@@ -1,0 +1,119 @@
+/* Contenedor principal */
+.dashboard {
+    font-family: Arial, sans-serif;
+    background-color: #f9f9fb;
+    min-height: 100vh;
+}
+
+/* Header */
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #ffffff;
+    padding: 20px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.dashboard-logo {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.dashboard-logo h1 {
+    margin: 0;
+    font-size: 1.3rem;
+}
+
+.dashboard-logo p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #555;
+}
+
+.logo-icon {
+    width: 50px;
+    height: 50px;
+}
+
+.dashboard-icons {
+    display: flex;
+    gap: 20px;
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+
+/* Títulos */
+.dashboard-title {
+    padding: 30px 40px 10px 40px;
+}
+
+.dashboard-title h2 {
+    margin: 0;
+    font-size: 1.4rem;
+}
+
+.dashboard-title p {
+    margin: 5px 0 0 0;
+    color: #666;
+}
+
+/* Cards */
+.dashboard-cards {
+    display: grid;
+     grid-template-columns: repeat(auto-fit, 250px);
+    gap: 80px;
+    padding: 20px 40px;
+    justify-content: flex-start;
+    
+}
+
+.card {
+    background-color: #eef3ff;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 20px;
+    position: relative;
+}
+
+.card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.card-icon {
+    width: 20px;
+    height: 20px;
+    background-color: #d33;
+    border-radius: 4px;
+}
+
+.card h3 {
+    margin: 0;
+}
+
+.card-button {
+    display: inline-block;
+    margin-top: 10px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.card-button:hover {
+    background-color: #0056b3;
+}
+
+.card-number {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    font-weight: bold;
+    color: #333;
+}

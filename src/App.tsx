@@ -1,15 +1,8 @@
+import React from "react";
+import Dashboard from "./pages/Dashboard";
 
-function App() {
+const App: React.FC = () => {
+  return <Dashboard />;
+};
 
-
-  return (
-    <>
-      <div>
-
-      </div>
-
-    </>
-  )
-}
-
-export default App
+export default App;

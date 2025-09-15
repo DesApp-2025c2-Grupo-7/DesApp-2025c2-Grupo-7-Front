@@ -1,0 +1,56 @@
+.header-dashboard {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 20px;
+    background-color: #fcfdfd;
+    box-shadow: 0 5px 4px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+}
+
+.header-dashboard-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.header-dashboard-logo {
+    width: 60px;
+    height: 60px;
+    object-fit: contain;
+    border-radius: 8px;
+}
+
+.header-dashboard-title {
+    margin: 0;
+    font-size: 1.2rem;
+}
+
+.header-dashboard-subtitle {
+    margin: 0;
+    font-size: 0.85rem;
+    color: #666;
+}
+
+.header-dashboard-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.header-dashboard-icon {
+    background: transparent;
+    border: none;
+    font-size: 1.4rem;
+    cursor: pointer;
+}
+
+
+/*tamaño iconos noti y user */
+.header-dashboard-icon-img {
+    width: 35px;
+    height: 35px;
+    object-fit: contain;
+}
+
+
