@@ -1,0 +1,39 @@
+.paginacion {
+    display: flex;
+    justify-content: center; /* centra la paginación */
+    gap: 5px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+}
+
+/* Botones de números en azul */
+.page-btn {
+    border: none;
+    border-radius: 2px;
+    padding: 6px 10px;
+    cursor: pointer;
+    background-color: #4B81D8; /* azul principal */
+    color: white;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.page-btn:hover {
+    background-color: #0056b3; /* azul más oscuro al pasar el mouse */
+}
+
+/* Botones de flechas en negro */
+.arrow-btn {
+    border: none;
+    border-radius: 4px;
+    padding: 6px 10px;
+    cursor: pointer;
+    background-color: #f0f0f0;
+    color: black;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.arrow-btn:hover {
+    background-color: #ccc;
+}

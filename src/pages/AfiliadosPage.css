@@ -1,0 +1,9 @@
+.afiliados-page {
+    background-color: #f9f9fb;
+    min-height: 100vh;
+    font-family: Arial, sans-serif;
+}
+
+.afiliados-content {
+    padding: 30px 40px;
+}

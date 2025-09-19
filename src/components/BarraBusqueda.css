@@ -1,0 +1,84 @@
+/* BarraBusqueda.css */
+.barra-busqueda {
+    background-color: #E6E6E6;
+    padding: 20px;
+    border-radius: 20px;
+    border: 1px solid black;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 40px;
+
+    width: 1300px;
+    /* ancho fijo deseado para la barra */
+    max-width: 90%;
+    /* que no se salga en pantallas pequeñas */
+    margin-left: auto;
+    margin-right: auto;
+    /* centra horizontalmente */
+}
+
+/* Icono y título */
+.busqueda-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.icon-lupa {
+    font-size: 1.3rem;
+}
+
+.busqueda-title {
+    margin: 0;
+    font-size: 1.3rem;
+    font-weight: 500;
+    color: #333;
+}
+
+/* Input, botón y selects */
+.busqueda-body {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.busqueda-body input {
+    flex: 0 0 500px;
+    /* ancho fijo menor para el input */
+    padding: 8px 12px;
+    font-size: 0.95rem;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+}
+
+.btn-primary {
+    background-color: #4B81D8;
+    color: white;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.btn-primary:hover {
+    background-color: #0056b3;
+}
+
+
+/* Selects con fondo oscuro y texto blanco */
+select {
+    padding: 8px 12px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    font-size: 0.95rem;
+    background-color: #484D5A;
+    color: rgb(238, 237, 237);
+}
+
+.busqueda-icon {
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
+    margin-right: 8px; /* espacio entre icono y título */
+}

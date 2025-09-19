@@ -3,8 +3,7 @@
     justify-content: space-between;
     align-items: center;
     padding: 5px 20px;
-    background-color: #fcfdfd;
-    box-shadow: 0 5px 4px rgba(0, 0, 0, 0.1);
+    background-color: #f1f1f1;
     border-radius: 10px;
 }
 
@@ -45,12 +44,9 @@
     cursor: pointer;
 }
 
-
-/*tamaño iconos noti y user */
+/* tamaño iconos noti y user */
 .header-dashboard-icon-img {
-    width: 35px;
-    height: 35px;
+    width: 40px;
+    height: 40px;
     object-fit: contain;
 }
-
-

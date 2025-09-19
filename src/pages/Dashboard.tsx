@@ -1,24 +1,25 @@
 import React from "react";
 import "./Dashboard.css";
-import HeaderDashboard from "../components/HeaderDashboard";
+import DashboardNavbar from "../components/DashboardNavbar";
+import PageHeader from "../components/PageHeader";
 import CardDashboard from "../components/CardDashboard";
 import LogoAfiliadosActivos from "../assets/icons/logo-AfiliadosActivos.svg";
 import LogoHorariosAtencion from "../assets/icons/logo-HorariosAtencion.svg";
 import LogoPrestadoresActivos from "../assets/icons/logo-PrestadoresActivos.svg";
+import { useNavigate } from "react-router-dom";
+
 
 const Dashboard: React.FC = () => {
+
+  const navigate = useNavigate();
+
   return (
     <div className="dashboard">
-      <HeaderDashboard
-        title="Panel de administración"
-        subtitle="Gestión del sistema Medicina Integral"
-      />
+      {/* Header superior */}
+      <DashboardNavbar />
 
-      {/* Títulos */}
-      <div className="dashboard-title">
-        <h2>Dashboard</h2>
-        <p>Menú principal</p>
-      </div>
+      {/* Encabezado de página */}
+      <PageHeader title="Dashboard" subtitle="Menú principal" />
 
       {/* Cards */}
       <div className="dashboard-cards">
@@ -26,7 +27,7 @@ const Dashboard: React.FC = () => {
           title="Afiliados Activos"
           buttonText="+ Ver Afiliados"
           number={430}
-          onButtonClick={() => console.log("Ver Afiliados")}
+          onButtonClick={() => navigate("/afiliados")}
           icon={LogoAfiliadosActivos}
         />
         <CardDashboard

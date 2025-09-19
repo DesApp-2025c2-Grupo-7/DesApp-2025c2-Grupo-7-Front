@@ -1,8 +1,8 @@
 import React from "react";
-import Dashboard from "./pages/Dashboard";
+import AppRoutes from "./routes/AppRoutes";
 
 const App: React.FC = () => {
-  return <Dashboard />;
+  return <AppRoutes />;
 };
 
 export default App;

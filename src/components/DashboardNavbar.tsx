@@ -1,19 +1,17 @@
 import React from "react";
-import "./HeaderDashboard.css";
+import "./DashboardNavbar.css"; // usa tu CSS original
 import LogoMedicinaIntegral from "../assets/icons/Logo-medicinaIntegral.svg";
 import LogoUsuario from "../assets/icons/logo-usuario.svg";
 import LogoNotificacion from "../assets/icons/logo-notificacion.svg";
 
-
-
-interface HeaderDashboardProps {
-    title: string;
-    subtitle?: string;
+interface DashboardNavbarProps {
+    onNotificationClick?: () => void;
+    onProfileClick?: () => void;
 }
 
-const HeaderDashboard: React.FC<HeaderDashboardProps> = ({
-    title,
-    subtitle
+const DashboardNavbar: React.FC<DashboardNavbarProps> = ({
+    onNotificationClick,
+    onProfileClick,
 }) => {
     return (
         <header className="header-dashboard">
@@ -21,25 +19,35 @@ const HeaderDashboard: React.FC<HeaderDashboardProps> = ({
             <div className="header-dashboard-left">
                 <img
                     src={LogoMedicinaIntegral}
-                    alt="Logo Medicina Integral"
+                    alt="Medicina Integral"
                     className="header-dashboard-logo"
                 />
                 <div>
-                    <h1 className="header-dashboard-title">{title}</h1>
-                    {subtitle && <p className="header-dashboard-subtitle">{subtitle}</p>}
+                    <h1 className="header-dashboard-title">Panel de administración</h1>
+                    <p className="header-dashboard-subtitle">
+                        Gestión del sistema Medicina Integral
+                    </p>
                 </div>
             </div>
 
-            {/* Iconos + botón salir */}
+            {/* Iconos */}
             <div className="header-dashboard-right">
-                <button className="header-dashboard-icon" title="Notificaciones">
+                <button
+                    className="header-dashboard-icon"
+                    title="Notificaciones"
+                    onClick={onNotificationClick}
+                >
                     <img
                         src={LogoNotificacion}
                         alt="Notificaciones"
                         className="header-dashboard-icon-img"
                     />
                 </button>
-                <button className="header-dashboard-icon" title="Perfil">
+                <button
+                    className="header-dashboard-icon"
+                    title="Perfil"
+                    onClick={onProfileClick}
+                >
                     <img
                         src={LogoUsuario}
                         alt="Usuario"
@@ -51,4 +59,4 @@ const HeaderDashboard: React.FC<HeaderDashboardProps> = ({
     );
 };
 
-export default HeaderDashboard;
+export default DashboardNavbar;
