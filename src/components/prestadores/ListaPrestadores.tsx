@@ -1,7 +1,7 @@
 import React from "react";
 import { Edit } from "lucide-react";
 import Button from "../genericos/Button";
-import "../genericos/ListaEstilos.css"
+import "./ListaPrestadores.css"
 
 interface Prestador {
     id: number;
@@ -15,26 +15,26 @@ interface ListaPrestadoresProps {
 
 const ListaPrestadores: React.FC<ListaPrestadoresProps> = ({ prestadores }) => {
     return (
-        <div className="lista-estilos">
+        <div className="prestadores-cards">
             <h3>Resultados</h3>
-            <ul>
+            <div className="cards-grid">
                 {prestadores.map((prestador) => (
-                    <li key={prestador.id}>
-                        <div className="item-info">
-                            <span className="nombre">{prestador.nombre}</span>
+                    <div key={prestador.id} className="prestador-card">
+                        <div className="card-header">
+                            <h4 className="prestador-nombre">{prestador.nombre}</h4>
                             {prestador.especialidad && (
-                                <span className="detalle">{prestador.especialidad}</span>
+                                <span className="prestador-especialidad">{prestador.especialidad}</span>
                             )}
                         </div>
-                        <div className="acciones">
+                        <div className="card-actions">
                             <Button variant="secondary" size="small">+ Ver más</Button>
-                            <Button variant="secondary" size="small" icon={Edit} iconPosition="left">
+                            <Button variant="primary" size="small" icon={Edit} iconPosition="left">
                                 Editar
                             </Button>
                         </div>
-                    </li>
+                    </div>
                 ))}
-            </ul>
+            </div>
         </div>
     );
 };

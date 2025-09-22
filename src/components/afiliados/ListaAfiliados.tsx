@@ -1,7 +1,7 @@
 import React from "react";
 import { Edit } from "lucide-react";
 import Button from "../genericos/Button";
-import "../genericos/ListaEstilos.css"
+import "./ListaAfiliados.css"
 
 interface Afiliado {
     id: number;
