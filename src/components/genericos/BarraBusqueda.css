@@ -1,39 +1,32 @@
 /* BarraBusqueda.css */
 .barra-busqueda {
-    background-color: #E6E6E6;
+    background-color: #f5f5f5;
     padding: 20px;
     border-radius: 20px;
-    border: 1px solid black;
+    border: 1px solid #81c784;
     display: flex;
     flex-direction: column;
     gap: 12px;
     margin-bottom: 40px;
-
-    width: 1300px;
-    /* ancho fijo deseado para la barra */
-    max-width: 90%;
-    /* que no se salga en pantallas pequeñas */
-    margin-left: auto;
-    margin-right: auto;
-    /* centra horizontalmente */
 }
 
 /* Icono y título */
 .busqueda-header {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
+    margin-bottom: 16px;
 }
 
-.icon-lupa {
-    font-size: 1.3rem;
+.busqueda-icon {
+    color: #2e7d32;
 }
 
 .busqueda-title {
     margin: 0;
     font-size: 1.3rem;
     font-weight: 500;
-    color: #333;
+    color: #424242;
 }
 
 /* Input, botón y selects */
@@ -51,20 +44,6 @@
     border-radius: 6px;
     border: 1px solid #ccc;
 }
-
-.btn-primary {
-    background-color: #4B81D8;
-    color: white;
-    border: none;
-    padding: 8px 14px;
-    border-radius: 6px;
-    cursor: pointer;
-}
-
-.btn-primary:hover {
-    background-color: #0056b3;
-}
-
 
 /* Selects con fondo oscuro y texto blanco */
 select {

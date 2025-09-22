@@ -1,4 +1,6 @@
 import React from "react";
+import type { LucideIcon } from "lucide-react";
+import Button from "./Button";
 import "./CardDashboard.css";
 
 interface CardDashboardProps {
@@ -6,7 +8,7 @@ interface CardDashboardProps {
     buttonText: string;
     number: number | string;
     onButtonClick?: () => void;
-    icon?: string; // ruta del icono
+    icon?: LucideIcon; // componente de icono de Lucide
 }
 
 
@@ -20,19 +22,16 @@ const CardDashboard: React.FC<CardDashboardProps> = ({
     return (
         <div className="card-dashboard">
             <div className="card-dashboard-header">
-                {icon && (
-                    <img
-                        src={icon}
-                        alt={`${title} icon`}
-                        className="card-dashboard-icon-img"
-                    />
-                )}
+                {icon && React.createElement(icon, {
+                    size: 24,
+                    className: "card-dashboard-icon"
+                })}
                 <h3>{title}</h3>
             </div>
 
-            <button className="card-dashboard-button" onClick={onButtonClick}>
+            <Button variant="primary" onClick={onButtonClick}>
                 {buttonText}
-            </button>
+            </Button>
 
             <span className="card-dashboard-number">{number}</span>
         </div>

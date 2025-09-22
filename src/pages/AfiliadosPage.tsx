@@ -1,12 +1,12 @@
 // AfiliadosPage.tsx
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import DashboardNavbar from "../components/DashboardNavbar";
-import AfiliadosHeader from "../components/AfiliadosHeader";
-import BarraBusqueda from "../components/BarraBusqueda";
-import ListaAfiliados from "../components/ListaAfiliados";
-import Paginacion from "../components/Paginacion";
-import "./AfiliadosPage.css";
+import Header from "../components/genericos/Header";
+import BarraBusqueda from "../components/genericos/BarraBusqueda";
+import ListaAfiliados from "../components/afiliados/ListaAfiliados";
+import Paginacion from "../components/genericos/Paginacion";
+import AfiliadosHeader from "../components/afiliados/HeaderAfiliados";
+import "../components/genericos/PaginaEstilos.css";
 
 interface Afiliado {
   id: number;
@@ -30,12 +30,14 @@ const AfiliadosPage: React.FC = () => {
   };
 
   return (
-    <div className="afiliados-page">
-      {/* Header superior */}
-      <DashboardNavbar />
+    <div className="admin-page">
+      <Header 
+        title="Panel de Administración" 
+        subtitle="Afiliados - Administración de prestadores médicos y centros de salud"
+      />
 
-      <div className="afiliados-content">
-        {/* Header de sección con botones */}
+      <div className="admin-content">
+        {/* Ejemplo de todos los tipos de botones */}
         <AfiliadosHeader onVolver={handleVolver} />
 
         {/* Barra de búsqueda */}

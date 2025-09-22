@@ -1,5 +1,5 @@
 import React from "react";
-import "./PageHeader.css";
+import "./HeaderEstilos.css";
 
 interface PageHeaderProps {
   title: string;
@@ -8,10 +8,10 @@ interface PageHeaderProps {
 
 const PageHeader: React.FC<PageHeaderProps> = ({ title, subtitle }) => {
   return (
-    <div className="page-header">
+    <div className="seccion-header">
       <div>
-        <h2 className="page-header-title">{title}</h2>
-        {subtitle && <p className="page-header-subtitle">{subtitle}</p>}
+        <h2>{title}</h2>
+        {subtitle && <p className="subtitle">{subtitle}</p>}
       </div>
     </div>
   );
