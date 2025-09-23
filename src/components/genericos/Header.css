@@ -19,12 +19,12 @@
     justify-content: center;
     width: 40px;
     height: 40px;
-    background-color: #81c784;
+    background-color: #4B81D8;
     border-radius: 50%;
 }
 
 .logo-icon {
-    color: #2e7d32;
+    color: #ffffff;
 }
 
 .header-title {
@@ -48,7 +48,7 @@
 .header-icon {
     background: none;
     border: none;
-    color: #2e7d32;
+    color: #4B81D8;
     cursor: pointer;
     padding: 8px;
     border-radius: 8px;
@@ -60,7 +60,7 @@
 
 .header-icon:hover {
     background-color: rgba(129, 199, 132, 0.2);
-    color: #81c784;
+    color: #4B81D8;
 }
 
 .header-icon:active {

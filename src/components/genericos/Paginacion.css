@@ -11,14 +11,14 @@
     border-radius: 2px;
     padding: 6px 10px;
     cursor: pointer;
-    background-color: #2e7d32;
+    background-color: #2a5599;
     color: white;
     font-weight: 500;
     transition: background-color 0.2s;
 }
 
 .page-btn:hover {
-    background-color: #1b5e20;
+    background-color: #295192;
 }
 
 .arrow-btn {

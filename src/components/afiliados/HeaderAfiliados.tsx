@@ -17,7 +17,7 @@ const AfiliadosHeader: React.FC<AfiliadosHeaderProps> = ({
             <h2>Gestión de Afiliados</h2>
             <div className="seccion-header-buttons">
                 <Button variant="back"  icon={ArrowLeft} onClick={onVolver}>
-                    Volver al menú
+                    Volver
                 </Button>
                 <Button variant="primary" onClick={onAlta}>
                     Dar de alta Afiliado

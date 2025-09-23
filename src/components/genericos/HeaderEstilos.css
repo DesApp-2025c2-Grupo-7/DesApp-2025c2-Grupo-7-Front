@@ -10,7 +10,7 @@
     background-color: #ffffff;
     border-radius: 12px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    border-left: 4px solid #2e7d32;
+    border-left: 4px solid #251f74;
 }
 
 /* Título del header */
@@ -25,7 +25,7 @@
 .seccion-header .subtitle {
     margin: 5px 0 0 0;
     font-size: 0.9rem;
-    color: #81c784;
+    color: #8182c7;
     font-weight: 400;
 }
 

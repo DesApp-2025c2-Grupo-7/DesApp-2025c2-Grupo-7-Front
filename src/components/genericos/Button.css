@@ -35,37 +35,37 @@
 
 /* Variantes de color */
 .btn-primary {
-    background-color: #2e7d32;
+    background-color: #4B81D8;
     color: #f5f5f5;
     box-shadow: 0 2px 4px rgba(46, 125, 50, 0.2);
 }
 
 .btn-primary:hover:not(.btn-disabled) {
-    background-color: #1b5e20;
+    background-color: #2b579c;
     box-shadow: 0 4px 8px rgba(46, 125, 50, 0.3);
     transform: translateY(-1px);
 }
 
 .btn-primary:active:not(.btn-disabled) {
-    background-color: #0d4f14;
+    background-color: #4B81D8;
     transform: translateY(0);
     box-shadow: 0 2px 4px rgba(46, 125, 50, 0.2);
 }
 
 .btn-secondary {
-    background-color: #81c784;
-    color: #424242;
+    background-color: #4B81D8;
+    color: #d3d3d3;
     box-shadow: 0 2px 4px rgba(129, 199, 132, 0.2);
 }
 
 .btn-secondary:hover:not(.btn-disabled) {
-    background-color: #66bb6a;
+    background-color: #29549b;
     box-shadow: 0 4px 8px rgba(129, 199, 132, 0.3);
     transform: translateY(-1px);
 }
 
 .btn-secondary:active:not(.btn-disabled) {
-    background-color: #4caf50;
+    background-color: #1d3e74;
     transform: translateY(0);
     box-shadow: 0 2px 4px rgba(129, 199, 132, 0.2);
 }
@@ -131,20 +131,20 @@
 .btn-back {
     background-color: #f5f5f5;
     color: #424242;
-    border: 2px solid #81c784;
+    border: 2px solid #8186c7;
     box-shadow: 0 2px 4px rgba(129, 199, 132, 0.1);
 }
 
 .btn-back:hover:not(.btn-disabled) {
-    background-color: #e8f5e8;
-    border-color: #66bb6a;
+    background-color: #edefff;
+    border-color: #2b579c;
     box-shadow: 0 4px 8px rgba(129, 199, 132, 0.2);
     transform: translateY(-1px);
 }
 
 .btn-back:active:not(.btn-disabled) {
-    background-color: #c8e6c9;
-    border-color: #4caf50;
+    background-color: #c8c8e6;
+    border-color: #574caf;
     transform: translateY(0);
     box-shadow: 0 2px 4px rgba(129, 199, 132, 0.1);
 }
