@@ -22,6 +22,7 @@ export interface Afiliado {
   desde: string;
   hasta: string;
   fechaBaja?: string;
+  CondicionesMedicas: string[];
 }
 
 export const afiliados: Afiliado[] = [
@@ -31,7 +32,7 @@ export const afiliados: Afiliado[] = [
     plan: "Plan Premium",
     tipoDocumento: "DNI",
     numeroDocumento: "40123456",
-    nombre: "Adrián Alejandro",
+    nombre: "Adriá Alejandro",
     apellido: "González Arévalo",
     fechaNacimiento: "1988-03-22",
     telefono: "11-5555-1111",
@@ -40,6 +41,7 @@ export const afiliados: Afiliado[] = [
     desde: "2019-06-01",
     hasta: "2025-06-01",
     fechaBaja: "",
+    CondicionesMedicas:[]
   },
   {
     id: 2,
@@ -56,6 +58,7 @@ export const afiliados: Afiliado[] = [
     desde: "2020-02-15",
     hasta: "2026-02-15",
     fechaBaja: "",
+    CondicionesMedicas:["Diabetes", "Hipertensión"]
   },
   {
     id: 3,
@@ -72,6 +75,7 @@ export const afiliados: Afiliado[] = [
     desde: "2018-01-01",
     hasta: "2024-01-01",
     fechaBaja: "2023-12-31",
+    CondicionesMedicas:["No Vidente"]
   },
   {
     id: 4,
@@ -85,9 +89,10 @@ export const afiliados: Afiliado[] = [
     telefono: "11-5555-4444",
     direccion: "Belgrano 321, Rosario",
     mail: "antony.rashford@mail.com",
-    desde: "2021-03-01",
-    hasta: "2027-03-01",
+    desde: "01-03-2021",
+    hasta: "01-03-2027",
     fechaBaja: "",
+    CondicionesMedicas:["Asma, Alergias, Obesidad, Colesterol, Trastornos de Ansiedad, Depresión, Insomnio, Migrañas,Asma, Alergias, Obesidad, Colesterol, Trastornos de Ansiedad, Depresión, Insomnio, Migrañas"]
   },
 ];
 
@@ -114,7 +119,7 @@ const AfiliadoProfile: React.FC = () => {
   const handleDarDeBaja = () => {
     if (afiliado) {
       setAfiliado({ ...afiliado, fechaBaja: new Date().toISOString().split("T")[0] });
-      alert("Afiliado dado de baja 🚫");
+      alert("El Afiliado sera dado de baja la fecha "+ afiliado.hasta+ " 🚫");
     }
   };
 
@@ -158,16 +163,26 @@ const AfiliadoProfile: React.FC = () => {
           <div className="form-row"><label>Teléfono</label><span>{afiliado?.telefono}</span></div>
           <div className="form-row"><label>Dirección</label><span>{afiliado?.direccion}</span></div>
           <div className="form-row"><label>Mail</label><span>{afiliado?.mail}</span></div>
-          <div className="form-row"><label>Desde</label><span>{afiliado?.desde}</span></div>
-          <div className="form-row"><label>Hasta</label><span>{afiliado?.hasta}</span></div>
+          <div className="form-row"><label>Fecha de Alta</label><span>{afiliado?.desde}</span></div>
+          <div className="form-row"><label>Fecha Baja</label><span>{afiliado?.hasta}</span></div>
+          <div className="form-row">
+  <label>Condiciones Médicas</label>
+  <span>
+    {afiliado && afiliado.CondicionesMedicas && afiliado.CondicionesMedicas.length > 0
+      ? afiliado.CondicionesMedicas.join(", ")
+      : "No posee condiciones médicas"}
+  </span>
+</div>
+
 
           <div className="form-row">
-            <label>Fecha de baja</label>
-            <span>{afiliado?.fechaBaja || "Activo"}</span>
-            <Button variant="danger" type="button" onClick={handleDarDeBaja}>
-              Dar de baja
-            </Button>
+            <label>Estado del Afiliado</label>
+            <span>{"Activo hasta " + afiliado?.hasta || "Activo"}</span>
+            
           </div>
+          <Button size="large" variant="danger" type="button" onClick={handleDarDeBaja}>
+              Dar de baja
+          </Button>
         </div>
       </div>
     </div>

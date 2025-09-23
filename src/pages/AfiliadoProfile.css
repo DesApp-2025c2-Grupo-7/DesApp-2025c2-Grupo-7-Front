@@ -37,7 +37,7 @@
 
 /* Fila especial para fecha de baja */
 .form-row:last-child {
-  grid-column: span 2; /* ocupa todo el ancho */
+  grid-column: span 1; /* ocupa todo el ancho */
   flex-direction: row;
   align-items: center;
   gap: 1rem;
