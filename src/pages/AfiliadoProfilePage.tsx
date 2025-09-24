@@ -2,99 +2,12 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Header from "../components/genericos/Header";
-import Button from "../components/genericos/Button";
 import HeaderAfiliado from "../components/afiliados/HeaderAfiliados";
+import AfiliadosForm from "../components/afiliados/AfiliadosForm";
 import "./AfiliadoProfile.css"; 
+import mockData from "../../data/afiliados-mock-backend.json"
+import type { Afiliado } from "../types/afiliados";
 
-// ---- Datos de afiliados ----
-export interface Afiliado {
-  id: number;
-  credencial: string;
-  plan: string;
-  tipoDocumento: string;
-  numeroDocumento: string;
-  nombre: string;
-  apellido: string;
-  fechaNacimiento: string;
-  telefono: string;
-  direccion: string;
-  mail: string;
-  desde: string;
-  hasta: string;
-  fechaBaja?: string;
-  CondicionesMedicas: string[];
-}
-
-export const afiliados: Afiliado[] = [
-  {
-    id: 1,
-    credencial: "1234567-01",
-    plan: "Plan Premium",
-    tipoDocumento: "DNI",
-    numeroDocumento: "40123456",
-    nombre: "Adriá Alejandro",
-    apellido: "González Arévalo",
-    fechaNacimiento: "1988-03-22",
-    telefono: "11-5555-1111",
-    direccion: "Av. Corrientes 1234, CABA",
-    mail: "adrian.gonzalez@mail.com",
-    desde: "2019-06-01",
-    hasta: "2025-06-01",
-    fechaBaja: "",
-    CondicionesMedicas:[]
-  },
-  {
-    id: 2,
-    credencial: "7654321-02",
-    plan: "Plan Básico",
-    tipoDocumento: "DNI",
-    numeroDocumento: "38999888",
-    nombre: "Lucia Noemi",
-    apellido: "Morelos Fernandez",
-    fechaNacimiento: "1992-11-10",
-    telefono: "11-5555-2222",
-    direccion: "Calle Falsa 456, Buenos Aires",
-    mail: "lucia.morelos@mail.com",
-    desde: "2020-02-15",
-    hasta: "2026-02-15",
-    fechaBaja: "",
-    CondicionesMedicas:["Diabetes", "Hipertensión"]
-  },
-  {
-    id: 3,
-    credencial: "9998887-03",
-    plan: "Plan Familiar",
-    tipoDocumento: "DNI",
-    numeroDocumento: "37777111",
-    nombre: "Carlos",
-    apellido: "Pereyra",
-    fechaNacimiento: "1985-07-08",
-    telefono: "11-5555-3333",
-    direccion: "San Martín 789, La Plata",
-    mail: "carlos.pereyra@mail.com",
-    desde: "2018-01-01",
-    hasta: "2024-01-01",
-    fechaBaja: "2023-12-31",
-    CondicionesMedicas:["No Vidente"]
-  },
-  {
-    id: 4,
-    credencial: "1112223-04",
-    plan: "Plan Premium",
-    tipoDocumento: "DNI",
-    numeroDocumento: "36666123",
-    nombre: "Antony",
-    apellido: "Rashford",
-    fechaNacimiento: "1995-09-14",
-    telefono: "11-5555-4444",
-    direccion: "Belgrano 321, Rosario",
-    mail: "antony.rashford@mail.com",
-    desde: "01-03-2021",
-    hasta: "01-03-2027",
-    fechaBaja: "",
-    CondicionesMedicas:["Asma, Alergias, Obesidad, Colesterol, Trastornos de Ansiedad, Depresión, Insomnio, Migrañas,Asma, Alergias, Obesidad, Colesterol, Trastornos de Ansiedad, Depresión, Insomnio, Migrañas"]
-  },
-];
 
 // ---- Componente ----
 const AfiliadoProfile: React.FC = () => {
@@ -106,7 +19,7 @@ const AfiliadoProfile: React.FC = () => {
   useEffect(() => {
     setLoading(true);
     const timer = setTimeout(() => {
-      const encontrado = afiliados.find((a) => a.id === Number(id));
+      const encontrado = mockData.find((a) => a.id === Number(id));
       if (encontrado) setAfiliado(encontrado);
       setLoading(false);
     }, 1000); // Simula 1 segundo de petición
@@ -119,7 +32,7 @@ const AfiliadoProfile: React.FC = () => {
   const handleDarDeBaja = () => {
     if (afiliado) {
       setAfiliado({ ...afiliado, fechaBaja: new Date().toISOString().split("T")[0] });
-      alert("El Afiliado sera dado de baja la fecha "+ afiliado.hasta+ " 🚫");
+      alert("El Afiliado sera dado de baja la fecha "+ afiliado.fechaBaja+ " 🚫");
     }
   };
 
@@ -152,39 +65,10 @@ const AfiliadoProfile: React.FC = () => {
       />
       <div className="admin-content">
         <HeaderAfiliado onVolver={handleVolver} />
-        <div className="afiliado-form">
-          <div className="form-row"><label>Credencial</label><span>{afiliado?.credencial}</span></div>
-          <div className="form-row"><label>Plan médico</label><span>{afiliado?.plan}</span></div>
-          <div className="form-row"><label>Tipo de documento</label><span>{afiliado?.tipoDocumento}</span></div>
-          <div className="form-row"><label>Número de documento</label><span>{afiliado?.numeroDocumento}</span></div>
-          <div className="form-row"><label>Nombre</label><span>{afiliado?.nombre}</span></div>
-          <div className="form-row"><label>Apellido</label><span>{afiliado?.apellido}</span></div>
-          <div className="form-row"><label>Fecha de nacimiento</label><span>{afiliado?.fechaNacimiento}</span></div>
-          <div className="form-row"><label>Teléfono</label><span>{afiliado?.telefono}</span></div>
-          <div className="form-row"><label>Dirección</label><span>{afiliado?.direccion}</span></div>
-          <div className="form-row"><label>Mail</label><span>{afiliado?.mail}</span></div>
-          <div className="form-row"><label>Fecha de Alta</label><span>{afiliado?.desde}</span></div>
-          <div className="form-row"><label>Fecha Baja</label><span>{afiliado?.hasta}</span></div>
-          <div className="form-row">
-  <label>Condiciones Médicas</label>
-  <span>
-    {afiliado && afiliado.CondicionesMedicas && afiliado.CondicionesMedicas.length > 0
-      ? afiliado.CondicionesMedicas.join(", ")
-      : "No posee condiciones médicas"}
-  </span>
-</div>
-
-
-          <div className="form-row">
-            <label>Estado del Afiliado</label>
-            <span>{"Activo hasta " + afiliado?.hasta || "Activo"}</span>
-            
-          </div>
-          <Button size="large" variant="danger" type="button" onClick={handleDarDeBaja}>
-              Dar de baja
-          </Button>
-        </div>
+        <AfiliadosForm afiliado={afiliado}  onDarDeBaja={handleDarDeBaja}/>
+        
       </div>
+      
     </div>
   );
 };

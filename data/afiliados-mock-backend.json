@@ -1,0 +1,140 @@
+[
+    {
+        "id": 1,
+        "credencial": "00000001-01",
+        "tipoDocumento": "DNI", 
+        "numeroDocumento": "32822776",
+        "nombre":"Marcelo",
+        "apellido": "Valdez",
+        "fechaNacimiento" : "1987-03-17",
+        "telefono": ["1137707882", "2374621631"],
+        "email": ["mar.celo@gmail.com", "marcelojvaldez.1703@gmail.com"],
+        "direccion": [   
+            {
+                "calle":"Estanislao del Campo", 
+                "numero": "478", 
+                "depto": "2A", 
+                "localidad": "Morón",
+                "codigoPostal":"1706"
+            },
+            {
+                "calle":"Libertad", 
+                "numero": "610", 
+                "depto": null, 
+                "localidad": "Moreno",
+                "codigoPostal":"1744"
+            }
+        ],
+        "parentesco": "Titular",
+        "situacionesTerapeuticas": [
+            {
+                "diagnostico":"Hipertension",
+                "fechaInicio":"2000-08-01",
+                "fechaFin": null
+            }
+        ],
+        "planMedico": "Plata",
+        "fechaAlta": "1999-03-17",
+        "fechaBaja": "2030-03-17"
+    },
+    {
+        "id": 2,
+        "credencial": "00000002-01",
+        "tipoDocumento": "DNI", 
+        "numeroDocumento": "35827839",
+        "nombre":"Nicolás",
+        "apellido": "Montes de Oca",
+        "fechaNacimiento" : "1993-09-28",
+        "telefono": ["11487289238"],
+        "email": ["nico.las@gmail.com"],
+        "direccion": [   
+            {
+                "calle":"Malarredo", 
+                "numero": "1076", 
+                "depto": null, 
+                "localidad": "Hurlingham",
+                "codigoPostal":"1686"
+            }
+        ],
+        "parentesco": "Titular",
+        "situacionesTerapeuticas": [],
+        "planMedico": "Oro",
+        "fechaAlta": "2001-06-15",
+        "fechaBaja": null
+    },
+    {
+        "id": 3,
+        "credencial": "00000003-01",
+        "tipoDocumento": "DNI", 
+        "numeroDocumento": "41894732",
+        "nombre":"Nicolas",
+        "apellido": "Bravo",
+        "fechaNacimiento" : "1998-08-13",
+        "telefono": ["1137707882", "2374621631"],
+        "email": ["mar.celo@gmail.com"],
+        "direccion": [   
+            {
+                "calle":"Sanabria", 
+                "numero": "4383", 
+                "depto": null, 
+                "localidad": "Hurlingham",
+                "codigoPostal":"1686"
+            }
+        ],
+        "parentesco": "Titular",
+        "situacionesTerapeuticas": [],
+        "planMedico": "Plata",
+        "fechaAlta": "1999-04-03",
+        "fechaBaja": null
+    },
+    {
+        "id": 4,
+        "credencial": "00000004-01",
+        "tipoDocumento": "DNI", 
+        "numeroDocumento": "44444444",
+        "nombre":"Melanie",
+        "apellido": "Mai",
+        "fechaNacimiento" : "2003-07-23",
+        "telefono": ["1122223333"],
+        "email": ["melanie.mai@gmail.com"],
+        "direccion": [   
+            {
+                "calle":"Avenida Siempre Viva", 
+                "numero": "742", 
+                "depto": null, 
+                "localidad": "Hurlingham",
+                "codigoPostal":"1686"
+            }
+        ],
+        "parentesco": "Titular",
+        "situacionesTerapeuticas": [],
+        "planMedico": "Oro",
+        "fechaAlta": "2012-04-03",
+        "fechaBaja": null
+    },
+    {
+        "id": 5,
+        "credencial": "00000005-01",
+        "tipoDocumento": "DNI", 
+        "numeroDocumento": "55555555",
+        "nombre":"Maricel",
+        "apellido": "Benitez",
+        "fechaNacimiento" : "2003-07-23",
+        "telefono": ["1133332222"],
+        "email": ["maricel.benitezi@gmail.com"],
+        "direccion": [   
+            {
+                "calle":"Los Sauces", 
+                "numero": "111", 
+                "depto": null, 
+                "localidad": "Hurlingham",
+                "codigoPostal":"1686"
+            }
+        ],
+        "parentesco": "Titular",
+        "situacionesTerapeuticas": [],
+        "planMedico": "Bronce",
+        "fechaAlta": "2012-04-03",
+        "fechaBaja": null
+    }
+]

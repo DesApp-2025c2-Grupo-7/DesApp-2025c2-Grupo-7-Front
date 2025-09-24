@@ -5,6 +5,7 @@ import CardDashboard from "../components/genericos/CardDashboard";
 import { Users, UserCheck, Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import PageHeader from "../components/genericos/PageHeader";
+import  afiliados  from "../../data/afiliados-mock-backend.json";
 
 
 const Dashboard: React.FC = () => {
@@ -28,7 +29,7 @@ const Dashboard: React.FC = () => {
           <CardDashboard
             title="Afiliados Activos"
             buttonText="+ Ver Afiliados"
-            number={430}
+            number={afiliados.length}
             onButtonClick={() => navigate("/afiliados")}
             icon={Users}
           />

@@ -7,6 +7,7 @@ import "./ListaAfiliados.css"
 interface Afiliado {
     id: number;
     nombre: string;
+    apellido: string;
 }
 
 interface ListaAfiliadosProps {
@@ -27,7 +28,7 @@ const ListaAfiliados: React.FC<ListaAfiliadosProps> = ({ afiliados }) => {
                 {afiliados.map((afiliado) => (
                     <li key={afiliado.id}>
                         <div className="item-info">
-                            <span className="nombre">{afiliado.nombre}</span>
+                            <span className="nombre">{afiliado.nombre} {afiliado.apellido}</span>
                         </div>
                         <div className="acciones">
                             <Button
