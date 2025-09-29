@@ -3,16 +3,7 @@ import { Edit } from "lucide-react";
 import Button from "../genericos/Button";
 import { useNavigate } from "react-router-dom";
 import "./ListaAfiliados.css"
-
-interface Afiliado {
-    id: number;
-    nombre: string;
-    apellido: string;
-}
-
-interface ListaAfiliadosProps {
-    afiliados: Afiliado[];
-}
+import type { ListaAfiliadosProps } from "../../types/afiliados";
 
 const ListaAfiliados: React.FC<ListaAfiliadosProps> = ({ afiliados }) => {
     const navigate = useNavigate();

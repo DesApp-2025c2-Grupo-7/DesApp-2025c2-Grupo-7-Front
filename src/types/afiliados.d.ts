@@ -22,10 +22,15 @@ interface Afiliado {
   telefono: string[];
   direccion: Direccion[];
   email: string[];
+  parentesco: string;
   fechaAlta: string;
   fechaBaja: string | null;
   situacionesTerapeuticas?: SituacionTerapeutica[];
   planMedico: string;
 }
 
-export { Direccion, SituacionTerapeutica, Afiliado };
+interface ListaAfiliadosProps {
+    afiliados: Afiliado[];
+}
+
+export { Direccion, SituacionTerapeutica, Afiliado, ListaAfiliadosProps};

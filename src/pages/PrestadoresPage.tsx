@@ -7,23 +7,13 @@ import BarraBusqueda from "../components/genericos/BarraBusqueda";
 import ListaPrestadores from "../components/prestadores/ListaPrestadores";
 import Paginacion from "../components/genericos/Paginacion";
 import "../components/genericos/PaginaEstilos.css";
+import mockPrestadores from "../../data/prestadores-mock-backend.json"
+import type { Prestador } from "../types/prestadores";
 
-interface Prestador {
-  id: number;
-  nombre: string;
-  especialidad?: string;
-}
 
 const PrestadoresPage: React.FC = () => {
   const [busqueda, setBusqueda] = useState("");
-  const [prestadores] = useState<Prestador[]>([
-    { id: 1, nombre: "Dr. Carlos Rodríguez", especialidad: "Cardiología" },
-    { id: 2, nombre: "Dra. María Elena Vásquez", especialidad: "Pediatría" },
-    { id: 3, nombre: "Dr. Roberto Mendoza", especialidad: "Traumatología" },
-    { id: 4, nombre: "Dra. Ana Sofía Torres", especialidad: "Ginecología" },
-    { id: 5, nombre: "Dr. Luis Fernando García", especialidad: "Neurología" },
-    { id: 6, nombre: "Dra. Carmen López", especialidad: "Dermatología" },
-  ]);
+  const [prestadores] = useState<Prestador[] >(mockPrestadores);
 
   const navigate = useNavigate();
 

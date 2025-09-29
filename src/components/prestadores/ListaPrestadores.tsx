@@ -2,16 +2,7 @@ import React from "react";
 import { Edit } from "lucide-react";
 import Button from "../genericos/Button";
 import "./ListaPrestadores.css"
-
-interface Prestador {
-    id: number;
-    nombre: string;
-    especialidad?: string;
-}
-
-interface ListaPrestadoresProps {
-    prestadores: Prestador[];
-}
+import type {ListaPrestadoresProps } from "../../types/prestadores";
 
 const ListaPrestadores: React.FC<ListaPrestadoresProps> = ({ prestadores }) => {
     return (
@@ -21,9 +12,9 @@ const ListaPrestadores: React.FC<ListaPrestadoresProps> = ({ prestadores }) => {
                 {prestadores.map((prestador) => (
                     <div key={prestador.id} className="prestador-card">
                         <div className="card-header">
-                            <h4 className="prestador-nombre">{prestador.nombre}</h4>
-                            {prestador.especialidad && (
-                                <span className="prestador-especialidad">{prestador.especialidad}</span>
+                            <h4 className="prestador-nombre">{prestador.nombreCompleto}</h4>
+                            {prestador.especialidades.map((especialidad) =>(
+                                <span className="prestador-especialidad">{especialidad} </span>)
                             )}
                         </div>
                         <div className="card-actions">

@@ -6,6 +6,7 @@ import { Users, UserCheck, Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import PageHeader from "../components/genericos/PageHeader";
 import  afiliados  from "../../data/afiliados-mock-backend.json";
+import  prestadores  from "../../data/prestadores-mock-backend.json";
 
 
 const Dashboard: React.FC = () => {
@@ -36,7 +37,7 @@ const Dashboard: React.FC = () => {
           <CardDashboard
             title="Prestadores Activos"
             buttonText="+ Ver Prestadores"
-            number={128}
+            number={prestadores.length}
             onButtonClick={() => navigate("/prestadores")}
             icon={UserCheck}
           />
