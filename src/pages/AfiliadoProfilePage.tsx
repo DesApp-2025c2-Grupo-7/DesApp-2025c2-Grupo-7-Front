@@ -5,9 +5,7 @@ import Header from "../components/genericos/Header";
 import HeaderAfiliado from "../components/afiliados/HeaderAfiliados";
 import AfiliadosForm from "../components/afiliados/AfiliadosForm";
 import "./AfiliadoProfile.css"; 
-import mockData from "../../data/afiliados-mock-backend.json"
 import type { Afiliado } from "../types/afiliados";
-
 
 // ---- Componente ----
 const AfiliadoProfile: React.FC = () => {
@@ -17,22 +15,50 @@ const AfiliadoProfile: React.FC = () => {
   const { id } = useParams<{ id: string }>();
 
   useEffect(() => {
-    setLoading(true);
-    const timer = setTimeout(() => {
-      const encontrado = mockData.find((a) => a.id === Number(id));
-      if (encontrado) setAfiliado(encontrado);
-      setLoading(false);
-    }, 1000); // Simula 1 segundo de petición
+    if (!id) return;
 
-    return () => clearTimeout(timer);
+    const fetchAfiliado = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(`http://localhost:3000/afiliados/${id}`); 
+        // 👆 Cambiá esta URL por la ruta de tu backend
+        if (!response.ok) {
+          throw new Error("Error al obtener los datos del afiliado");
+        }
+        const data: Afiliado = await response.json();
+        setAfiliado(data);
+      } catch (error) {
+        console.error(error);
+        setAfiliado(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAfiliado();
   }, [id]);
 
   const handleVolver = () => navigate("/afiliados");
 
-  const handleDarDeBaja = () => {
+  const handleDarDeBaja = async () => {
     if (afiliado) {
-      setAfiliado({ ...afiliado, fechaBaja: new Date().toISOString().split("T")[0] });
-      alert("El Afiliado sera dado de baja la fecha "+ afiliado.fechaBaja+ " 🚫");
+      const fechaBaja = new Date().toISOString().split("T")[0];
+      try {
+        // Llamada al backend para dar de baja (PUT/PATCH/POST según tu API)
+        await fetch(`http://localhost:3000/afiliados/${afiliado.id}/baja`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ fechaBaja }),
+        });
+
+        setAfiliado({ ...afiliado, fechaBaja });
+        alert("El Afiliado será dado de baja en la fecha " + fechaBaja + " 🚫");
+      } catch (error) {
+        console.error("Error al dar de baja:", error);
+        alert("No se pudo dar de baja al afiliado ❌");
+      }
     }
   };
 
@@ -65,10 +91,12 @@ const AfiliadoProfile: React.FC = () => {
       />
       <div className="admin-content">
         <HeaderAfiliado onVolver={handleVolver} />
-        <AfiliadosForm afiliado={afiliado}  onDarDeBaja={handleDarDeBaja}/>
-        
+        {afiliado ? (
+          <AfiliadosForm afiliado={afiliado} onDarDeBaja={handleDarDeBaja} />
+        ) : (
+          <p>No se encontró el afiliado</p>
+        )}
       </div>
-      
     </div>
   );
 };
