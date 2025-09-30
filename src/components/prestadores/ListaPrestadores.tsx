@@ -1,10 +1,17 @@
 import React from "react";
 import { Edit } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import Button from "../genericos/Button";
 import "./ListaPrestadores.css"
-import type {ListaPrestadoresProps } from "../../types/prestadores";
+import type { ListaPrestadoresProps } from "../../types/prestadores";
 
 const ListaPrestadores: React.FC<ListaPrestadoresProps> = ({ prestadores }) => {
+    const navigate = useNavigate();
+
+    const handleVerMas = (id: number) => {
+        navigate(`/prestadores/${id}`); // 👈 navega al perfil del prestador
+    };
+
     return (
         <div className="prestadores-cards">
             <h3>Resultados</h3>
@@ -13,12 +20,18 @@ const ListaPrestadores: React.FC<ListaPrestadoresProps> = ({ prestadores }) => {
                     <div key={prestador.id} className="prestador-card">
                         <div className="card-header">
                             <h4 className="prestador-nombre">{prestador.nombreCompleto}</h4>
-                            {prestador.especialidades.map((especialidad) =>(
-                                <span className="prestador-especialidad">{especialidad} </span>)
-                            )}
+                            {prestador.especialidades.map((especialidad, i) =>(
+                                <span key={i} className="prestador-especialidad">{especialidad}</span>
+                            ))}
                         </div>
                         <div className="card-actions">
-                            <Button variant="secondary" size="small">+ Ver más</Button>
+                            <Button 
+                                variant="secondary" 
+                                size="small" 
+                                onClick={() => handleVerMas(prestador.id)}
+                            >
+                                + Ver más
+                            </Button>
                             <Button variant="primary" size="small" icon={Edit} iconPosition="left">
                                 Editar
                             </Button>
