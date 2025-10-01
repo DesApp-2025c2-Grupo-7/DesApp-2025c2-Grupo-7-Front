@@ -7,6 +7,7 @@ import ListaAfiliados from "../components/afiliados/ListaAfiliados";
 import Paginacion from "../components/genericos/Paginacion";
 import AfiliadosHeader from "../components/afiliados/HeaderAfiliados";
 import "../components/genericos/PaginaEstilos.css";
+import { filtrarPorBusqueda } from "../utils/filtroBusqueda";
 import type { Afiliado } from "../types/afiliados";
 
 const AfiliadosPage: React.FC = () => {
@@ -44,9 +45,7 @@ const AfiliadosPage: React.FC = () => {
   };
 
   // Filtrado por búsqueda
-  const afiliadosFiltrados = afiliados.filter((a) =>
-    `${a.nombre} ${a.apellido}`.toLowerCase().includes(busqueda.toLowerCase())
-  );
+  const afiliadosFiltrados = filtrarPorBusqueda(afiliados, busqueda);
 
   return (
     <div className="admin-page">

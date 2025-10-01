@@ -7,6 +7,7 @@ import BarraBusqueda from "../components/genericos/BarraBusqueda";
 import ListaPrestadores from "../components/prestadores/ListaPrestadores";
 import Paginacion from "../components/genericos/Paginacion";
 import "../components/genericos/PaginaEstilos.css";
+import { filtrarPorBusqueda } from "../utils/filtroBusqueda";
 import type { Prestador } from "../types/prestadores";
 
 const PrestadoresPage: React.FC = () => {
@@ -49,9 +50,7 @@ const PrestadoresPage: React.FC = () => {
   };
 
   // Filtrado por búsqueda usando nombreCompleto
-  const prestadoresFiltrados = prestadores.filter((p) =>
-    p.nombreCompleto.toLowerCase().includes(busqueda.toLowerCase())
-  );
+  const prestadoresFiltrados = filtrarPorBusqueda(prestadores, busqueda);
 
   return (
     <div className="admin-page">

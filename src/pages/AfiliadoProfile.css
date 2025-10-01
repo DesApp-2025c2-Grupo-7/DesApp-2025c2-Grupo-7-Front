@@ -33,6 +33,7 @@
   min-height: 42px;
   display: flex;
   align-items: center;
+  margin-bottom: 1rem;
 }
 
 /* Fila especial para fecha de baja */
