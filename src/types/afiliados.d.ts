@@ -11,26 +11,35 @@ interface SituacionTerapeutica {
   fechaInicio: string | null;
   fechaFin: string | null;
 }
+
+interface GrupoFamiliar {
+  id: string;
+  planMedico: string;
+  fechaAltaPlan: string;
+  fechaBajaPlan: string | null;
+  titularId: number;
+}
 interface Afiliado {
   id: number;
   credencial: string;
+  grupoFamiliar: string;
   tipoDocumento: string;
   numeroDocumento: string;
   nombre: string;
   apellido: string;
-  fechaNacimiento: string;
+  fechaNacimiento: string;  
   telefono: string[];
   direccion: Direccion[];
   email: string[];
   parentesco: string;
+  titularId?: number;
   fechaAlta: string;
   fechaBaja: string | null;
   situacionesTerapeuticas?: SituacionTerapeutica[];
-  planMedico: string;
 }
 
 interface ListaAfiliadosProps {
     afiliados: Afiliado[];
 }
 
-export { Direccion, SituacionTerapeutica, Afiliado, ListaAfiliadosProps};
+export { Direccion, SituacionTerapeutica, GrupoFamiliar, Afiliado, ListaAfiliadosProps};

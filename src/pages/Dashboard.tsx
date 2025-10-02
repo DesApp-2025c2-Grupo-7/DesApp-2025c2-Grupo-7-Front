@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import "./PageEstilos.css";
+import "./PaginaEstilos.css";
 import Header from "../components/genericos/Header";
 import CardDashboard from "../components/genericos/CardDashboard";
 import { Users, UserCheck, Clock } from "lucide-react";

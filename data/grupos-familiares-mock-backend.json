@@ -1,0 +1,37 @@
+[
+  {
+    "id": "00000001",
+    "planMedico": "Plata",
+    "fechaAltaPlan": "1999-03-17",
+    "fechaBajaPlan": null,
+    "titularId": 1
+  },
+  {
+    "id": "00000002",
+    "planMedico": "Oro",
+    "fechaAltaPlan": "2001-06-15",
+    "fechaBajaPlan": null,
+    "titularId": 2
+  },
+  {
+    "id": "00000003",
+    "planMedico": "Plata",
+    "fechaAltaPlan": "1999-04-03",
+    "fechaBajaPlan": null,
+    "titularId": 3
+  },
+  {
+    "id": "00000004",
+    "planMedico": "Oro",
+    "fechaAltaPlan": "2012-04-03",
+    "fechaBajaPlan": null,
+    "titularId": 4
+  },
+  {
+    "id": "00000005",
+    "planMedico": "Bronce",
+    "fechaAltaPlan": "2012-04-03",
+    "fechaBajaPlan": null,
+    "titularId": 5
+  }
+]

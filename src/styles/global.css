@@ -1,7 +1,7 @@
 /* Reset global de colores para asegurar que no queden azules */
 :root {
-    --primary-color: #2e7d32;
-    --secondary-color: #81c784;
+    --primary-color: #4B81D8;
+    --secondary-color: #8196c7;
     --background-color: #f5f5f5;
     --text-color: #424242;
     --accent-color: #ff9d0a;
