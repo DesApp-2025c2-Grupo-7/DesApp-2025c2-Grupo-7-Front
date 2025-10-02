@@ -1,6 +1,6 @@
 // PrestadoresPage.tsx
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import Header from "../components/genericos/Header";
 import PrestadoresHeader from "../components/prestadores/HeaderPrestadores";
 import BarraBusqueda from "../components/genericos/BarraBusqueda";
@@ -16,27 +16,38 @@ const PrestadoresPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
-    const fetchPrestadores = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch("http://localhost:3000/prestadores");
-        if (!response.ok) {
-          throw new Error("Error al obtener los prestadores");
+    // Verificar si los datos fueron pasados desde el Dashboard
+    const prestadoresFromState = location.state?.prestadores;
+    
+    if (prestadoresFromState) {
+      // Si los datos vienen del Dashboard, usarlos como cache
+      setPrestadores(prestadoresFromState);
+      setLoading(false);
+    } else {
+      // Si no hay datos del Dashboard, consultar el backend
+      const fetchPrestadores = async () => {
+        try {
+          setLoading(true);
+          const response = await fetch("http://localhost:3000/prestadores");
+          if (!response.ok) {
+            throw new Error("Error al obtener los prestadores");
+          }
+          const data: Prestador[] = await response.json();
+          setPrestadores(data);
+        } catch (error) {
+          console.error(error);
+          setPrestadores([]);
+        } finally {
+          setLoading(false);
         }
-        const data: Prestador[] = await response.json();
-        setPrestadores(data);
-      } catch (error) {
-        console.error(error);
-        setPrestadores([]);
-      } finally {
-        setLoading(false);
-      }
-    };
+      };
 
-    fetchPrestadores();
-  }, []);
+      fetchPrestadores();
+    }
+  }, [location.state]);
 
   // Función que se pasa al botón "Volver al menú"
   const handleVolver = () => {

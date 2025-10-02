@@ -1,6 +1,6 @@
 // AfiliadosPage.tsx
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import Header from "../components/genericos/Header";
 import BarraBusqueda from "../components/genericos/BarraBusqueda";
 import ListaAfiliados from "../components/afiliados/ListaAfiliados";
@@ -16,28 +16,38 @@ const AfiliadosPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
-    const fetchAfiliados = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch("http://localhost:3000/afiliados");
-        // 👆 Cambiá esta URL por la de tu backend
-        if (!response.ok) {
-          throw new Error("Error al obtener la lista de afiliados");
+    // Verificar si los datos fueron pasados desde el Dashboard
+    const afiliadosFromState = location.state?.afiliados;
+    
+    if (afiliadosFromState) {
+      // Si los datos vienen del Dashboard, usarlos como cache
+      setAfiliados(afiliadosFromState);
+      setLoading(false);
+    } else {
+      // Si no hay datos del Dashboard, consultar el backend
+      const fetchAfiliados = async () => {
+        try {
+          setLoading(true);
+          const response = await fetch("http://localhost:3000/afiliados");
+          if (!response.ok) {
+            throw new Error("Error al obtener la lista de afiliados");
+          }
+          const data: Afiliado[] = await response.json();
+          setAfiliados(data);
+        } catch (error) {
+          console.error(error);
+          setAfiliados([]);
+        } finally {
+          setLoading(false);
         }
-        const data: Afiliado[] = await response.json();
-        setAfiliados(data);
-      } catch (error) {
-        console.error(error);
-        setAfiliados([]);
-      } finally {
-        setLoading(false);
-      }
-    };
+      };
 
-    fetchAfiliados();
-  }, []);
+      fetchAfiliados();
+    }
+  }, [location.state]);
 
   // Función que se pasa al botón "Volver al menú"
   const handleVolver = () => {

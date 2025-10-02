@@ -9,6 +9,7 @@ interface Direccion {
 interface HorarioAtencion {
   dia: string;
   desde: string;
+  hasta: string;
   duracionTurno: string;
 }
 interface Prestador {

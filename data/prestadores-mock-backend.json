@@ -17,6 +17,7 @@
                     {
                         "dia":"Viernes", 
                         "desde":"07:30", 
+                        "hasta":"17:00",
                         "duracionTurno":"15 minutos"}
                 ]
             },
@@ -29,6 +30,7 @@
                     {
                         "dia":"Lunes", 
                         "desde":"09:00", 
+                        "hasta":"18:00",
                         "duracionTurno":"20 minutos"}
                 ]
             }
@@ -52,6 +54,7 @@
                     {
                         "dia":"Martes", 
                         "desde":"08:00", 
+                        "hasta":"16:30",
                         "duracionTurno":"20 minutos"}
                 ]
             }

@@ -15,14 +15,27 @@
   flex-direction: column;
 }
 
-.form-row label {
+.form-row-double {
+  display: flex;
+  flex-direction: row;
+}
+
+.form-row-double-item-left{
+  margin-right: 2rem;
+  width: -webkit-fill-available;
+}
+.form-row-double-item-right{
+  width: -webkit-fill-available;
+}
+
+.form-row label,.form-row-double-item-left label, .form-row-double-item-right label {
   font-size: 0.85rem;
   color: #34495e;
   margin-bottom: 0.4rem;
   font-weight: 500;
 }
 
-.form-row span {
+.form-row span, .form-row-double-item-left span, .form-row-double-item-right span {
   background: #fff;
   border: 1px solid #ccd6e0;
   border-radius: 8px;
