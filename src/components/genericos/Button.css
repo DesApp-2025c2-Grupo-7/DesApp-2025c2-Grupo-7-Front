@@ -54,12 +54,13 @@
 
 .btn-secondary {
     background-color: #4B81D8;
-    color: #d3d3d3;
+    color: #ffffff;
     box-shadow: 0 2px 4px rgba(129, 199, 132, 0.2);
 }
 
 .btn-secondary:hover:not(.btn-disabled) {
     background-color: #29549b;
+    color: #d3d3d3;
     box-shadow: 0 4px 8px rgba(129, 199, 132, 0.3);
     transform: translateY(-1px);
 }

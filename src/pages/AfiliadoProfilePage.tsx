@@ -1,15 +1,14 @@
-// AfiliadoProfile.tsx
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Header from "../components/genericos/Header";
 import HeaderAfiliado from "../components/afiliados/HeaderAfiliados";
 import AfiliadosForm from "../components/afiliados/AfiliadosForm";
 import "./AfiliadoProfile.css"; 
-import type { Afiliado } from "../types/afiliados";
-
-// ---- Componente ----
+import type { Afiliado, GrupoFamiliar } from "../types/afiliados";
 const AfiliadoProfile: React.FC = () => {
   const [afiliado, setAfiliado] = useState<Afiliado | null>(null);
+  const [grupoFamiliar, setGrupoFamiliar] = useState<GrupoFamiliar | null>(null);
+  const [miembrosGrupo, setMiembrosGrupo] = useState<Afiliado[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
@@ -20,13 +19,29 @@ const AfiliadoProfile: React.FC = () => {
     const fetchAfiliado = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`http://localhost:3000/afiliados/${id}`); 
-        // 👆 Cambiá esta URL por la ruta de tu backend
+        const response = await fetch(`http://localhost:3000/afiliados/${id}`);
         if (!response.ok) {
           throw new Error("Error al obtener los datos del afiliado");
         }
         const data: Afiliado = await response.json();
         setAfiliado(data);
+
+        // Obtener información del grupo familiar
+        if (data.grupoFamiliar) {
+          // Obtener información del plan del grupo familiar
+          const grupoResponse = await fetch(`http://localhost:3000/grupos-familiares/${data.grupoFamiliar}`);
+          if (grupoResponse.ok) {
+            const grupoData: GrupoFamiliar = await grupoResponse.json();
+            setGrupoFamiliar(grupoData);
+          }
+
+          // Obtener todos los miembros del grupo familiar
+          const miembrosResponse = await fetch(`http://localhost:3000/afiliados?grupoFamiliar=${data.grupoFamiliar}`);
+          if (miembrosResponse.ok) {
+            const miembrosData: Afiliado[] = await miembrosResponse.json();
+            setMiembrosGrupo(miembrosData);
+          }
+        }
       } catch (error) {
         console.error(error);
         setAfiliado(null);
@@ -44,7 +59,7 @@ const AfiliadoProfile: React.FC = () => {
     if (afiliado) {
       const fechaBaja = new Date().toISOString().split("T")[0];
       try {
-        // Llamada al backend para dar de baja (PUT/PATCH/POST según tu API)
+
         await fetch(`http://localhost:3000/afiliados/${afiliado.id}/baja`, {
           method: "PATCH",
           headers: {
@@ -62,7 +77,7 @@ const AfiliadoProfile: React.FC = () => {
     }
   };
 
-  // --- Render skeleton mientras carga ---
+
   if (loading) {
     return (
       <div className="admin-page">
@@ -82,7 +97,7 @@ const AfiliadoProfile: React.FC = () => {
     );
   }
 
-  // --- Render normal cuando ya se cargaron los datos ---
+
   return (
     <div className="admin-page">
       <Header
@@ -92,7 +107,12 @@ const AfiliadoProfile: React.FC = () => {
       <div className="admin-content">
         <HeaderAfiliado onVolver={handleVolver} />
         {afiliado ? (
-          <AfiliadosForm afiliado={afiliado} onDarDeBaja={handleDarDeBaja} />
+          <AfiliadosForm 
+            afiliado={afiliado} 
+            grupoFamiliar={grupoFamiliar}
+            miembrosGrupo={miembrosGrupo}
+            onDarDeBaja={handleDarDeBaja} 
+          />
         ) : (
           <p>No se encontró el afiliado</p>
         )}
