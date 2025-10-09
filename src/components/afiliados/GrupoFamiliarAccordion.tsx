@@ -18,8 +18,19 @@ const GrupoFamiliarAccordion: React.FC<GrupoFamiliarAccordionProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
 
-  const handleVerMas = (afiliadoId: number) => {
-    navigate(`/afiliados/${afiliadoId}`);
+  const handleVerMas = (miembro: any) => {
+    // Si el miembro es el titular, navegar normalmente
+    if (miembro.parentesco === "Titular") {
+      navigate(`/afiliados/${miembro.id}`);
+    } else {
+      // Si es un integrante, navegar al titular con parámetro del integrante usando credencial-sufijo
+      const integranteKey = `${miembro.credencial}-${miembro.sufijo}`;
+      // Encontrar el titular en el grupo
+      const titular = miembrosGrupo.find(m => m.parentesco === "Titular");
+      if (titular) {
+        navigate(`/afiliados/${titular.id}?integrante=${integranteKey}`);
+      }
+    }
   };
 
   const isActiveAfiliado = (miembro: Afiliado) => {
@@ -36,6 +47,9 @@ const GrupoFamiliarAccordion: React.FC<GrupoFamiliarAccordionProps> = ({
     }
     return 'Inactivo';
   };
+
+
+  // Debug temporal
 
 
   return (
@@ -74,20 +88,23 @@ const GrupoFamiliarAccordion: React.FC<GrupoFamiliarAccordionProps> = ({
           <div className="miembros-grupo">
             <h5>Miembros del Grupo Familiar</h5>
             
-            {miembrosGrupo.map((miembro) => (
-              <div 
-                key={miembro.id} 
-                className={`miembro-card ${miembro.id === afiliadoActual.id ? 'miembro-actual' : ''}`}
-              >
-                <div className="miembro-header">
-                  <div className="miembro-info">
-                    <strong>{miembro.nombre} {miembro.apellido}</strong>
-                    <span className="parentesco">{miembro.parentesco}</span>
-                    {miembro.id === afiliadoActual.id && (
-                      <span className="badge-actual">Actual</span>
-                    )}
+            {miembrosGrupo.map((miembro, index) => {
+              const esAfililadoActual = miembro.credencial === afiliadoActual.credencial && miembro.sufijo === afiliadoActual.sufijo;
+              
+              return (
+                <div 
+                  key={`${miembro.credencial}-${miembro.sufijo}-${index}`} 
+                  className={`miembro-card ${esAfililadoActual ? 'miembro-actual' : ''}`}
+                >
+                  <div className="miembro-header">
+                    <div className="miembro-info">
+                      <strong>{miembro.nombre} {miembro.apellido}</strong>
+                      <span className="parentesco">{miembro.parentesco}</span>
+                      {esAfililadoActual && (
+                        <span className="badge-actual">ACTUAL</span>
+                      )}
                   </div>
-                  <span className="credencial">{miembro.credencial}</span>
+                  <span className="credencial">{miembro.credencial}-{miembro.sufijo}</span>
                 </div>
                 
                 <div className="miembro-detalles">
@@ -128,7 +145,7 @@ const GrupoFamiliarAccordion: React.FC<GrupoFamiliarAccordionProps> = ({
                         <span className="label">Situaciones Terapéuticas:</span>
                       </div>
                       {miembro.situacionesTerapeuticas.map((st, index) => (
-                        <div key={index} className="situacion-item">
+                        <div key={`${miembro.credencial}-${miembro.sufijo}-st-${index}`} className="situacion-item">
                           <div className="situacion-diagnostico">
                             <strong>{st.diagnostico}</strong>
                           </div>
@@ -151,11 +168,11 @@ const GrupoFamiliarAccordion: React.FC<GrupoFamiliarAccordionProps> = ({
                   )}
                 </div>
 
-                {miembro.id !== afiliadoActual.id && (
+                {!esAfililadoActual && (
                   <div className="miembro-actions">
                     <button 
                       className="btn-ver-mas"
-                      onClick={() => handleVerMas(miembro.id)}
+                      onClick={() => handleVerMas(miembro)}
                     >
                       <Eye size={16} />
                       Ver más
@@ -163,7 +180,8 @@ const GrupoFamiliarAccordion: React.FC<GrupoFamiliarAccordionProps> = ({
                   </div>
                 )}
               </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}

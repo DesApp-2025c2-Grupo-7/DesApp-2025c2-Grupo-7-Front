@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import Header from "../components/genericos/Header";
 import HeaderAfiliado from "../components/afiliados/HeaderAfiliados";
 import AfiliadosForm from "../components/afiliados/AfiliadosForm";
 import "./AfiliadoProfile.css"; 
 import type { Afiliado, GrupoFamiliar } from "../types/afiliados";
 const AfiliadoProfile: React.FC = () => {
-  const [afiliado, setAfiliado] = useState<Afiliado | null>(null);
+  const [afiliado, setAfiliado] = useState<Afiliado | null>(null); // Titular original (para referencia del grupo)
+  const [afiliadoMostrado, setAfiliadoMostrado] = useState<Afiliado | null>(null); // El afiliado que se muestra (puede ser titular o integrante)
   const [grupoFamiliar, setGrupoFamiliar] = useState<GrupoFamiliar | null>(null);
   const [miembrosGrupo, setMiembrosGrupo] = useState<Afiliado[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
+  const [searchParams] = useSearchParams();
 
   useEffect(() => {
     if (!id) return;
@@ -26,41 +28,72 @@ const AfiliadoProfile: React.FC = () => {
         const data: Afiliado = await response.json();
         setAfiliado(data);
 
-        // Obtener información del grupo familiar
-        if (data.grupoFamiliar) {
-          // Obtener información del plan del grupo familiar
-          const grupoResponse = await fetch(`http://localhost:3000/grupos-familiares/${data.grupoFamiliar}`);
-          if (grupoResponse.ok) {
-            const grupoData: GrupoFamiliar = await grupoResponse.json();
-            setGrupoFamiliar(grupoData);
+        // Crear el grupo familiar completo incluyendo al titular y sus integrantes
+        const grupoData: GrupoFamiliar = {
+          id: data.id,
+          plan: data.planMedico,
+          planMedico: data.planMedico,
+          fechaCreacion: data.fechaAlta,
+          fechaAltaPlan: data.fechaAlta,
+          activo: true
+        };
+        setGrupoFamiliar(grupoData);
+        
+        // Crear la lista completa del grupo familiar: titular + integrantes
+        const grupoCompleto: Afiliado[] = [
+          // Primero el titular (afiliado actual)
+          {
+            ...data,
+            grupoFamiliar: [] // Evitar recursión
           }
-
-          // Obtener todos los miembros del grupo familiar
-          const miembrosResponse = await fetch(`http://localhost:3000/afiliados?grupoFamiliar=${data.grupoFamiliar}`);
-          if (miembrosResponse.ok) {
-            const miembrosData: Afiliado[] = await miembrosResponse.json();
-            setMiembrosGrupo(miembrosData);
+        ];
+        
+        // Agregar los integrantes si existen
+        if (data.grupoFamiliar && data.grupoFamiliar.length > 0) {
+          const integrantes: Afiliado[] = data.grupoFamiliar.map(integrante => ({
+            ...integrante,
+            grupoFamiliar: []
+          }));
+          grupoCompleto.push(...integrantes);
+        }
+        
+        setMiembrosGrupo(grupoCompleto);
+        
+        // Determinar qué afiliado mostrar basado en el parámetro de URL
+        const integranteId = searchParams.get('integrante');
+        
+        if (integranteId) {
+          // Si hay parámetro integrante, buscar ese integrante en el grupo por credencial-sufijo
+          const integranteEncontrado = grupoCompleto.find(miembro => `${miembro.credencial}-${miembro.sufijo}` === integranteId);
+          if (integranteEncontrado) {
+            setAfiliadoMostrado(integranteEncontrado);
+          } else {
+            setAfiliadoMostrado(data); // Fallback al titular si no se encuentra el integrante
           }
+        } else {
+          // Si no hay parámetro, mostrar el titular
+          setAfiliadoMostrado(data);
         }
       } catch (error) {
         console.error(error);
         setAfiliado(null);
+        setAfiliadoMostrado(null);
       } finally {
         setLoading(false);
       }
     };
 
     fetchAfiliado();
-  }, [id]);
+  }, [id, searchParams.toString()]);
 
   const handleVolver = () => navigate("/afiliados");
 
   const handleDarDeBaja = async () => {
-    if (afiliado) {
+    if (afiliadoMostrado) {
       const fechaBaja = new Date().toISOString().split("T")[0];
       try {
 
-        await fetch(`http://localhost:3000/afiliados/${afiliado.id}/baja`, {
+        await fetch(`http://localhost:3000/afiliados/${afiliadoMostrado.id}/baja`, {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
@@ -68,7 +101,7 @@ const AfiliadoProfile: React.FC = () => {
           body: JSON.stringify({ fechaBaja }),
         });
 
-        setAfiliado({ ...afiliado, fechaBaja });
+        setAfiliadoMostrado({ ...afiliadoMostrado, fechaBaja });
         alert("El Afiliado será dado de baja en la fecha " + fechaBaja + " 🚫");
       } catch (error) {
         console.error("Error al dar de baja:", error);
@@ -106,9 +139,10 @@ const AfiliadoProfile: React.FC = () => {
       />
       <div className="admin-content">
         <HeaderAfiliado onVolver={handleVolver} />
-        {afiliado ? (
+        {afiliadoMostrado && afiliado ? (
           <AfiliadosForm 
-            afiliado={afiliado} 
+            afiliado={afiliadoMostrado} 
+            afiliadoTitular={afiliado}
             grupoFamiliar={grupoFamiliar}
             miembrosGrupo={miembrosGrupo}
             onDarDeBaja={handleDarDeBaja} 

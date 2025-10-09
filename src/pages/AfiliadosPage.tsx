@@ -8,11 +8,13 @@ import Paginacion from "../components/genericos/Paginacion";
 import AfiliadosHeader from "../components/afiliados/HeaderAfiliados";
 import "../components/genericos/PaginaEstilos.css";
 import { filtrarPorBusqueda } from "../utils/filtroBusqueda";
-import type { Afiliado } from "../types/afiliados";
+import { transformarAfiliadosParaLista } from "../utils/transformarAfiliados";
+import type { Afiliado, AfiliadoListItem } from "../types/afiliados";
 
 const AfiliadosPage: React.FC = () => {
   const [busqueda, setBusqueda] = useState("");
-  const [afiliados, setAfiliados] = useState<Afiliado[]>([]);
+  const [afiliados, setAfiliados] = useState<Afiliado[]>([]); // Mantiene datos originales para navegación
+  const [afiliadosLista, setAfiliadosLista] = useState<AfiliadoListItem[]>([]); // Datos transformados para la lista
   const [loading, setLoading] = useState(true);
 
   const navigate = useNavigate();
@@ -25,6 +27,8 @@ const AfiliadosPage: React.FC = () => {
     if (afiliadosFromState) {
       // Si los datos vienen del Dashboard, usarlos como cache
       setAfiliados(afiliadosFromState);
+      const listaTransformada = transformarAfiliadosParaLista(afiliadosFromState);
+      setAfiliadosLista(listaTransformada);
       setLoading(false);
     } else {
       // Si no hay datos del Dashboard, consultar el backend
@@ -37,9 +41,12 @@ const AfiliadosPage: React.FC = () => {
           }
           const data: Afiliado[] = await response.json();
           setAfiliados(data);
+          const listaTransformada = transformarAfiliadosParaLista(data);
+          setAfiliadosLista(listaTransformada);
         } catch (error) {
           console.error(error);
           setAfiliados([]);
+          setAfiliadosLista([]);
         } finally {
           setLoading(false);
         }
@@ -51,11 +58,11 @@ const AfiliadosPage: React.FC = () => {
 
   // Función que se pasa al botón "Volver al menú"
   const handleVolver = () => {
-    navigate("/"); // redirige al Dashboard
+    navigate("/", { state: { afiliados } }); // Pasa datos completos al Dashboard
   };
 
-  // Filtrado por búsqueda
-  const afiliadosFiltrados = filtrarPorBusqueda(afiliados, busqueda);
+  // Filtrado por búsqueda en la lista transformada
+  const afiliadosFiltrados = filtrarPorBusqueda(afiliadosLista, busqueda);
 
   return (
     <div className="admin-page">
