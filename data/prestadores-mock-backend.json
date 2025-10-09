@@ -1,0 +1,128 @@
+[
+    {
+        "id": 1,
+        "numeroCUIL": "27328227768",
+        "nombreCompleto": "Marcelo Valdez",
+        "especialidades": [
+            "Odontología"
+        ],
+        "tipoPrestacion": "Profesional Independiente",
+        "telefono": [
+            "1144445555",
+            "1144445556"
+        ],
+        "email": [
+            "mar.celo@gmail.com"
+        ],
+        "direccion": [
+            {
+                "calle": "Estanislao del Campo",
+                "numero": "478",
+                "localidad": "Morón",
+                "codigoPostal": "1706",
+                "horariosAtencion": [
+                    {
+                        "dia": "Viernes",
+                        "desde": "07:30",
+                        "hasta": "",
+                        "duracionTurno": "15 minutos"
+                    }
+                ]
+            },
+            {
+                "calle": "Libertad",
+                "numero": "610",
+                "localidad": "Moreno",
+                "codigoPostal": "1744",
+                "horariosAtencion": [
+                    {
+                        "dia": "Lunes",
+                        "desde": "09:00",
+                        "hasta": "",
+                        "duracionTurno": "20 minutos"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 2,
+        "numeroCUIL": "30987654629",
+        "nombreCompleto": "Centro Médico Sarasa",
+        "especialidades": [
+            "Cardiología",
+            "Nutrición"
+        ],
+        "tipoPrestacion": "Centro Médico",
+        "telefono": [
+            "1177777778",
+            "1177778889"
+        ],
+        "email": [
+            "centro.sarasa@gmail.com"
+        ],
+        "direccion": [
+            {
+                "calle": "Calle Falsa",
+                "numero": "123",
+                "localidad": "CABA",
+                "codigoPostal": "1222",
+                "horariosAtencion": [
+                    {
+                        "dia": "Martes",
+                        "desde": "08:00",
+                        "hasta": "",
+                        "duracionTurno": "20 minutos"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 3,
+        "numeroCUIL": "30112233445",
+        "nombreCompleto": "Centro Médico Ceres",
+        "especialidades": [
+            "Kinesiología",
+            "Fisiatría",
+            "Terapia Ocupacional",
+            "Traumatología"
+        ],
+        "tipoPrestacion": "Centro Médico",
+        "telefono": [
+            "1188371628",
+            "1273617399"
+        ],
+        "email": [
+            "centro.ceres@gmail.com"
+        ],
+        "direccion": [
+            {
+                "calle": "Av. Roca",
+                "numero": "2303",
+                "localidad": "Hurlingham",
+                "codigoPostal": "1686",
+                "horariosAtencion": [
+                    {
+                        "dia": "Lunes",
+                        "desde": "15:00",
+                        "hasta": "",
+                        "duracionTurno": "15 minutos"
+                    },
+                    {
+                        "dia": "Miércoles",
+                        "desde": "10:00",
+                        "hasta": "",
+                        "duracionTurno": "60 minutos"
+                    },
+                    {
+                        "dia": "Viernes",
+                        "desde": "12:00",
+                        "hasta": "",
+                        "duracionTurno": "10 minutos"
+                    }
+                ]
+            }
+        ]
+    }
+]

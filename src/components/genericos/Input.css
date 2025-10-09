@@ -1,0 +1,173 @@
+/* Input Component Styles */
+.input-wrapper {
+    position: relative;
+    display: grid;
+    align-items: center;
+    width: 100%;
+    max-width: 100%;
+}
+
+/* Base input field styles */
+.input-field {
+    width: 100%;
+    border: 2px solid #4B81D8;
+    border-radius: 8px;
+    background-color: #f5f5f5;
+    color: #424242;
+    font-family: inherit;
+    font-size: 16px;
+    transition: all 0.2s ease-in-out;
+    outline: none;
+    box-sizing: border-box;
+}
+
+.input-field::placeholder {
+    color: #888;
+    opacity: 1;
+}
+
+/* Focus states */
+.input-field:focus {
+    border-color: #4B81D8;
+    background-color: #ffffff;
+    box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.1);
+}
+
+/* Disabled state */
+.input-disabled .input-field {
+    background-color: #e0e0e0;
+    border-color: #bdbdbd;
+    color: #888;
+    cursor: not-allowed;
+}
+
+.input-disabled .input-icon {
+    color: #888;
+}
+
+/* Size variations */
+.input-small .input-field {
+    min-height: 36px;
+    padding: 8px 12px;
+    font-size: 14px;
+}
+
+.input-medium .input-field {
+    min-height: 44px;
+    padding: 12px 16px;
+    font-size: 16px;
+}
+
+.input-large .input-field {
+    min-height: 52px;
+    padding: 16px 20px;
+    font-size: 18px;
+}
+
+/* Variant styles */
+.input-search .input-field {
+    border-radius: 25px;
+    background-color: #ffffff;
+    border-color: #e0e0e0;
+}
+
+.input-search .input-field:focus {
+    border-color: #4B81D8;
+    box-shadow: 0 2px 8px rgba(46, 125, 50, 0.15);
+}
+
+/* Icon styles */
+.input-icon {
+    left:12px;
+    position: absolute;
+    color: #4B81D8;
+    pointer-events: none;
+    z-index: 1;
+    transition: color 0.2s ease-in-out;
+}
+
+/* Padding adjustments for inputs with icons */
+.input-with-icon.input-icon-left .input-field {
+    padding-left: 44px;
+}
+
+.input-with-icon.input-icon-right .input-field {
+    padding-right: 44px;
+}
+
+.input-small.input-with-icon.input-icon-left .input-field {
+    padding-left: 36px;
+}
+
+.input-small.input-with-icon.input-icon-right .input-field {
+    padding-right: 36px;
+}
+
+.input-small .input-icon-left {
+    left: 10px;
+}
+
+.input-small .input-icon-right {
+    right: 10px;
+}
+
+.input-large.input-with-icon.input-icon-left .input-field {
+    padding-left: 52px;
+}
+
+.input-large.input-with-icon.input-icon-right .input-field {
+    padding-right: 52px;
+}
+
+.input-large .input-icon-left {
+    left: 16px;
+}
+
+.input-large .input-icon-right {
+    right: 16px;
+}
+
+/* Hover effects */
+.input-field:hover:not(:disabled) {
+    border-color: #4B81D8;
+    background-color: #ffffff;
+}
+
+.input-wrapper:hover .input-icon {
+    color: #264a83;
+}
+
+/* Focus effects for icons */
+.input-field:focus + .input-icon,
+.input-wrapper:focus-within .input-icon {
+    color: #264f91;
+}
+
+/* Validation states (optional - for future use) */
+.input-error .input-field {
+    border-color: #f44336;
+}
+
+.input-error .input-field:focus {
+    border-color: #f44336;
+    box-shadow: 0 0 0 3px rgba(244, 67, 54, 0.1);
+}
+
+.input-success .input-field {
+    border-color: #234781;
+}
+
+.input-success .input-field:focus {
+    border-color: #1d4481;
+    box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.15);
+}
+
+/* Read-only state */
+.input-field:read-only {
+    background-color: #f5f5f5;
+    cursor: default;
+}
+
+.input-field:read-only:focus {
+    box-shadow: none;
+}

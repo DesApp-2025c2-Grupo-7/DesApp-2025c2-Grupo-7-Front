@@ -1,0 +1,299 @@
+.grupo-familiar-accordion {
+  margin-top: 20px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.accordion-header {
+  padding: 16px 20px;
+  background: #f5f5f5;
+  border-radius: 8px 8px 0 0;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: background-color 0.2s ease;
+}
+
+.accordion-header:hover {
+  background: #e9f0fa;
+}
+
+.accordion-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #4B81D8;
+}
+
+.accordion-title h4 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.accordion-toggle {
+  color: #4B81D8;
+  transition: transform 0.2s ease;
+}
+
+.accordion-content {
+  padding: 20px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.plan-familiar-info {
+  margin-bottom: 24px;
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border-left: 4px solid #4B81D8;
+}
+
+.plan-familiar-info h5 {
+  margin: 0 0 12px 0;
+  color: #4B81D8;
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.miembros-grupo h5 {
+  margin: 0 0 16px 0;
+  color: #424242;
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.miembro-card {
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  margin-bottom: 12px;
+  background: #fafafa;
+  transition: all 0.2s ease;
+}
+
+.miembro-card:hover {
+  border-color: #8196c7;
+  box-shadow: 0 2px 8px rgba(75, 129, 216, 0.1);
+}
+
+.miembro-card.miembro-actual {
+  border-color: #4B81D8;
+  background: #e9f0fa;
+  box-shadow: 0 2px 8px rgba(75, 129, 216, 0.15);
+}
+
+.miembro-header {
+  padding: 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #fff;
+  border-radius: 6px 6px 0 0;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.miembro-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.miembro-info strong {
+  color: #424242;
+  font-size: 15px;
+}
+
+.parentesco {
+  background: #8196c7;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.badge-actual {
+  background: #4B81D8;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.credencial {
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  color: #666;
+  background: #f0f0f0;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.miembro-detalles {
+  padding: 12px 16px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  align-items: start;
+}
+
+@media (max-width: 768px) {
+  .miembro-detalles {
+    grid-template-columns: 1fr;
+  }
+}
+
+.detalle-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+}
+
+.detalle-row .label {
+  color: #666;
+  font-weight: 500;
+}
+
+.estado.activo {
+  color: #4B81D8;
+  font-weight: 600;
+}
+
+.estado.inactivo {
+  color: #d32f2f;
+  font-weight: 600;
+}
+
+.fecha-baja {
+  color: #d32f2f;
+  font-weight: 500;
+}
+
+.situaciones-terapeuticas {
+  grid-column: 1 / -1;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.situaciones-header {
+  margin-bottom: 8px;
+}
+
+.situaciones-header .label {
+  color: #4B81D8;
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.situacion-item {
+  background: #f8f9fa;
+  border-radius: 4px;
+  padding: 8px 10px;
+  margin-bottom: 6px;
+  border-left: 3px solid #ff9d0a;
+}
+
+.situacion-diagnostico {
+  margin-bottom: 4px;
+}
+
+.situacion-diagnostico strong {
+  color: #424242;
+  font-size: 13px;
+}
+
+.situacion-fechas {
+  display: flex;
+  gap: 12px;
+  font-size: 11px;
+  color: #666;
+}
+
+.fecha-inicio,
+.fecha-fin {
+  font-weight: 500;
+}
+
+.activa {
+  background: #4B81D8;
+  color: white;
+  padding: 1px 6px;
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+/* Estilos heredados del form */
+.form-row-double {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.form-row-double-item-left,
+.form-row-double-item-right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.form-row-double-item-left label,
+.form-row-double-item-right label {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 4px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+.form-row-double-item-left span,
+.form-row-double-item-right span {
+  color: #424242;
+  font-weight: 500;
+}
+
+/* Estilos para el botón Ver más */
+.miembro-actions {
+  padding: 8px 16px 12px 16px;
+  border-top: 1px solid #e9e9e9;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn-ver-mas {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: #4B81D8;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-ver-mas:hover {
+  background: #3a6bc7;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(75, 129, 216, 0.3);
+}
+
+.btn-ver-mas:active {
+  transform: translateY(0);
+}
