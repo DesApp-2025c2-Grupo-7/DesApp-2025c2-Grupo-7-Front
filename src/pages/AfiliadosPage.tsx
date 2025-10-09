@@ -54,6 +54,11 @@ const AfiliadosPage: React.FC = () => {
     navigate("/"); // redirige al Dashboard
   };
 
+  // Función para dar de alta afiliado
+  const handleAlta = () => {
+    navigate("/afiliados/alta"); // redirige a la página de alta
+  };
+
   // Filtrado por búsqueda
   const afiliadosFiltrados = filtrarPorBusqueda(afiliados, busqueda);
 
@@ -65,7 +70,7 @@ const AfiliadosPage: React.FC = () => {
       />
 
       <div className="admin-content">
-        <AfiliadosHeader onVolver={handleVolver} />
+        <AfiliadosHeader onVolver={handleVolver} onAlta={handleAlta} />
 
         {/* Barra de búsqueda */}
         <BarraBusqueda busqueda={busqueda} setBusqueda={setBusqueda} />
