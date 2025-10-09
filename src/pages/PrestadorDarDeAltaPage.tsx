@@ -10,7 +10,7 @@ export function PrestadorDarDeAlta() {
     <div className="admin-page">
       <Header
         title="Panel de Administración"
-        subtitle="Prestador - Información y estado"
+        subtitle="Prestador - Dar de alta"
       />
       <div className="admin-content">
         <HeaderPrestador onVolver={handleVolver} />
@@ -19,3 +19,7 @@ export function PrestadorDarDeAlta() {
     </div>
   );
 }
+
+/* EXTRA:
+
+1. Modificar el headerPrestador para que sólo quede el "Volver" */
