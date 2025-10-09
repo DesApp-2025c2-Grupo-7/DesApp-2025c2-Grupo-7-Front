@@ -56,8 +56,7 @@ const PrestadoresPage: React.FC = () => {
 
   // Función para dar de alta prestador
   const handleAlta = () => {
-    console.log("Dar de alta prestador");
-    // Aquí podés abrir un modal o redirigir a un formulario
+    navigate("/prestadores/alta"); // redirige a la página de alta
   };
 
   // Filtrado por búsqueda usando nombreCompleto
