@@ -1,57 +1,77 @@
 // AfiliadosPage.tsx
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import Header from "../components/genericos/Header";
 import BarraBusqueda from "../components/genericos/BarraBusqueda";
 import ListaAfiliados from "../components/afiliados/ListaAfiliados";
 import Paginacion from "../components/genericos/Paginacion";
 import AfiliadosHeader from "../components/afiliados/HeaderAfiliados";
 import "../components/genericos/PaginaEstilos.css";
-import type { Afiliado } from "../types/afiliados";
+import { filtrarPorBusqueda } from "../utils/filtroBusqueda";
+import { transformarAfiliadosParaLista } from "../utils/transformarAfiliados";
+import type { Afiliado, AfiliadoListItem } from "../types/afiliados";
 
 const AfiliadosPage: React.FC = () => {
   const [busqueda, setBusqueda] = useState("");
   const [afiliados, setAfiliados] = useState<Afiliado[]>([]);
+  const [afiliadosLista, setAfiliadosLista] = useState<AfiliadoListItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // 👇 Nuevo estado para paginación
+  // 👇 Estado para paginación
   const [currentPage, setCurrentPage] = useState(1);
-  const afiliadosPerPage = 3;
+  const afiliadosPerPage = 5; // cantidad por página
 
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
-    const fetchAfiliados = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch("http://localhost:3000/afiliados");
-        if (!response.ok) throw new Error("Error al obtener la lista de afiliados");
-        const data: Afiliado[] = await response.json();
-        setAfiliados(data);
-      } catch (error) {
-        console.error(error);
-        setAfiliados([]);
-      } finally {
-        setLoading(false);
-      }
-    };
+    const afiliadosFromState = location.state?.afiliados;
 
-    fetchAfiliados();
-  }, []);
+    if (afiliadosFromState) {
+      setAfiliados(afiliadosFromState);
+      const listaTransformada = transformarAfiliadosParaLista(afiliadosFromState);
+      setAfiliadosLista(listaTransformada);
+      setLoading(false);
+    } else {
+      const fetchAfiliados = async () => {
+        try {
+          setLoading(true);
+          const response = await fetch("http://localhost:3000/personas");
+          if (!response.ok) throw new Error("Error al obtener la lista de afiliados");
+          const data: Afiliado[] = await response.json();
+          setAfiliados(data);
+          const listaTransformada = transformarAfiliadosParaLista(data);
+          setAfiliadosLista(listaTransformada);
+        } catch (error) {
+          console.error(error);
+          setAfiliados([]);
+          setAfiliadosLista([]);
+        } finally {
+          setLoading(false);
+        }
+      };
 
-  const handleVolver = () => navigate("/");
+      fetchAfiliados();
+    }
+  }, [location.state]);
 
-  // Filtrar por búsqueda
-  const afiliadosFiltrados = afiliados.filter((a) =>
-    `${a.nombre} ${a.apellido}`.toLowerCase().includes(busqueda.toLowerCase())
-  );
+  const handleVolver = () => {
+    navigate("/", { state: { afiliados } });
+  };
+
+  const handleAlta = () => {
+    navigate("/afiliados/alta");
+  };
+
+  // Filtrado por búsqueda
+  const afiliadosFiltrados = filtrarPorBusqueda(afiliadosLista, busqueda);
 
   // 👇 Lógica de paginación
   const totalPages = Math.ceil(afiliadosFiltrados.length / afiliadosPerPage);
   const startIndex = (currentPage - 1) * afiliadosPerPage;
   const afiliadosVisibles = afiliadosFiltrados.slice(startIndex, startIndex + afiliadosPerPage);
 
-  // Si cambian los resultados de búsqueda, volver a la página 1
+  // 👇 Reiniciar a página 1 si cambia la búsqueda
   useEffect(() => {
     setCurrentPage(1);
   }, [busqueda]);
@@ -64,7 +84,8 @@ const AfiliadosPage: React.FC = () => {
       />
 
       <div className="admin-content">
-        <AfiliadosHeader onVolver={handleVolver} />
+        <AfiliadosHeader onVolver={handleVolver} onAlta={handleAlta} />
+
         <BarraBusqueda busqueda={busqueda} setBusqueda={setBusqueda} />
 
         {loading ? (
