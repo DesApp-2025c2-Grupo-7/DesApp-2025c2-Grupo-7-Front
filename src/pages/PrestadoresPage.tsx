@@ -15,19 +15,20 @@ const PrestadoresPage: React.FC = () => {
   const [prestadores, setPrestadores] = useState<Prestador[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // 👇 Nuevo estado para paginación
+  const [currentPage, setCurrentPage] = useState(1);
+  const prestadoresPerPage = 5; // cantidad de elementos por página
+
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
-    // Verificar si los datos fueron pasados desde el Dashboard
     const prestadoresFromState = location.state?.prestadores;
-    
+
     if (prestadoresFromState) {
-      // Si los datos vienen del Dashboard, usarlos como cache
       setPrestadores(prestadoresFromState);
       setLoading(false);
     } else {
-      // Si no hay datos del Dashboard, consultar el backend
       const fetchPrestadores = async () => {
         try {
           setLoading(true);
@@ -49,18 +50,24 @@ const PrestadoresPage: React.FC = () => {
     }
   }, [location.state]);
 
-  // Función que se pasa al botón "Volver al menú"
-  const handleVolver = () => {
-    navigate("/"); // redirige al Dashboard
-  };
+  // Función para volver al Dashboard
+  const handleVolver = () => navigate("/");
 
   // Función para dar de alta prestador
-  const handleAlta = () => {
-    navigate("/prestadores/alta"); // redirige a la página de alta
-  };
+  const handleAlta = () => navigate("/prestadores/alta");
 
-  // Filtrado por búsqueda usando nombreCompleto
+  // Filtrado por búsqueda
   const prestadoresFiltrados = filtrarPorBusqueda(prestadores, busqueda);
+
+  // 👇 Lógica de paginación
+  const totalPages = Math.ceil(prestadoresFiltrados.length / prestadoresPerPage);
+  const startIndex = (currentPage - 1) * prestadoresPerPage;
+  const prestadoresVisibles = prestadoresFiltrados.slice(startIndex, startIndex + prestadoresPerPage);
+
+  // 👇 Reiniciar a la página 1 si cambia la búsqueda
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [busqueda]);
 
   return (
     <div className="admin-page">
@@ -70,23 +77,24 @@ const PrestadoresPage: React.FC = () => {
       />
 
       <div className="admin-content">
-        {/* Header de sección con botones */}
         <PrestadoresHeader onVolver={handleVolver} onAlta={handleAlta} />
 
-        {/* Barra de búsqueda */}
         <BarraBusqueda busqueda={busqueda} setBusqueda={setBusqueda} />
 
-        {/* Lista de prestadores */}
         {loading ? (
           <p>Cargando prestadores...</p>
-        ) : prestadoresFiltrados.length > 0 ? (
-          <ListaPrestadores prestadores={prestadoresFiltrados} />
+        ) : prestadoresVisibles.length > 0 ? (
+          <>
+            <ListaPrestadores prestadores={prestadoresVisibles} />
+            <Paginacion
+              totalPages={totalPages}
+              currentPage={currentPage}
+              onPageChange={setCurrentPage}
+            />
+          </>
         ) : (
           <p>No se encontraron prestadores</p>
         )}
-
-        {/* Paginación (por ahora estática, se puede conectar al backend después) */}
-        <Paginacion totalPages={5} />
       </div>
     </div>
   );

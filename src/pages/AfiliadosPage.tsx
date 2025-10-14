@@ -13,32 +13,31 @@ import type { Afiliado, AfiliadoListItem } from "../types/afiliados";
 
 const AfiliadosPage: React.FC = () => {
   const [busqueda, setBusqueda] = useState("");
-  const [afiliados, setAfiliados] = useState<Afiliado[]>([]); // Mantiene datos originales para navegación
-  const [afiliadosLista, setAfiliadosLista] = useState<AfiliadoListItem[]>([]); // Datos transformados para la lista
+  const [afiliados, setAfiliados] = useState<Afiliado[]>([]);
+  const [afiliadosLista, setAfiliadosLista] = useState<AfiliadoListItem[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // 👇 Estado para paginación
+  const [currentPage, setCurrentPage] = useState(1);
+  const afiliadosPerPage = 3; // cantidad por página
 
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
-    // Verificar si los datos fueron pasados desde el Dashboard
     const afiliadosFromState = location.state?.afiliados;
-    
+
     if (afiliadosFromState) {
-      // Si los datos vienen del Dashboard, usarlos como cache
       setAfiliados(afiliadosFromState);
       const listaTransformada = transformarAfiliadosParaLista(afiliadosFromState);
       setAfiliadosLista(listaTransformada);
       setLoading(false);
     } else {
-      // Si no hay datos del Dashboard, consultar el backend
       const fetchAfiliados = async () => {
         try {
           setLoading(true);
-          const response = await fetch("http://localhost:3000/afiliados");
-          if (!response.ok) {
-            throw new Error("Error al obtener la lista de afiliados");
-          }
+          const response = await fetch("http://localhost:3000/personas");
+          if (!response.ok) throw new Error("Error al obtener la lista de afiliados");
           const data: Afiliado[] = await response.json();
           setAfiliados(data);
           const listaTransformada = transformarAfiliadosParaLista(data);
@@ -56,18 +55,26 @@ const AfiliadosPage: React.FC = () => {
     }
   }, [location.state]);
 
-  // Función que se pasa al botón "Volver al menú"
   const handleVolver = () => {
-    navigate("/", { state: { afiliados } }); // Pasa datos completos al Dashboard
+    navigate("/", { state: { afiliados } });
   };
 
-  // Función para dar de alta afiliado
   const handleAlta = () => {
-    navigate("/afiliados/alta"); // redirige a la página de alta
+    navigate("/afiliados/alta");
   };
 
   // Filtrado por búsqueda
   const afiliadosFiltrados = filtrarPorBusqueda(afiliadosLista, busqueda);
+
+  // 👇 Lógica de paginación
+  const totalPages = Math.ceil(afiliadosFiltrados.length / afiliadosPerPage);
+  const startIndex = (currentPage - 1) * afiliadosPerPage;
+  const afiliadosVisibles = afiliadosFiltrados.slice(startIndex, startIndex + afiliadosPerPage);
+
+  // 👇 Reiniciar a página 1 si cambia la búsqueda
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [busqueda]);
 
   return (
     <div className="admin-page">
@@ -79,20 +86,22 @@ const AfiliadosPage: React.FC = () => {
       <div className="admin-content">
         <AfiliadosHeader onVolver={handleVolver} onAlta={handleAlta} />
 
-        {/* Barra de búsqueda */}
         <BarraBusqueda busqueda={busqueda} setBusqueda={setBusqueda} />
 
-        {/* Lista de afiliados */}
         {loading ? (
           <p>Cargando afiliados...</p>
-        ) : afiliadosFiltrados.length > 0 ? (
-          <ListaAfiliados afiliados={afiliadosFiltrados} />
+        ) : afiliadosVisibles.length > 0 ? (
+          <>
+            <ListaAfiliados afiliados={afiliadosVisibles} />
+            <Paginacion
+              totalPages={totalPages}
+              currentPage={currentPage}
+              onPageChange={setCurrentPage}
+            />
+          </>
         ) : (
           <p>No se encontraron afiliados</p>
         )}
-
-        {/* Paginación (esto lo podemos conectar al backend más adelante) */}
-        <Paginacion totalPages={9} />
       </div>
     </div>
   );
