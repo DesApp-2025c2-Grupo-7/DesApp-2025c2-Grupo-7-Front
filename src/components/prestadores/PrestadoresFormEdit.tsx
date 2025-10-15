@@ -17,7 +17,7 @@ const PrestadoresFormEdit: React.FC = ({}) => {
   const actualizarTelefono = (index: number, valor: string) => {
     const nuevosTelefonos = [...telefonos];
     nuevosTelefonos[index] = valor;
-    setEmails(nuevosTelefonos);
+    setEmails(nuevosTelefonos); /* Modificar a setTelefonos */
   };
 
   /* Para agregar otros inputs de emails */
@@ -138,7 +138,7 @@ const PrestadoresFormEdit: React.FC = ({}) => {
             onChange={(valor) => actualizarEmail(0, valor)}
           />
           <button type="button" onClick={agregarEmail}>
-            + Agregar email
+            + Agregar email {/* Modificar texto */}
           </button>
           {emails.slice(1).map((email, index) => (
             <Input
