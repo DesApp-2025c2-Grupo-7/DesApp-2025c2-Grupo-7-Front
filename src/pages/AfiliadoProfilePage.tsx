@@ -4,7 +4,7 @@ import Header from "../components/genericos/Header";
 import HeaderAfiliado from "../components/afiliados/HeaderAfiliados";
 import AfiliadosForm from "../components/afiliados/AfiliadosForm";
 import "./AfiliadoProfile.css"; 
-import type { Afiliado, GrupoFamiliar } from "../types/afiliados";
+import type {Persona,Integrante, Afiliado,GrupoFamiliar } from "../types/afiliados";
 import { useModal } from "../hooks/useModal";
 import Modal from "../components/genericos/Modal";
 import { getApiUrl } from "../config/env";

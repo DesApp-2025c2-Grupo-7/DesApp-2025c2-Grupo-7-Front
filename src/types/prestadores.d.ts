@@ -1,30 +1,32 @@
-interface Direccion {
-  calle: string;
-  numero: string;
-  localidad: string;
-  codigoPostal: string | null;
-  horariosAtencion: HorarioAtencion[];
+export interface HorarioAtencion {
+    id: number;
+    dia: string;
+    desde: string;
+    hasta: string;
+    duracionTurno: string;
 }
 
-interface HorarioAtencion {
-  dia: string;
-  desde: string;
-  hasta: string;
-  duracionTurno: string;
-}
-interface Prestador {
-  id: number;
-  numeroCUIL: string;
-  nombreCompleto: string;
-  especialidades: string[];
-  tipoPrestacion: string;
-  telefono: string[];
-  email: string[];
-  direccion: Direccion[]
+export interface Direccion {
+    id: number;
+    calle: string;
+    numero: string;
+    localidad: string;
+    codigoPostal: string;
+    horariosAtencion: HorarioAtencion[];
 }
 
-interface ListaPrestadoresProps {
-    prestadores: Prestador[];
+export interface Prestador {
+    id: number;
+    numeroCUIL: string;
+    nombreCompleto: string;
+    especialidades: Especialidad[];
+    esProfesionalIndependiente: boolean;
+    telefono: string[];
+    email: string[];
+    direccion: Direccion[];
 }
 
-export { Direccion, HorarioAtencion, Prestador, ListaPrestadoresProps };
+export interface Especialidad {
+    id: number;
+    nombre: string;
+}

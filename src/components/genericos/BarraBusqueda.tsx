@@ -28,9 +28,11 @@ const BarraBusqueda: React.FC<BarraBusquedaProps> = ({ busqueda, setBusqueda }) 
                     variant="search"
                     icon={Search}
                 />
+               
             </div>
         </div>
     );
 };
 
 export default BarraBusqueda;
+
