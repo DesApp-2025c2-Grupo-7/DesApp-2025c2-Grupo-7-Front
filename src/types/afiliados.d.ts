@@ -12,6 +12,28 @@ interface SituacionTerapeutica {
   fechaFin: string | null;
 }
 
+interface Persona {
+  id: number;
+  credencial: string;
+  sufijo: string;
+  tipoPersona: 'AFILIADO' | 'INTEGRANTE';
+  tipoDocumento: string;
+  numeroDocumento: string;
+  nombre: string;
+  apellido: string;
+  fechaNacimiento: string;
+  telefono: string[];
+  email: string[];
+  parentesco?: string;
+  direccion: Direccion[];
+  situacionesTerapeuticas?: SituacionTerapeutica[];
+  grupoFamiliar: GrupoFamiliar;
+  grupoFamiliarId: string;
+  planMedico: string;
+  fechaAlta: string;
+  fechaBaja: string | null;
+}
+
 interface Integrante {
   id: number;
   credencial: string;
@@ -75,16 +97,21 @@ interface AfiliadoListItem {
 }
 
 interface GrupoFamiliar {
-  id: number;
-  plan: string;
+  id?: number;
+  credencial?: string;
+  plan?: string;
   planMedico: string;
-  fechaCreacion: string;
-  fechaAltaPlan: string;
-  activo: boolean;
+  estado?: string;
+  fechaCreacion?: string;
+  fechaAlta?: string;
+  fechaAltaPlan?: string;
+  fechaBaja?: string | null;
+  activo?: boolean;
+  personas?: Persona[];
 }
 
 interface ListaAfiliadosProps {
     afiliados: AfiliadoListItem[];
 }
 
-export { Direccion, SituacionTerapeutica, Integrante, Afiliado, AfiliadoListItem, ListaAfiliadosProps, GrupoFamiliar};
+export { Direccion, SituacionTerapeutica, Persona, Integrante, Afiliado, AfiliadoListItem, ListaAfiliadosProps, GrupoFamiliar};

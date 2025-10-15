@@ -10,6 +10,7 @@ import "../components/genericos/PaginaEstilos.css";
 import { filtrarPorBusqueda } from "../utils/filtroBusqueda";
 import { transformarAfiliadosParaLista } from "../utils/transformarAfiliados";
 import type { Afiliado, AfiliadoListItem } from "../types/afiliados";
+import { getApiUrl } from "../config/env";
 
 const AfiliadosPage: React.FC = () => {
   const [busqueda, setBusqueda] = useState("");
@@ -35,16 +36,45 @@ const AfiliadosPage: React.FC = () => {
       const fetchAfiliados = async () => {
         try {
           setLoading(true);
-          const response = await fetch("http://localhost:3000/afiliados");
+          // Obtener solo los titulares (AFILIADO) desde el backend
+          const response = await fetch(getApiUrl("/personas"));
           if (!response.ok) {
             throw new Error("Error al obtener la lista de afiliados");
           }
-          const data: Afiliado[] = await response.json();
-          setAfiliados(data);
-          const listaTransformada = transformarAfiliadosParaLista(data);
+          const titulares: Afiliado[] = await response.json();
+          
+          // Para cada titular, obtener su grupo familiar completo
+          const afiliadosCompletos = await Promise.all(
+            titulares.map(async (titular) => {
+              try {
+                const grupoResponse = await fetch(getApiUrl(`/personas/grupo/${titular.credencial}`));
+                if (grupoResponse.ok) {
+                  const grupoCompleto = await grupoResponse.json();
+                  return {
+                    ...titular,
+                    grupoFamiliar: grupoCompleto.grupoFamiliar || []
+                  };
+                }
+                return {
+                  ...titular,
+                  grupoFamiliar: []
+                };
+              } catch (error) {
+                console.warn(`Error obteniendo grupo de ${titular.credencial}:`, error);
+                return {
+                  ...titular,
+                  grupoFamiliar: []
+                };
+              }
+            })
+          );
+          
+          setAfiliados(afiliadosCompletos);
+          // Transformar para mostrar TODOS los afiliados e integrantes en la lista
+          const listaTransformada = transformarAfiliadosParaLista(afiliadosCompletos);
           setAfiliadosLista(listaTransformada);
         } catch (error) {
-          console.error(error);
+          console.error("Error al cargar afiliados:", error);
           setAfiliados([]);
           setAfiliadosLista([]);
         } finally {

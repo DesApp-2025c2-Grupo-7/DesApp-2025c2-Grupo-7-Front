@@ -35,7 +35,10 @@
   font-weight: 500;
 }
 
-.form-row span, .form-row-double-item-left span, .form-row-double-item-right span {
+/* Estilos para spans de datos, excluyendo spans dentro de botones o contenedores de botones */
+.form-row span:not(.btn):not([class*="btn"]):not(.contactos-editables span):not(.btn span):not(button span), 
+.form-row-double-item-left span:not(.btn):not([class*="btn"]):not(.contactos-editables span):not(.btn span):not(button span), 
+.form-row-double-item-right span:not(.btn):not([class*="btn"]):not(.contactos-editables span):not(.btn span):not(button span) {
   background: #fff;
   border: 1px solid #ccd6e0;
   border-radius: 8px;
@@ -47,6 +50,19 @@
   display: flex;
   align-items: center;
   margin-bottom: 1rem;
+}
+
+/* Excluir específicamente spans que están dentro de .contactos-editables */
+.form-row .contactos-editables span,
+.form-row-double-item-left .contactos-editables span,
+.form-row-double-item-right .contactos-editables span {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  min-height: auto !important;
+  display: inline !important;
+  color: #fff;
 }
 
 /* Fila especial para fecha de baja */

@@ -28,20 +28,6 @@ const BarraBusqueda: React.FC<BarraBusquedaProps> = ({ busqueda, setBusqueda }) 
                     variant="search"
                     icon={Search}
                 />
-                <Button variant="primary">Buscar</Button>
-
-                <Select 
-                    options={[
-                        { value: "opcion1", label: "Opción 1" }
-                    ]}
-                    placeholder="Selecciona una opción"
-                />
-                <Select 
-                    options={[
-                        { value: "opcion2", label: "Opción 2" }
-                    ]}
-                    placeholder="Selecciona una opción"
-                />
             </div>
         </div>
     );

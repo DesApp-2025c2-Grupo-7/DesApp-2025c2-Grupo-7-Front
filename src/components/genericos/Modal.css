@@ -1,0 +1,194 @@
+/* Base del modal universal */
+.modal-universal {
+    background: white;
+    border-radius: 12px;
+    max-width: 600px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    position: relative;
+    animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* Headers según tipo */
+.header-success {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+}
+
+.header-error {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: white;
+}
+
+.header-warning {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: white;
+}
+
+.header-info {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: white;
+}
+
+.header-confirmation {
+    background: linear-gradient(135deg, #6366f1, #4f46e5);
+    color: white;
+}
+
+.header-danger {
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
+    color: white;
+}
+
+.modal-universal .modal-header {
+    padding: 20px 24px;
+    border-radius: 12px 12px 0 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.modal-universal .modal-icon {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-universal .modal-titulo {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0;
+    line-height: 1.2;
+}
+
+.modal-universal .modal-body {
+    padding: 24px;
+}
+
+.modal-universal .modal-mensaje {
+    font-size: 16px;
+    color: #374151;
+    margin: 0 0 16px 0;
+    line-height: 1.5;
+}
+
+.modal-universal .modal-submensaje {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 16px;
+}
+
+.modal-universal .modal-submensaje p {
+    margin: 0;
+    font-size: 14px;
+    color: #6b7280;
+    line-height: 1.4;
+}
+
+/* Lista de errores para validaciones */
+.modal-errores {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+}
+
+.modal-errores ul {
+    margin: 0;
+    padding-left: 20px;
+    list-style-type: disc;
+}
+
+.modal-errores li {
+    color: #dc2626;
+    font-size: 14px;
+    line-height: 1.4;
+    margin-bottom: 4px;
+}
+
+.modal-errores li:last-child {
+    margin-bottom: 0;
+}
+
+/* Contenido extra */
+.modal-contenido-extra {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #e5e7eb;
+}
+
+.modal-universal .modal-footer {
+    padding: 16px 24px 24px;
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+/* Variantes específicas del modal */
+.modal-success .modal-mensaje {
+    color: #065f46;
+}
+
+.modal-error .modal-mensaje {
+    color: #7f1d1d;
+}
+
+.modal-warning .modal-mensaje {
+    color: #92400e;
+}
+
+.modal-info .modal-mensaje {
+    color: #1e3a8a;
+}
+
+.modal-confirmation .modal-mensaje {
+    color: #312e81;
+}
+
+.modal-danger .modal-mensaje {
+    color: #7f1d1d;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+    .modal-universal {
+        width: 95%;
+        margin: 20px;
+    }
+    
+    .modal-universal .modal-header {
+        padding: 16px 20px;
+    }
+    
+    .modal-universal .modal-body {
+        padding: 20px;
+    }
+    
+    .modal-universal .modal-footer {
+        padding: 12px 20px 20px;
+        flex-direction: column-reverse;
+    }
+    
+    .modal-universal .modal-footer .btn {
+        width: 100%;
+    }
+}

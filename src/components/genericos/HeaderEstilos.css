@@ -21,6 +21,31 @@
     font-weight: 600;
 }
 
+/* Contenedor para título con estado */
+.titulo-con-estado {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+/* Badge para modo edición */
+.badge-modo-edicion {
+    background: linear-gradient(135deg, #ff9800, #f57c00);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    box-shadow: 0 2px 8px rgba(255, 152, 0, 0.3);
+    animation: pulse-edit 2s infinite;
+}
+
+@keyframes pulse-edit {
+    0% { box-shadow: 0 2px 8px rgba(255, 152, 0, 0.3); }
+    50% { box-shadow: 0 4px 15px rgba(255, 152, 0, 0.5); }
+    100% { box-shadow: 0 2px 8px rgba(255, 152, 0, 0.3); }
+}
+
 /* Subtítulo del header */
 .seccion-header .subtitle {
     margin: 5px 0 0 0;

@@ -18,6 +18,16 @@ const ListaAfiliados: React.FC<ListaAfiliadosProps> = ({ afiliados }) => {
         }
     };
 
+    const handleEditar = (afiliado: any) => {
+        // Si es un integrante, navegar al perfil del titular pero marcando el integrante actual y modo edición
+        if (!afiliado.esTitular && afiliado.titularId) {
+            const integranteKey = `${afiliado.credencial}-${afiliado.sufijo}`;
+            navigate(`/afiliados/${afiliado.titularId}?integrante=${integranteKey}&modo=editar`);
+        } else {
+            navigate(`/afiliados/${afiliado.id}?modo=editar`);
+        }
+    };
+
     const getEstadoText = (afiliado: any) => {
         if (!afiliado.fechaBaja) return 'Activo';
         const today = new Date().toISOString().split('T')[0];
@@ -41,7 +51,12 @@ const ListaAfiliados: React.FC<ListaAfiliadosProps> = ({ afiliados }) => {
                     <li key={`${afiliado.esTitular ? 'titular' : 'integrante'}-${afiliado.id}`}>
                         <div className="item-info">
                             <span className="nombre">{afiliado.nombre} {afiliado.apellido}</span>
-                            <span className="detalle">#{afiliado.credencial}-{afiliado.sufijo} | DNI: {afiliado.numeroDocumento} | Plan: {afiliado.planMedico}</span>
+                            <span className="detalle">
+                                #{afiliado.credencial}-{afiliado.sufijo} | DNI: {afiliado.numeroDocumento} | Plan: {afiliado.planMedico}
+                                {!isActiveAfiliado(afiliado) && afiliado.fechaBaja && (
+                                    <> | <span className="fecha-baja">Fecha baja: {afiliado.fechaBaja}</span></>
+                                )}
+                            </span>
                             <span className={`estado ${isActiveAfiliado(afiliado) ? 'activo' : 'inactivo'}`}>
                                 {getEstadoText(afiliado)}
                             </span>
@@ -59,6 +74,7 @@ const ListaAfiliados: React.FC<ListaAfiliadosProps> = ({ afiliados }) => {
                                 size="small"
                                 icon={Edit}
                                 iconPosition="left"
+                                onClick={() => handleEditar(afiliado)}
                             >
                                 Editar
                             </Button>
