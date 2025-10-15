@@ -1,22 +1,12 @@
-import React from "react";
-import Button from "../genericos/Button";
-import type { Direccion } from "../../types/prestadores";
-
-interface CardDireccionesYHorariosFormProps {
-  direcciones?: Direccion[];
-}
-
-const CardDireccionesYHorariosForm: React.FC<
-  CardDireccionesYHorariosFormProps
-> = ({ direcciones = [] }) => {
-  return (
-    <div className="schedules">import React, { useState } from "react";
+import React, { useState } from "react";
 import Button from "../genericos/Button";
 import ModalDireccion from "./ModalDireccion";
 import type { Direccion, HorarioAtencion } from "../../types/prestadores";
 
-// Función para convertir "HH:MM" a minutos
-const horaAMinutos = (hora: string) => {
+
+// Función segura para convertir "HH:MM" a minutos
+const horaAMinutos = (hora?: string) => {
+  if (!hora) return 0;
   const [h, m] = hora.split(":").map(Number);
   return h * 60 + m;
 };
@@ -28,7 +18,6 @@ const calcularTurnos = (horario: HorarioAtencion) => {
   const inicio = horaAMinutos(horario.desde);
   const fin = horaAMinutos(horario.hasta);
 
-  // Extraemos solo los números de duracionTurno
   let duracion = 0;
   if (horario.duracionTurno.includes(":")) {
     duracion = horaAMinutos(horario.duracionTurno);
@@ -53,20 +42,15 @@ const CardDireccionesYHorariosForm: React.FC<CardDireccionesYHorariosFormProps> 
   const [listaDirecciones, setListaDirecciones] = useState<Direccion[]>(direcciones);
   const [direccionSeleccionada, setDireccionSeleccionada] = useState<Direccion | null>(null);
 
-  const handleVerMas = (direccion: Direccion) => {
-    setDireccionSeleccionada(direccion);
-  };
-
+  const handleVerMas = (direccion: Direccion) => setDireccionSeleccionada(direccion);
   const handleCloseModal = () => setDireccionSeleccionada(null);
 
   const handleSaveDireccion = (dirActualizada: Direccion) => {
     setListaDirecciones(prev => {
       const existe = prev.find(d => d.id === dirActualizada.id);
       if (existe) {
-        // Reemplaza la dirección existente
         return prev.map(d => (d.id === dirActualizada.id ? dirActualizada : d));
       } else {
-        // Agrega nueva dirección
         return [...prev, dirActualizada];
       }
     });
@@ -112,50 +96,37 @@ const CardDireccionesYHorariosForm: React.FC<CardDireccionesYHorariosFormProps> 
   return (
     <div className="schedules">
       <h4>Direcciones y Horarios de atención</h4>
-      <br />
-      <div>
+      <div className="schedules-container">
         {listaDirecciones.map((dir, i) => (
-        <div className="schedule-card" key={i}>
-          <div className="schedule-header">
-            <h4>
-              Dirección: {dir.calle} {dir.numero}, {dir.localidad} ({dir.codigoPostal || "—"})
-            </h4>
+          <div className="schedule-card" key={i}>
+            <div className="schedule-header">
+              <h4>
+                Dirección: {dir.calle} {dir.numero}, {dir.localidad} ({dir.codigoPostal || "—"})
+              </h4>
+            </div>
+            <div className="schedule-list">
+              {dir.horariosAtencion?.map((hor, j) => (
+                <div className="schedule-item" key={j}>
+                  <strong>{hor.dia}</strong> - {hor.desde} a {hor.hasta}
+                  <span className="schedule-badge">
+                    Duración: {hor.duracionTurno} | Turnos: {calcularTurnos(hor)}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <div className="schedule-actions">
+              <Button variant="primary" size="small" onClick={() => handleVerMas(dir)}>
+                Editar
+              </Button>
+              <Button variant="danger" size="small" onClick={() => handleEliminarDireccion(dir)}>
+                Eliminar
+              </Button>
+            </div>
           </div>
-
-          <div className="schedule-list">
-            {dir.horariosAtencion?.map((hor, j) => (
-              <div className="schedule-item" key={j}>
-                <strong>{hor.dia}</strong> - {hor.desde} a {hor.hasta}
-                <span className="schedule-badge">
-                  Duración: {hor.duracionTurno} | Turnos: {calcularTurnos(hor)}
-                </span>
-              </div>
-            ))}
-          </div>
-
-          <div
-            className="schedule-actions"
-            style={{
-              position: "sticky",
-              bottom: 0,
-              background: "#fff",
-              padding: "0.5rem 0",
-              display: "flex",
-              gap: "0.5rem",
-            }}
-          >
-            <Button variant="primary" size="small" onClick={() => handleVerMas(dir)}>
-              Editar
-            </Button>
-            <Button variant="danger" size="small" onClick={() => handleEliminarDireccion(dir)}>
-              Eliminar
-            </Button>
-          </div>
-        </div>
-      ))}
+        ))}
       </div>
 
-      <div className="flex-row" style={{ marginTop: "1rem" }}>
+      <div className="fixed-add-button">
         <Button className="add-schedule" onClick={handleAgregarNuevaDireccion}>
           + Agregar nueva dirección
         </Button>
@@ -170,47 +141,6 @@ const CardDireccionesYHorariosForm: React.FC<CardDireccionesYHorariosFormProps> 
           onSave={handleSaveDireccion}
         />
       )}
-    </div>
-  );
-};
-
-export default CardDireccionesYHorariosForm;
-
-      <h4>Direcciones y Horarios de atención</h4>
-      {direcciones.map((dir, i) => (
-        <div className="schedule-card" key={i}>
-          <div className="schedule-header">
-            <h4>
-              Dirección: {dir.calle} {dir.numero}, {dir.localidad} (
-              {dir.codigoPostal || "—"})
-            </h4>
-          </div>
-          <div className="schedule-list">
-            {dir.horariosAtencion?.map((hor, j) => (
-              <div className="schedule-item" key={j}>
-                <strong>{hor.dia}</strong> - {hor.desde} a {hor.hasta}
-                <span className="schedule-badge">
-                  Turnos: {hor.duracionTurno}
-                </span>
-              </div>
-            ))}
-          </div>
-          <div className="schedule-actions">
-            <Button variant="primary" size="small">
-              Ver más
-            </Button>{" "}
-            <Button variant="secondary" size="small">
-              Editar
-            </Button>
-          </div>
-        </div>
-      ))}
-      <div className="flex-row">
-        <Button className="add-schedule">+ Agregar nueva dirección</Button>
-        <Button className="add-schedule">
-          + Agregar nuevo horario de atención
-        </Button>
-      </div>
     </div>
   );
 };

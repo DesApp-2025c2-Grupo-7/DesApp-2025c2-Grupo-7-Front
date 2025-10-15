@@ -72,6 +72,8 @@ const PrestadoresForm: React.FC<PrestadoresFormProps> = ({ prestador }) => {
         direcciones={prestador.direccion}
         prestadorId={prestador.id} // ✅ pasamos el ID real
       />
+      
+      
     </div>
   );
 };
