@@ -6,15 +6,17 @@ import { ArrowLeft, UserPlus } from "lucide-react";
 interface AfiliadosHeaderProps {
     onVolver?: () => void;
     onAlta?: () => void;
-    mostrarBotonIntegrante?: boolean;
     modoEdicion?: boolean;
+    esTitular?: boolean;
+    contexto?: 'lista' | 'titular' | 'integrante';
 }
 
 const AfiliadosHeader: React.FC<AfiliadosHeaderProps> = ({
     onVolver,
     onAlta,
-    mostrarBotonIntegrante = false,
     modoEdicion = false,
+    esTitular = true,
+    contexto = 'lista',
 }) => {
     return (
         <div className="seccion-header">
@@ -30,7 +32,16 @@ const AfiliadosHeader: React.FC<AfiliadosHeaderProps> = ({
                 <Button variant="back"  icon={ArrowLeft} onClick={onVolver}>
                     Volver
                 </Button>
-                {mostrarBotonIntegrante && (
+                
+                {/* Lista de afiliados: mostrar "Dar de alta afiliado" */}
+                {contexto === 'lista' && (
+                    <Button variant="primary" icon={UserPlus} onClick={onAlta}>
+                        Dar de alta Afiliado
+                    </Button>
+                )}
+                
+                {/* Info de titular: mostrar "Agregar integrante" si no está en modo edición */}
+                {contexto === 'titular' && !modoEdicion && (
                     <Button 
                         variant="secondary" 
                         icon={UserPlus} 
@@ -42,11 +53,8 @@ const AfiliadosHeader: React.FC<AfiliadosHeaderProps> = ({
                         Agregar Integrante
                     </Button>
                 )}
-                {!mostrarBotonIntegrante && (
-                    <Button variant="primary" icon={UserPlus} onClick={onAlta}>
-                        Dar de alta Afiliado
-                    </Button>
-                )}
+                
+                {/* Info de integrante: no mostrar ningún botón adicional */}
             </div>
         </div>
     );

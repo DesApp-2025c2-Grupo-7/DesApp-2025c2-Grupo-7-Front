@@ -503,7 +503,7 @@
     font-family: 'Courier New', monospace;
     font-size: 14px;
     font-weight: 600;
-    color: #4B81D8;
+    color: #424242;
     display: flex;
     align-items: center;
     min-height: 44px; /* Misma altura que los otros inputs */

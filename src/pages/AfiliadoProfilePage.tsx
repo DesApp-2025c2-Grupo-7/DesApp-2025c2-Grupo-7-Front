@@ -356,9 +356,10 @@ const AfiliadoProfile: React.FC = () => {
       <div className="admin-content">
         <HeaderAfiliado 
           onVolver={handleVolver} 
-          mostrarBotonIntegrante={
-            (((afiliadoMostrado as any)?.tipoPersona === "AFILIADO") || (afiliadoMostrado?.parentesco === "Titular")) 
-            && !modoEdicion
+          contexto={
+            ((afiliadoMostrado as any)?.tipoPersona === "AFILIADO") || (afiliadoMostrado?.parentesco === "Titular")
+              ? 'titular' 
+              : 'integrante'
           }
           modoEdicion={modoEdicion}
         />

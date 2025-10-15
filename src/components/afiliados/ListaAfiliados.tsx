@@ -69,15 +69,17 @@ const ListaAfiliados: React.FC<ListaAfiliadosProps> = ({ afiliados, totalAfiliad
                             >
                                 + Ver más
                             </Button>
-                            <Button
-                                variant="secondary"
-                                size="small"
-                                icon={Edit}
-                                iconPosition="left"
-                                onClick={() => handleEditar(afiliado)}
-                            >
-                                Editar
-                            </Button>
+                            {isActiveAfiliado(afiliado) && (
+                                <Button
+                                    variant="secondary"
+                                    size="small"
+                                    icon={Edit}
+                                    iconPosition="left"
+                                    onClick={() => handleEditar(afiliado)}
+                                >
+                                    Editar
+                                </Button>
+                            )}
                         </div>
                     </li>
                 ))}

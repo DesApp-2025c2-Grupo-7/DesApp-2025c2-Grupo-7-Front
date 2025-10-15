@@ -109,7 +109,7 @@ const GrupoFamiliarAccordion: React.FC<GrupoFamiliarAccordionProps> = ({
           <div className="miembros-grupo">
             <div className="miembros-header">
               <h5>Miembros del Grupo Familiar</h5>
-              {esTitular(afiliadoActual) && onAgregarIntegrante && (
+              {onAgregarIntegrante && (
                 <button 
                   className="btn-agregar-integrante"
                   onClick={onAgregarIntegrante}
@@ -179,7 +179,7 @@ const GrupoFamiliarAccordion: React.FC<GrupoFamiliarAccordionProps> = ({
                       <div className="situaciones-header">
                         <span className="label">Situaciones Terapéuticas:</span>
                       </div>
-                      {miembro.situacionesTerapeuticas.map((st, index) => (
+                      {miembro.situacionesTerapeuticas.map((st: any, index: number) => (
                         <div key={`${miembro.credencial}-${miembro.sufijo}-st-${index}`} className="situacion-item">
                           <div className="situacion-diagnostico">
                             <strong>{st.diagnostico}</strong>
