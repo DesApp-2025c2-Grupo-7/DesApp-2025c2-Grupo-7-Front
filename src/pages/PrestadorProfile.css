@@ -37,6 +37,7 @@
 .form-row span, .form-row-double-item-left span, .form-row-double-item-right span {
   background: #fff;
   border: 1px solid #ccd6e0;
+  background-color: #f4f4f4;
   border-radius: 8px;
   padding: 0.7rem 1rem;
   font-size: 0.95rem;

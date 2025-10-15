@@ -14,30 +14,46 @@ export interface SituacionTerapeutica {
     fechaFin: string | null;
 }
 
-export interface Persona {
-    id: number;
-    credencial: string;
-    tipoDocumento: string;
-    numeroDocumento: string;
-    nombre: string;
-    apellido: string;
-    fechaNacimiento: string;
-    telefono: string[];
-    direccion: Direccion[];
-    email: string[];
-    fechaAlta: string;
-    fechaBaja: string | null;
-    situacionesTerapeuticas?: SituacionTerapeutica[];
-    planMedico: string;
+interface Persona {
+  id: number;
+  credencial: string;
+  sufijo: string;
+  tipoPersona: 'AFILIADO' | 'INTEGRANTE';
+  tipoDocumento: string;
+  numeroDocumento: string;
+  nombre: string;
+  apellido: string;
+  fechaNacimiento: string;
+  telefono: string[];
+  email: string[];
+  parentesco?: string;
+  direccion: Direccion[];
+  situacionesTerapeuticas?: SituacionTerapeutica[];
+  grupoFamiliar: GrupoFamiliar;
+  grupoFamiliarId: string;
+  planMedico: string;
+  fechaAlta: string;
+  fechaBaja: string | null;
 }
-export interface Afiliado extends Persona {
-    sufijo: string;
-    parentesco: string;
-    grupoFamiliar: Integrante[];    
-    
-}export interface Integrante extends Persona {
-    sufijo: string;
-    parentesco: string;
+
+interface Integrante {
+  id: number;
+  credencial: string;
+  sufijo: string;
+  tipoDocumento: string;
+  numeroDocumento: string;
+  nombre: string;
+  apellido: string;
+  fechaNacimiento: string;
+  telefono: string[];
+  email: string[];
+  direccion: Direccion[];
+  parentesco: string;
+  situacionesTerapeuticas: SituacionTerapeutica[];
+  planMedico: string;
+  fechaAlta: string;
+  fechaBaja: string | null;
+  afiliadoId: number;
 }
 
 
@@ -64,17 +80,23 @@ export interface AfiliadoListItem {
   titularId?: number; // Solo para integrantes
 }
 
-export interface GrupoFamiliar {
-    id: number;
-    credencial: string;
-    planMedico: string;
-    estado: string;
-    fechaAlta: string;
-    fechaBaja: string | null;
-    personas: Integrante[];
+interface GrupoFamiliar {
+  id?: number;
+  credencial?: string;
+  plan?: string;
+  planMedico: string;
+  estado?: string;
+  fechaCreacion?: string;
+  fechaAlta?: string;
+  fechaAltaPlan?: string;
+  fechaBaja?: string | null;
+  activo?: boolean;
+  personas?: Persona[];
 }
 
 export interface ListaAfiliadosProps {
     afiliados: AfiliadoListItem[];
+    totalAfiliados?: number; // Total de afiliados filtrados (independiente de la paginación)
 }
 
+export { Direccion, SituacionTerapeutica, Persona, Integrante, Afiliado, AfiliadoListItem, ListaAfiliadosProps, GrupoFamiliar};

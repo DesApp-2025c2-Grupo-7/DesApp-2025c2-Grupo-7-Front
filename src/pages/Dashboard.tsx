@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import PageHeader from "../components/genericos/PageHeader";
 import type { Afiliado } from "../types/afiliados";
 import type { Prestador } from "../types/prestadores";
+import { getApiUrl } from "../config/env";
 
 
 const Dashboard: React.FC = () => {
@@ -16,6 +17,27 @@ const Dashboard: React.FC = () => {
 
   const navigate = useNavigate();
 
+  // Función para calcular el total de personas (titulares + integrantes) evitando duplicados
+  const calcularTotalPersonas = () => {
+    const personasUnicas = new Set<string>();
+    
+    afiliados.forEach(afiliado => {
+      // Agregar el titular
+      const titularKey = `${afiliado.credencial}-${afiliado.sufijo}`;
+      personasUnicas.add(titularKey);
+      
+      // Agregar los integrantes del grupo familiar
+      if (afiliado.grupoFamiliar && afiliado.grupoFamiliar.length > 0) {
+        afiliado.grupoFamiliar.forEach((integrante: { credencial: any; sufijo: any; }) => {
+          const integranteKey = `${integrante.credencial}-${integrante.sufijo}`;
+          personasUnicas.add(integranteKey);
+        });
+      }
+    });
+    
+    return personasUnicas.size;
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -23,8 +45,8 @@ const Dashboard: React.FC = () => {
         
         // Consultar afiliados y prestadores en paralelo
         const [afiliadosResponse, prestadoresResponse] = await Promise.all([
-          fetch("http://localhost:3000/personas"),
-          fetch("http://localhost:3000/prestadores")
+          fetch(getApiUrl("/personas")),
+          fetch(getApiUrl("/prestadores"))
         ]);
 
         if (!afiliadosResponse.ok) {
@@ -37,7 +59,33 @@ const Dashboard: React.FC = () => {
         const afiliadosData: Afiliado[] = await afiliadosResponse.json();
         const prestadoresData: Prestador[] = await prestadoresResponse.json();
 
-        setAfiliados(afiliadosData);
+        // Para cada titular, obtener su grupo familiar completo
+        const afiliadosCompletos = await Promise.all(
+          afiliadosData.map(async (titular) => {
+            try {
+              const grupoResponse = await fetch(getApiUrl(`/personas/grupo/${titular.credencial}`));
+              if (grupoResponse.ok) {
+                const grupoCompleto = await grupoResponse.json();
+                return {
+                  ...titular,
+                  grupoFamiliar: grupoCompleto.grupoFamiliar || []
+                };
+              }
+              return {
+                ...titular,
+                grupoFamiliar: []
+              };
+            } catch (error) {
+              console.warn(`Error obteniendo grupo de ${titular.credencial}:`, error);
+              return {
+                ...titular,
+                grupoFamiliar: []
+              };
+            }
+          })
+        );
+
+        setAfiliados(afiliadosCompletos);
         setPrestadores(prestadoresData);
       } catch (error) {
         console.error("Error al cargar datos:", error);
@@ -68,7 +116,7 @@ const Dashboard: React.FC = () => {
           <CardDashboard
             title="Afiliados Activos"
             buttonText="+ Ver Afiliados"
-            number={loading ? 0 : afiliados.length}
+            number={loading ? 0 : calcularTotalPersonas()}
             onButtonClick={() => navigate("/afiliados", { state: { afiliados } })}
             icon={Users}
           />

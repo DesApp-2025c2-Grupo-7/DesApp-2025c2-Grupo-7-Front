@@ -1,8 +1,10 @@
 import { useState } from "react";
 import Input from "../genericos/Input";
 import Select from "../genericos/Select";
+import CardDireccionesAfiliados from "./CardDireccionesAfiliados";
 import "./ListaAfiliados.css";
 import Button from "../genericos/Button";
+import type { Direccion } from "../../types/afiliados";
 import MultipleInput from "../genericos/MultipleInput";
 import DireccionInput from "../genericos/DireccionInput";
 import SituacionesTerapeuticasInput from "./SituacionesTerapeuticasInput";
@@ -238,6 +240,17 @@ export default function AfiliadosFormEdit() {
       {/* Fecha de nacimiento */}
       <div className="form-row">
         <label>Fecha de nacimiento</label>
+        <Input type="date" className="input-valor" />
+      </div>
+      {/* Direcciones dinámicas */}
+      <CardDireccionesAfiliados
+        direcciones={[]}
+        personaId={0}
+        modoEdicion={false}
+
+        onDireccionesChange={(direcciones) => console.log('Direcciones:', direcciones)}
+      />
+      {/*Teléfono*/}
         <Input
           type="date"
           className="input-valor"

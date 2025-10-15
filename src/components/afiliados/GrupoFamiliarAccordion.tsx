@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronDown, ChevronUp, Users, Eye } from "lucide-react";
+import { ChevronDown, ChevronUp, Users, Eye, UserPlus } from "lucide-react";
 import type { Afiliado, GrupoFamiliar } from "../../types/afiliados";
 import "./GrupoFamiliarAccordion.css";
 
@@ -8,25 +8,37 @@ interface GrupoFamiliarAccordionProps {
   afiliadoActual: Afiliado;
   grupoFamiliar: GrupoFamiliar;
   miembrosGrupo: Afiliado[];
+  onAgregarIntegrante?: () => void;
 }
 
 const GrupoFamiliarAccordion: React.FC<GrupoFamiliarAccordionProps> = ({
   afiliadoActual,
   grupoFamiliar,
-  miembrosGrupo
+  miembrosGrupo,
+  onAgregarIntegrante
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
 
+  // Función helper para determinar si es titular
+  const esTitular = (persona: any) => {
+    return (persona.tipoPersona === "AFILIADO") || (persona.parentesco === "Titular");
+  };
+
+  // Función helper para obtener el texto del parentesco
+  const obtenerParentesco = (persona: any) => {
+    return esTitular(persona) ? "Titular" : (persona.parentesco || "Integrante");
+  };
+
   const handleVerMas = (miembro: any) => {
     // Si el miembro es el titular, navegar normalmente
-    if (miembro.parentesco === "Titular") {
+    if (esTitular(miembro)) {
       navigate(`/afiliados/${miembro.id}`);
     } else {
       // Si es un integrante, navegar al titular con parámetro del integrante usando credencial-sufijo
       const integranteKey = `${miembro.credencial}-${miembro.sufijo}`;
       // Encontrar el titular en el grupo
-      const titular = miembrosGrupo.find(m => m.parentesco === "Titular");
+      const titular = miembrosGrupo.find(m => esTitular(m));
       if (titular) {
         navigate(`/afiliados/${titular.id}?integrante=${integranteKey}`);
       }
@@ -79,14 +91,35 @@ const GrupoFamiliarAccordion: React.FC<GrupoFamiliarAccordionProps> = ({
               </div>
               <div className="form-row-double-item-right">
                 <label>Fecha Alta Plan</label>
-                <span>{grupoFamiliar.fechaAltaPlan}</span>
+                <span>{grupoFamiliar.fechaAlta}</span>
               </div>
             </div>
+            
+            {grupoFamiliar.estado && (
+              <div className="form-row">
+                <label>Estado del Grupo</label>
+                <span className={`estado-grupo ${grupoFamiliar.estado.toLowerCase()}`}>
+                  {grupoFamiliar.estado}
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Lista de Miembros del Grupo */}
           <div className="miembros-grupo">
-            <h5>Miembros del Grupo Familiar</h5>
+            <div className="miembros-header">
+              <h5>Miembros del Grupo Familiar</h5>
+              {onAgregarIntegrante && (
+                <button 
+                  className="btn-agregar-integrante"
+                  onClick={onAgregarIntegrante}
+                  title="Agregar nuevo integrante al grupo familiar"
+                >
+                  <UserPlus size={16} />
+                  Agregar Integrante
+                </button>
+              )}
+            </div>
             
             {miembrosGrupo.map((miembro, index) => {
               const esAfililadoActual = miembro.credencial === afiliadoActual.credencial && miembro.sufijo === afiliadoActual.sufijo;
@@ -99,7 +132,9 @@ const GrupoFamiliarAccordion: React.FC<GrupoFamiliarAccordionProps> = ({
                   <div className="miembro-header">
                     <div className="miembro-info">
                       <strong>{miembro.nombre} {miembro.apellido}</strong>
-                      <span className="parentesco">{miembro.parentesco}</span>
+                      <span className="parentesco">
+                        {obtenerParentesco(miembro)}
+                      </span>
                       {esAfililadoActual && (
                         <span className="badge-actual">ACTUAL</span>
                       )}
@@ -144,7 +179,7 @@ const GrupoFamiliarAccordion: React.FC<GrupoFamiliarAccordionProps> = ({
                       <div className="situaciones-header">
                         <span className="label">Situaciones Terapéuticas:</span>
                       </div>
-                      {miembro.situacionesTerapeuticas.map((st, index) => (
+                      {miembro.situacionesTerapeuticas.map((st: any, index: number) => (
                         <div key={`${miembro.credencial}-${miembro.sufijo}-st-${index}`} className="situacion-item">
                           <div className="situacion-diagnostico">
                             <strong>{st.diagnostico}</strong>
