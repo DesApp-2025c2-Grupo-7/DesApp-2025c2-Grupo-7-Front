@@ -23,7 +23,7 @@ const Dashboard: React.FC = () => {
         
         // Consultar afiliados y prestadores en paralelo
         const [afiliadosResponse, prestadoresResponse] = await Promise.all([
-          fetch("http://localhost:3000/afiliados"),
+          fetch("http://localhost:3000/personas"),
           fetch("http://localhost:3000/prestadores")
         ]);
 

@@ -1,59 +1,49 @@
-interface Direccion {
-  calle: string;
-  numero: string;
-  depto?: string | null;
-  localidad: string;
-  codigoPostal: string | null;
+export interface Direccion {
+    id: number;
+    calle: string;
+    numero: string;
+    depto?: string | null;
+    localidad: string;
+    codigoPostal: string | null;
 }
 
-interface SituacionTerapeutica {
-  diagnostico: string | null;
-  fechaInicio: string | null;
-  fechaFin: string | null;
+export interface SituacionTerapeutica {
+    id: number;
+    diagnostico: string | null;
+    fechaInicio: string | null;
+    fechaFin: string | null;
 }
 
-interface Integrante {
-  id: number;
-  credencial: string;
-  sufijo: string;
-  tipoDocumento: string;
-  numeroDocumento: string;
-  nombre: string;
-  apellido: string;
-  fechaNacimiento: string;
-  telefono: string[];
-  email: string[];
-  direccion: Direccion[];
-  parentesco: string;
-  situacionesTerapeuticas: SituacionTerapeutica[];
-  planMedico: string;
-  fechaAlta: string;
-  fechaBaja: string | null;
-  afiliadoId: number;
+export interface Persona {
+    id: number;
+    credencial: string;
+    tipoDocumento: string;
+    numeroDocumento: string;
+    nombre: string;
+    apellido: string;
+    fechaNacimiento: string;
+    telefono: string[];
+    direccion: Direccion[];
+    email: string[];
+    fechaAlta: string;
+    fechaBaja: string | null;
+    situacionesTerapeuticas?: SituacionTerapeutica[];
+    planMedico: string;
+}
+export interface Afiliado extends Persona {
+    sufijo: string;
+    parentesco: string;
+    grupoFamiliar: Integrante[];    
+    
+}export interface Integrante extends Persona {
+    sufijo: string;
+    parentesco: string;
 }
 
-interface Afiliado {
-  id: number;
-  credencial: string;
-  sufijo: string;
-  tipoDocumento: string;
-  numeroDocumento: string;
-  nombre: string;
-  apellido: string;
-  fechaNacimiento: string;  
-  telefono: string[];
-  direccion: Direccion[];
-  email: string[];
-  parentesco: string;
-  situacionesTerapeuticas: SituacionTerapeutica[];
-  planMedico: string;
-  fechaAlta: string;
-  fechaBaja: string | null;
-  grupoFamiliar: Integrante[];
-}
+
 
 // Tipo unificado para mostrar en listas (puede ser Afiliado titular o Integrante)
-interface AfiliadoListItem {
+export interface AfiliadoListItem {
   id: number;
   credencial: string;
   sufijo: string;
@@ -74,17 +64,17 @@ interface AfiliadoListItem {
   titularId?: number; // Solo para integrantes
 }
 
-interface GrupoFamiliar {
-  id: number;
-  plan: string;
-  planMedico: string;
-  fechaCreacion: string;
-  fechaAltaPlan: string;
-  activo: boolean;
+export interface GrupoFamiliar {
+    id: number;
+    credencial: string;
+    planMedico: string;
+    estado: string;
+    fechaAlta: string;
+    fechaBaja: string | null;
+    personas: Integrante[];
 }
 
-interface ListaAfiliadosProps {
+export interface ListaAfiliadosProps {
     afiliados: AfiliadoListItem[];
 }
 
-export { Direccion, SituacionTerapeutica, Integrante, Afiliado, AfiliadoListItem, ListaAfiliadosProps, GrupoFamiliar};

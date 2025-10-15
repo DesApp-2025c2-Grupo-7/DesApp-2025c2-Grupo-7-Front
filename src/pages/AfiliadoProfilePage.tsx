@@ -4,7 +4,7 @@ import Header from "../components/genericos/Header";
 import HeaderAfiliado from "../components/afiliados/HeaderAfiliados";
 import AfiliadosForm from "../components/afiliados/AfiliadosForm";
 import "./AfiliadoProfile.css"; 
-import type { Afiliado, GrupoFamiliar } from "../types/afiliados";
+import type {Persona,Integrante, Afiliado,GrupoFamiliar } from "../types/afiliados";
 const AfiliadoProfile: React.FC = () => {
   const [afiliado, setAfiliado] = useState<Afiliado | null>(null); // Titular original (para referencia del grupo)
   const [afiliadoMostrado, setAfiliadoMostrado] = useState<Afiliado | null>(null); // El afiliado que se muestra (puede ser titular o integrante)
@@ -21,7 +21,7 @@ const AfiliadoProfile: React.FC = () => {
     const fetchAfiliado = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`http://localhost:3000/afiliados/${id}`);
+        const response = await fetch(`http://localhost:3000/personas/${id}`);
         if (!response.ok) {
           throw new Error("Error al obtener los datos del afiliado");
         }
@@ -31,7 +31,6 @@ const AfiliadoProfile: React.FC = () => {
         // Crear el grupo familiar completo incluyendo al titular y sus integrantes
         const grupoData: GrupoFamiliar = {
           id: data.id,
-          plan: data.planMedico,
           planMedico: data.planMedico,
           fechaCreacion: data.fechaAlta,
           fechaAltaPlan: data.fechaAlta,
