@@ -6,7 +6,7 @@ import ModalConfirmacion from "../genericos/ModalConfirmacion";
 import Modal from "../genericos/Modal";
 import GrupoFamiliarAccordion from "./GrupoFamiliarAccordion";
 import CardDireccionesAfiliados from "./CardDireccionesAfiliados";
-import { AlertTriangle, UserX, UserPlus, Plus, Trash2, Edit2 } from "lucide-react";
+import { AlertTriangle, UserX, UserPlus, Plus, Trash2, Edit2, PenOff } from "lucide-react";
 import { useModal } from "../../hooks/useModal";
 import { personasService } from "../../services/personasService";
 import { calcularProximoSufijo } from "../../utils/calcularSufijo";
@@ -140,6 +140,21 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
         if (isReadOnly) return 'no-editable';
         return modoEdicion ? 'modo-edicion' : 'modo-visualizacion';
     };
+
+  const renderFieldWithIcon = (content: React.ReactNode, isReadOnly = false) => {
+    // Mostrar icono solo si el campo es readonly y además estamos EN modo edición
+    if (isReadOnly && modoEdicion) {
+      return (
+        <div className="field-with-icon">
+          {content}
+          <div className="field-readonly-icon" title="Campo no editable">
+            <PenOff size={16} />
+          </div>
+        </div>
+      );
+    }
+    return content;
+  };
 
     const handleAbrirModalBaja = () => {
         setMostrarModalBaja(true);
@@ -639,12 +654,18 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
 
           <div className={`afiliado-form ${modoEdicion ? 'modo-edicion' : ''}`}>
             {/* Campos no editables */}
-            <div className={`form-row ${getFieldClassName(true)}`}><label>Credencial</label><span>{afiliado?.credencial}-{afiliado?.sufijo}</span></div> 
+            <div className={`form-row ${getFieldClassName(true)}`}>
+                <label>Credencial</label>
+                {renderFieldWithIcon(<span>{afiliado?.credencial}-{afiliado?.sufijo}</span>, true)}
+            </div> 
             <div className={`form-row ${getFieldClassName(true)}`}>
                 <label>Parentesco</label>
-                <span className={esTitular() ? 'titular' : 'integrante'}>
-                    {esTitular() ? 'Titular' : (afiliado?.parentesco || 'Integrante')}
-                </span>
+                {renderFieldWithIcon(
+                    <span className={esTitular() ? 'titular' : 'integrante'}>
+                        {esTitular() ? 'Titular' : (afiliado?.parentesco || 'Integrante')}
+                    </span>, 
+                    true
+                )}
             </div>
             
             {/* Campos editables según el modo */}
@@ -742,7 +763,7 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
                           </div>
                         ))}
                         <Button 
-                          variant="secondary" 
+                          variant="primary" 
                           size="small" 
                           icon={Plus}
                           onClick={agregarTelefono}
@@ -776,7 +797,7 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
                           </div>
                         ))}
                         <Button 
-                          variant="secondary" 
+                          variant="primary" 
                           size="small" 
                           icon={Plus}
                           onClick={agregarEmail}
@@ -834,43 +855,54 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
               {afiliado && afiliado.situacionesTerapeuticas && afiliado.situacionesTerapeuticas.length > 0
                 ? afiliado.situacionesTerapeuticas.map((st: any, index: number) => st.fechaFin === null ?
                   <div key={index}>
-                  <div className="form-row-double">
-                    <div className={`form-row-double-item-left ${getFieldClassName(true)}`}>
-                    <label>Diagnóstico</label> <span>{st.diagnostico} </span>
-                  </div>
-                  <div className={`form-row-double-item-right ${getFieldClassName(true)}`}>
-                    <label>Fecha de inicio</label> <span>{st.fechaInicio} </span>
-                  </div>
+                    <div className="form-row-double">
+                      <div className={`form-row-double-item-left ${getFieldClassName(true)}`}>
+                      <label>Diagnóstico</label> 
+                      {renderFieldWithIcon(<span>{st.diagnostico}</span>, true)}
+                    </div>
+                    <div className={`form-row-double-item-right ${getFieldClassName(true)}`}>
+                      <label>Fecha de inicio</label> 
+                      {renderFieldWithIcon(<span>{st.fechaInicio}</span>, true)}
+                    </div>
                   </div>
                  
                   </div> : 
                   <div key={index}>
-                    <label>Diagnóstico</label> <span>{st.diagnostico} </span>
+                    <div className={`form-row ${getFieldClassName(true)}`}>
+                      <label>Diagnóstico</label> 
+                      {renderFieldWithIcon(<span>{st.diagnostico}</span>, true)}
+                    </div>
                   <div className="form-row-double">
 
                     <div className={`form-row-double-item-left ${getFieldClassName(true)}`}>
-                      <label>Fecha de inicio</label> <span>{st.fechaInicio} </span>
+                      <label>Fecha de inicio</label> 
+                      {renderFieldWithIcon(<span>{st.fechaInicio}</span>, true)}
                     </div>
                     <div className={`form-row-double-item-right ${getFieldClassName(true)}`}>
-                      <label>Fecha de fin</label> <span>{st.fechaFin} </span>
+                      <label>Fecha de fin</label> 
+                      {renderFieldWithIcon(<span>{st.fechaFin}</span>, true)}
                     </div>
                   </div>
-                  </div>
+                </div>
               )
-                : <div className={`form-row-double-item-right ${getFieldClassName(true)}`}> 
-                    <label>Diagnóstico</label>
-                    <span>No posee situaciones terapeuticas</span>
-                  </div>}
-          </div>
+                : (
+                    <>
+                      <label>Diagnóstico</label>
+                      {renderFieldWithIcon(<span>No posee situaciones terapeuticas</span>, true)}
+                    </>
+      )}
+    </div>
 
           <div className={`form-row ${getFieldClassName(true)}`}>
             <h4>Ingreso/Egreso al Sistema</h4>
             <div className="form-row-double">
               <div className={`form-row-double-item-left ${getFieldClassName(true)}`}>
-                <label>Fecha de Alta</label><span>{afiliado?.fechaAlta}</span>
+                <label>Fecha de Alta</label>
+                {renderFieldWithIcon(<span>{afiliado?.fechaAlta}</span>, true)}
               </div>
               <div className={`form-row-double-item-right ${getFieldClassName(true)}`}>
-                <label>Fecha Baja</label><span>{afiliado?.fechaBaja}</span>
+                <label>Fecha Baja</label>
+                {renderFieldWithIcon(<span>{afiliado?.fechaBaja}</span>, true)}
               </div>
             </div>
         
@@ -889,7 +921,7 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
           <div className="botones-acciones">
             {modoEdicion ? (
               <>
-                <Button size="large" variant="secondary" type="button" onClick={handleCancelarEdicion}>
+                <Button size="large" variant="cancel" type="button" onClick={handleCancelarEdicion}>
                   Cancelar Edición
                 </Button>
                 <Button size="large" variant="primary" type="button" onClick={handleGuardarCambios}>
@@ -1057,7 +1089,7 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
 
                   {/* Sección: Información del Sistema */}
                   <div className="form-section">
-                    <h4 className="section-title">📋 Información del Sistema</h4>
+                    <h4 className="section-title">Información del Sistema</h4>
                     <div className="section-description">
                       <p>Fechas administrativas para control interno del sistema</p>
                     </div>
@@ -1178,7 +1210,7 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
                     <small>* Campos obligatorios</small>
                   </div>
                   <div className="modal-buttons">
-                    <Button variant="secondary" onClick={handleCerrarModalAgregarIntegrante}>
+                    <Button variant="cancel" onClick={handleCerrarModalAgregarIntegrante}>
                       Cancelar
                     </Button>
                     <Button variant="primary" onClick={handleConfirmarAgregarIntegrante}>

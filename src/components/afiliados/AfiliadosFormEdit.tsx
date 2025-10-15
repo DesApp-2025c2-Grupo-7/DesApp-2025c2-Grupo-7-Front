@@ -1,13 +1,15 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Input from "../genericos/Input";
 import Select from "../genericos/Select";
-import CardDireccionesAfiliados from "./CardDireccionesAfiliados";
 import "./ListaAfiliados.css";
 import Button from "../genericos/Button";
-import type { Direccion } from "../../types/afiliados";
 import MultipleInput from "../genericos/MultipleInput";
 import DireccionInput from "../genericos/DireccionInput";
 import SituacionesTerapeuticasInput from "./SituacionesTerapeuticasInput";
+import Modal from "../genericos/Modal";
+import { useModal } from "../../hooks/useModal";
+import { personasService } from "../../services/personasService";
 
 type SituacionTerapeutica = {
   diagnostico: string;
@@ -41,9 +43,13 @@ type FormDataType = {
 
 export default function AfiliadosFormEdit() {
   /* Hooks */
+  const navigate = useNavigate();
+  const modal = useModal();
+  const [isLoading, setIsLoading] = useState(false);
+
   const [formData, setFormData] = useState<FormDataType>({
-    credencial: "000000-01", // Valor predeterminado
-    sufijo: "",
+    credencial: "000000", // Sin sufijo inicial
+    sufijo: "00", // Titular siempre es 00
     tipoDocumento: "DNI", // Valor predeterminado
     numeroDocumento: "",
     nombre: "",
@@ -59,7 +65,7 @@ export default function AfiliadosFormEdit() {
       { diagnostico: "", fechaInicio: "", fechaFin: "" },
     ],
     planMedico: "Bronce", // Valor predeterminado
-    fechaAlta: "",
+    fechaAlta: new Date().toISOString().split('T')[0], // Fecha actual por defecto
     fechaBaja: "",
   });
 
@@ -100,12 +106,7 @@ export default function AfiliadosFormEdit() {
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const dataToSend = {
-      ...formData,
-      credencial: formData.credencial,
-      parentesco: formData.parentesco,
-    };
-    console.log("Datos del formulario enviados:", dataToSend);
+    // No hacer nada aquí, los botones manejan sus propias acciones
   };
 
   // Maneja el cambio de una situación terapéutica individual
@@ -119,28 +120,152 @@ export default function AfiliadosFormEdit() {
     setFormData({ ...formData, situacionesTerapeuticas: nuevasSituaciones });
   };
 
+  // Validación del formulario
+  const validarFormulario = (): { esValido: boolean; errores: string[] } => {
+    const errores: string[] = [];
+    
+    // Validar campos obligatorios
+    if (!formData.credencial.trim()) errores.push('La credencial es obligatoria');
+    if (!formData.nombre.trim()) errores.push('El nombre es obligatorio');
+    if (!formData.apellido.trim()) errores.push('El apellido es obligatorio');
+    if (!formData.numeroDocumento.trim()) errores.push('El número de documento es obligatorio');
+    if (!formData.fechaNacimiento.trim()) errores.push('La fecha de nacimiento es obligatoria');
+    if (!formData.fechaAlta.trim()) errores.push('La fecha de alta es obligatoria');
+    
+    // Validar direcciones
+    if (formData.direccion.length === 0 || !formData.direccion[0].calle.trim()) {
+      errores.push('Debe tener al menos una dirección válida');
+    }
+    
+    // Validar teléfonos y emails
+    const telefonosValidos = formData.telefonos.filter(tel => tel.trim() !== '');
+    const emailsValidos = formData.emails.filter(email => email.trim() !== '');
+    
+    if (telefonosValidos.length === 0) errores.push('Debe tener al menos un teléfono');
+    if (emailsValidos.length === 0) errores.push('Debe tener al menos un email');
+    
+    // Validar formato de emails
+    emailsValidos.forEach((email, index) => {
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        errores.push(`El formato del email ${index + 1} no es válido`);
+      }
+    });
+    
+    // Validar fechas
+    const fechaNac = new Date(formData.fechaNacimiento);
+    const fechaAlta = new Date(formData.fechaAlta);
+    const hoy = new Date();
+    
+    if (fechaNac > hoy) errores.push('La fecha de nacimiento no puede ser futura');
+    if (fechaNac > fechaAlta) errores.push('La fecha de alta no puede ser anterior a la fecha de nacimiento');
+    
+    // Validar situaciones terapéuticas
+    formData.situacionesTerapeuticas.forEach((situacion, index) => {
+      if (situacion.diagnostico.trim() && !situacion.fechaInicio.trim()) {
+        errores.push(`La situación ${index + 1} requiere fecha de inicio`);
+      }
+      if (situacion.fechaInicio && situacion.fechaFin && situacion.fechaFin < situacion.fechaInicio) {
+        errores.push(`En la situación ${index + 1}, la fecha de fin no puede ser anterior a la fecha de inicio`);
+      }
+    });
+    
+    return { esValido: errores.length === 0, errores };
+  };
+
+  // Función para cancelar y volver a la lista
+  const handleCancelar = () => {
+    navigate('/afiliados');
+  };
+
+  // Función para crear el titular
+  const handleCrearTitular = async () => {
+    const validacion = validarFormulario();
+    
+    if (!validacion.esValido) {
+      modal.mostrarError(
+        'Errores en el formulario',
+        'Por favor corrige los siguientes errores:',
+        validacion.errores
+      );
+      return;
+    }
+
+    setIsLoading(true);
+    
+    try {
+      // Preparar datos para el backend
+      const datosAfiliado = {
+        credencial: formData.credencial,
+        sufijo: formData.sufijo,
+        tipoPersona: 'AFILIADO', // Titular
+        tipoDocumento: formData.tipoDocumento,
+        numeroDocumento: formData.numeroDocumento,
+        nombre: formData.nombre,
+        apellido: formData.apellido,
+        fechaNacimiento: formData.fechaNacimiento,
+        telefono: formData.telefonos.filter(tel => tel.trim() !== ''),
+        email: formData.emails.filter(email => email.trim() !== ''),
+        parentesco: 'Titular',
+        fechaAlta: formData.fechaAlta,
+        fechaBaja: formData.fechaBaja || null,
+        direccion: formData.direccion.filter(dir => dir.calle.trim() !== ''),
+        situacionesTerapeuticas: formData.situacionesTerapeuticas.filter(st => 
+          st.diagnostico.trim() !== '' && st.fechaInicio.trim() !== ''
+        ).map(st => ({
+          ...st,
+          fechaFin: st.fechaFin.trim() === '' ? null : st.fechaFin
+        })),
+        // Datos del grupo familiar
+        grupoFamiliar: {
+          planMedico: formData.planMedico,
+          fechaAlta: formData.fechaAlta,
+          estado: 'ACTIVO'
+        }
+      };
+
+      // Llamar al servicio para crear el titular (usando createIntegrante para titular)
+      const nuevoAfiliado = await personasService.createIntegrante(0, datosAfiliado);
+      
+      // Mostrar modal de éxito
+      modal.mostrarExito(
+        '¡Afiliado creado exitosamente!',
+        `Se ha dado de alta al titular ${formData.nombre} ${formData.apellido} con la credencial ${formData.credencial}-00.`,
+        'Será redirigido al perfil del afiliado.'
+      );
+
+      // Redirigir al perfil después de 2 segundos
+      setTimeout(() => {
+        navigate(`/afiliados/${nuevoAfiliado.id}`);
+      }, 2000);
+
+    } catch (error: any) {
+      console.error('Error al crear afiliado:', error);
+      
+      modal.mostrarError(
+        'Error al crear afiliado',
+        'No se pudo dar de alta al afiliado',
+        [error.message || 'Error desconocido del servidor']
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
+    <>
     <form className="afiliado-form" onSubmit={handleSubmit}>
       {/* Credencial */}
       <div className="form-row">
-        <label>Credencial</label>
-        <input
-          disabled
-          style={{
-            background: "#fff",
-            border: "1px solid #ccd6e0",
-            borderRadius: "8px",
-            padding: "0.7rem 1rem",
-            fontSize: "0.95rem",
-            color: "#2c3e50",
-            fontWeight: 500,
-            minHeight: "42px",
-            display: "flex",
-            alignItems: "center",
-            marginBottom: "1rem",
-          }}
-          value={formData.credencial}
-        ></input>
+        <label>Credencial del Titular</label>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <Input
+            type="text"
+            value={formData.credencial}
+            onChange={(value: string) => handleInputChange("credencial", value)}
+            placeholder="000000"
+            required
+          />
+        </div>
       </div>
 
       {/* Parentesco */}
@@ -239,27 +364,29 @@ export default function AfiliadosFormEdit() {
 
       {/* Fecha de nacimiento */}
       <div className="form-row">
-        <label>Fecha de nacimiento</label>
-        <Input type="date" className="input-valor" />
-      </div>
-      {/* Direcciones dinámicas */}
-      <CardDireccionesAfiliados
-        direcciones={[]}
-        personaId={0}
-        modoEdicion={false}
-
-        onDireccionesChange={(direcciones) => console.log('Direcciones:', direcciones)}
-      />
-      {/*Teléfono*/}
-        <Input
-          type="date"
-          className="input-valor"
-          name="fechaNacimiento"
-          onChange={(value: string) =>
-            handleInputChange("fechaNacimiento", value)
-          }
+        <label>Fecha de nacimiento *</label>
+        <Input 
+          type="date" 
+          className="input-valor" 
+          value={formData.fechaNacimiento}
+          onChange={(value: string) => handleInputChange("fechaNacimiento", value)}
           required
         />
+      </div>
+
+      {/* Fecha de alta del sistema */}
+      <div className="form-row">
+        <label>Fecha de Alta del Sistema *</label>
+        <Input 
+          type="date" 
+          className="input-valor" 
+          value={formData.fechaAlta}
+          onChange={(value: string) => handleInputChange("fechaAlta", value)}
+          required
+        />
+        <small style={{ color: "#666", fontSize: "0.8rem", marginTop: "5px" }}>
+          Fecha en que se registra en el sistema
+        </small>
       </div>
 
       {/* Dirección */}
@@ -315,68 +442,86 @@ export default function AfiliadosFormEdit() {
       </div>
 
       {/* Situaciones Terapéuticas */}
-      <div
-        className="form-row"
-        style={{
-          display: "flex",
-          gap: "5px",
-        }}
+      <><div className="form-row" style={{ display: "flex", gap: "5px", }}
+  >
+    <label>Situaciones Terapéuticas</label>
+    {formData.situacionesTerapeuticas.map((situacion, index) => (
+      <SituacionesTerapeuticasInput
+        key={index}
+        value={situacion}
+        onChange={(field, value) => handleSituacionTerapeuticaChange(
+          index,
+          field as keyof SituacionTerapeutica,
+          value
+        )}
+        listaSituacionesTerapeuticas={listaSituacionesTerapeuticas} />
+    ))}
+    <button
+      type="button"
+      style={{
+        background: "none",
+        border: "none",
+        color: "blue",
+        cursor: "pointer",
+        fontWeight: "bold",
+        padding: 0,
+        marginTop: "5px",
+        width: "100%",
+        textAlign: "left",
+      }}
+      onClick={() => setFormData({
+        ...formData,
+        situacionesTerapeuticas: [
+          ...formData.situacionesTerapeuticas,
+          { diagnostico: "", fechaInicio: "", fechaFin: "" },
+        ],
+      })}
+    >
+      + Agregar situación terapéutica
+    </button>
+  </div><div className="form-row"></div><div className="form-row"></div><div
+    style={{
+      width: "100%",
+      display: "flex",
+      gap: "10px",
+    }}
+  >
+      <Button 
+        type="button" 
+        variant="cancel" 
+        onClick={handleCancelar}
+        disabled={isLoading}
       >
-        <label>Situaciones Terapéuticas</label>
-        {formData.situacionesTerapeuticas.map((situacion, index) => (
-          <SituacionesTerapeuticasInput
-            key={index}
-            value={situacion}
-            onChange={(field, value) =>
-              handleSituacionTerapeuticaChange(
-                index,
-                field as keyof SituacionTerapeutica,
-                value
-              )
-            }
-            listaSituacionesTerapeuticas={listaSituacionesTerapeuticas}
-          />
-        ))}
-        <button
-          type="button"
-          style={{
-            background: "none",
-            border: "none",
-            color: "blue",
-            cursor: "pointer",
-            fontWeight: "bold",
-            padding: 0,
-            marginTop: "5px",
-            width: "100%",
-            textAlign: "left",
-          }}
-          onClick={() =>
-            setFormData({
-              ...formData,
-              situacionesTerapeuticas: [
-                ...formData.situacionesTerapeuticas,
-                { diagnostico: "", fechaInicio: "", fechaFin: "" },
-              ],
-            })
-          }
-        >
-          + Agregar situación terapéutica
-        </button>
-      </div>
-
-      <div className="form-row"></div>
-      <div className="form-row"></div>
-      <div
-        style={{
-          width: "100%",
-          display: "flex",
-          gap: "10px",
-        }}
+        Cancelar
+      </Button>
+      <Button 
+        type="button" 
+        variant="primary" 
+        onClick={handleCrearTitular}
+        disabled={isLoading}
       >
-        <Button type="submit">Cancelar</Button>
-        <Button type="submit">Dar de alta</Button>
-      </div>
+        {isLoading ? 'Creando...' : 'Dar de alta'}
+      </Button>
+    </div></>
     </form>
+    
+    {/* Modal */}
+    <Modal
+      isOpen={modal.isOpen}
+      onClose={modal.cerrarModal}
+      onConfirm={modal.confirmarModal}
+      titulo={modal.config?.titulo || ''}
+      mensaje={modal.config?.mensaje || ''}
+      submensaje={modal.config?.submensaje}
+      tipo={modal.config?.tipo || 'info'}
+      textoBotonConfirmar={modal.config?.textoBotonConfirmar}
+      textoBotonCancelar={modal.config?.textoBotonCancelar}
+      icono={modal.config?.icono}
+      contenidoExtra={modal.config?.contenidoExtra}
+      soloInformacion={modal.config?.soloInformacion}
+      listaErrores={modal.config?.listaErrores}
+    />
+    </>
   );
 }
 

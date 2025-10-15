@@ -28,7 +28,7 @@ const Header: React.FC<HeaderProps> = ({
             {/* Iconos + botón salir */}
             <div className="header-right">
                 <Button 
-                    variant="secondary" 
+                    variant="primary" 
                     size="small" 
                     icon={Bell} 
                     iconPosition="left" 
@@ -36,7 +36,7 @@ const Header: React.FC<HeaderProps> = ({
                 >
                 </Button>
                 <Button 
-                    variant="secondary" 
+                    variant="primary" 
                     size="small" 
                     icon={User} 
                     iconPosition="left" 

@@ -63,7 +63,7 @@ const ListaAfiliados: React.FC<ListaAfiliadosProps> = ({ afiliados, totalAfiliad
                         </div>
                         <div className="acciones">
                             <Button
-                                variant="secondary"
+                                variant="primary"
                                 size="small"
                                 onClick={() => handleVerMas(afiliado)}
                             >
@@ -71,7 +71,7 @@ const ListaAfiliados: React.FC<ListaAfiliadosProps> = ({ afiliados, totalAfiliad
                             </Button>
                             {isActiveAfiliado(afiliado) && (
                                 <Button
-                                    variant="secondary"
+                                    variant="primary"
                                     size="small"
                                     icon={Edit}
                                     iconPosition="left"

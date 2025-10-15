@@ -26,7 +26,7 @@ const ListaPrestadores: React.FC<{ prestadores: Prestador[] }> = ({ prestadores 
                         </div>
                         <div className="card-actions">
                             <Button 
-                                variant="secondary" 
+                                variant="primary" 
                                 size="small" 
                                 onClick={() => handleVerMas(prestador.id)}
                             >

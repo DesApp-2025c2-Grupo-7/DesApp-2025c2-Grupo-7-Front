@@ -34,7 +34,10 @@
   font-weight: 500;
 }
 
-.form-row span, .form-row-double-item-left span, .form-row-double-item-right span {
+/* Estilos para spans de datos: solo spans DIRECTOS dentro de form-row/columnas y NO .btn-text */
+.form-row > span:not(.btn-text),
+.form-row-double-item-left > span:not(.btn-text),
+.form-row-double-item-right > span:not(.btn-text) {
   background: #fff;
   border: 1px solid #ccd6e0;
   background-color: #f4f4f4;
@@ -46,7 +49,29 @@
   min-height: 42px;
   display: flex;
   align-items: center;
-  margin-bottom: 1rem;
+}
+
+/* Reset específico: garantizar que los spans usados por los botones mantengan apariencia de botón */
+.form-row .btn-text,
+.form-row button .btn-text {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  min-height: 0 !important;
+  color: inherit !important;
+}
+
+/* Excluir específicamente spans que están dentro de .contactos-editables */
+.form-row .contactos-editables span,
+.form-row-double-item-left .contactos-editables span,
+.form-row-double-item-right .contactos-editables span {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  min-height: auto !important;
+  display: inline !important;
+  color: #fff;
 }
 
 /* Contenedor de direcciones */

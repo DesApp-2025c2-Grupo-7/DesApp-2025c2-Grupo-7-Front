@@ -43,7 +43,7 @@ const AfiliadosHeader: React.FC<AfiliadosHeaderProps> = ({
                 {/* Info de titular: mostrar "Agregar integrante" si no está en modo edición */}
                 {contexto === 'titular' && !modoEdicion && (
                     <Button 
-                        variant="secondary" 
+                        variant="primary" 
                         icon={UserPlus} 
                         onClick={() => {
                             // Disparar evento personalizado para que lo capture AfiliadosForm

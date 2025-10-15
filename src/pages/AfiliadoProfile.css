@@ -35,10 +35,10 @@
   font-weight: 500;
 }
 
-/* Estilos para spans de datos, excluyendo spans dentro de botones o contenedores de botones */
-.form-row span:not(.btn):not([class*="btn"]):not(.contactos-editables span):not(.btn span):not(button span), 
-.form-row-double-item-left span:not(.btn):not([class*="btn"]):not(.contactos-editables span):not(.btn span):not(button span), 
-.form-row-double-item-right span:not(.btn):not([class*="btn"]):not(.contactos-editables span):not(.btn span):not(button span) {
+/* Estilos para spans de datos: solo spans DIRECTOS dentro de form-row/columnas y NO .btn-text */
+.form-row > span:not(.btn-text),
+.form-row-double-item-left > span:not(.btn-text),
+.form-row-double-item-right > span:not(.btn-text) {
   background: #fff;
   border: 1px solid #ccd6e0;
   background-color: #f4f4f4;
@@ -50,7 +50,16 @@
   min-height: 42px;
   display: flex;
   align-items: center;
-  margin-bottom: 1rem;
+}
+
+/* Reset específico: garantizar que los spans usados por los botones mantengan apariencia de botón */
+.form-row .btn-text,
+.form-row button .btn-text {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  min-height: 0 !important;
+  color: inherit !important;
 }
 
 /* Excluir específicamente spans que están dentro de .contactos-editables */
@@ -131,5 +140,32 @@
 .form-row span.loading {
   background-color: #f0f3f7;
   color: transparent;
+}
+
+/* Estilos para campos con ícono de solo lectura */
+.field-with-icon {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.field-with-icon span {
+  flex: 1;
+  padding-right: 2.5rem !important; /* Espacio para el ícono */
+}
+
+.field-readonly-icon {
+  position: absolute;
+  right: 0.75rem;
+  color: #6c757d;
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+/* Asegurar que los campos no editables tengan el fondo correcto */
+.no-editable .field-with-icon span {
+  background-color: #f8f9fa !important;
+  border-color: #e9ecef !important;
+  color: #6c757d !important;
 }
 

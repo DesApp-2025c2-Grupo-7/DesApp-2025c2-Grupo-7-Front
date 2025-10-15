@@ -142,7 +142,7 @@ const CardDireccionesAfiliados: React.FC<CardDireccionesAfiliadosProps> = ({
           </div>
 
           <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
-            <Button variant="secondary" onClick={onClose}>
+            <Button variant="cancel" onClick={onClose}>
               Cancelar
             </Button>
             <Button variant="primary" onClick={handleSave}>
@@ -193,7 +193,7 @@ const CardDireccionesAfiliados: React.FC<CardDireccionesAfiliadosProps> = ({
   };
 
   return (
-    <div className="direcciones-container">
+    <div className="form-row modo-visualizacion">
       <h4>Direcciones</h4>
       <div className="direcciones-list">
         {listaDirecciones.map((dir, i) => (
@@ -223,7 +223,7 @@ const CardDireccionesAfiliados: React.FC<CardDireccionesAfiliadosProps> = ({
 
       {estaEnModoEdicion && (
         <div className="add-direccion-button">
-          <Button variant="secondary" onClick={handleAgregarNuevaDireccion}>
+          <Button variant="primary" onClick={handleAgregarNuevaDireccion}>
             + Agregar nueva dirección
           </Button>
         </div>

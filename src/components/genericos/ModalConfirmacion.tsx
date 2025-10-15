@@ -54,7 +54,7 @@ const ModalConfirmacion: React.FC<ModalConfirmacionProps> = ({
         
         <div className="modal-footer">
           <Button
-            variant="secondary"
+            variant="cancel"
             size="medium"
             onClick={onClose}
           >

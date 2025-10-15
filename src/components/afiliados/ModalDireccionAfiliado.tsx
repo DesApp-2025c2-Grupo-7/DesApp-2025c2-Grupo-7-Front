@@ -153,7 +153,7 @@ const ModalDireccionAfiliado: React.FC<ModalDireccionAfiliadoProps> = ({
         </div>
 
         <div className="modal-actions">
-          <Button variant="secondary" onClick={onClose} disabled={loading}>
+          <Button variant="cancel" onClick={onClose} disabled={loading}>
             Cancelar
           </Button>
           <Button variant="primary" onClick={handleSave} disabled={loading}>

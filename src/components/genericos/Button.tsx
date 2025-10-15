@@ -4,7 +4,7 @@ import "./Button.css";
 
 interface ButtonProps {
     children?: React.ReactNode;
-    variant?: "primary" | "secondary" | "accent" | "back" | "danger";
+    variant?: "primary" | "secondary" | "accent" | "back" | "danger" | "cancel";
     size?: "small" | "medium" | "large";
     onClick?: () => void;
     disabled?: boolean;

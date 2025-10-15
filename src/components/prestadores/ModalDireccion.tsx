@@ -203,12 +203,12 @@ const ModalDireccion: React.FC<ModalDireccionProps> = ({
               <Button variant="danger" size="small" onClick={() => handleDeleteHorario(i)}>Eliminar</Button>
             </div>
           ))}
-          <Button variant="secondary" onClick={handleAddHorario}>+ Agregar nuevo horario</Button>
+          <Button variant="primary" onClick={handleAddHorario}>+ Agregar nuevo horario</Button>
         </div>
 
         {/* BOTONES FIJOS ABAJO */}
         <div className="modal-actions" style={{ position: "sticky", bottom: 0, backgroundColor: "white", paddingTop: "0.5rem", paddingBottom: "0.5rem", display: "flex", justifyContent: "flex-end", gap: "0.5rem", borderTop: "1px solid #ccc" }}>
-          <Button variant="secondary" onClick={onClose}>Cancelar</Button>
+          <Button variant="cancel" onClick={onClose}>Cancelar</Button>
           <Button variant="primary" onClick={handleSave}>Guardar</Button>
         </div>
       </div>

@@ -116,7 +116,7 @@ const Modal: React.FC<ModalProps> = ({
         <div className="modal-footer">
           {!soloInformacion && (
             <Button
-              variant="secondary"
+              variant="cancel"
               size="medium"
               onClick={onClose}
             >
