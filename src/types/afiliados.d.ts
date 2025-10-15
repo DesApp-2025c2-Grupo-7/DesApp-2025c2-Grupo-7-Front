@@ -96,6 +96,7 @@ interface GrupoFamiliar {
 
 export interface ListaAfiliadosProps {
     afiliados: AfiliadoListItem[];
+    totalAfiliados?: number; // Total de afiliados filtrados (independiente de la paginación)
 }
 
 export { Direccion, SituacionTerapeutica, Persona, Integrante, Afiliado, AfiliadoListItem, ListaAfiliadosProps, GrupoFamiliar};

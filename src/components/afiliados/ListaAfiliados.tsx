@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import "./ListaAfiliados.css"
 import type { ListaAfiliadosProps } from "../../types/afiliados";
 
-const ListaAfiliados: React.FC<ListaAfiliadosProps> = ({ afiliados }) => {
+const ListaAfiliados: React.FC<ListaAfiliadosProps> = ({ afiliados, totalAfiliados }) => {
     const navigate = useNavigate();
 
     const handleVerMas = (afiliado: any) => {
@@ -45,7 +45,7 @@ const ListaAfiliados: React.FC<ListaAfiliadosProps> = ({ afiliados }) => {
 
     return (
         <div className="lista-estilos">
-            <h3>Resultados ({afiliados.length} afiliados)</h3>
+            <h3>Resultados ({totalAfiliados ?? afiliados.length} afiliados)</h3>
             <ul>
                 {afiliados.map((afiliado) => (
                     <li key={`${afiliado.esTitular ? 'titular' : 'integrante'}-${afiliado.id}`}>

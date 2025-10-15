@@ -852,3 +852,106 @@
     opacity: 1;
     transform: scale(1.05);
 }
+
+/* Estilos para CardDireccionesAfiliados */
+.direcciones-container {
+    margin-top: 2rem;
+    padding: 1rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background-color: #f9fafb;
+}
+
+.direcciones-container h4 {
+    margin: 0 0 1rem 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #374151;
+}
+
+.direcciones-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.direccion-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 1rem;
+    background-color: white;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.direccion-card:hover {
+    border-color: #9ca3af;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.direccion-info {
+    flex: 1;
+}
+
+.direccion-info p {
+    margin: 0 0 0.25rem 0;
+    color: #374151;
+}
+
+.direccion-info p:first-child {
+    font-weight: 500;
+}
+
+.direccion-info p:last-child {
+    color: #6b7280;
+    font-size: 0.9rem;
+}
+
+.direccion-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-left: 1rem;
+}
+
+.add-direccion-button {
+    margin-top: 1rem;
+    text-align: center;
+}
+
+.add-direccion-button button {
+    background-color: transparent !important;
+    border: 2px dashed #9ca3af !important;
+    color: #6b7280 !important;
+    padding: 0.75rem 1.5rem !important;
+    border-radius: 6px !important;
+    transition: all 0.2s ease !important;
+}
+
+.add-direccion-button button:hover {
+    border-color: #4f46e5 !important;
+    color: #4f46e5 !important;
+    background-color: #f0f0ff !important;
+}
+
+/* Estilos para botones de control de modo */
+.modo-control-buttons {
+    margin-top: 1rem;
+    text-align: center;
+}
+
+.edicion-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    align-items: center;
+}
+
+.modo-control-buttons button {
+    min-width: 120px;
+}
+
+.edicion-buttons button {
+    min-width: 100px;
+}

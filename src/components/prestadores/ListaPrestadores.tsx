@@ -3,9 +3,9 @@ import { Edit } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Button from "../genericos/Button";
 import "./ListaPrestadores.css"
-import type { ListaPrestadoresProps } from "../../types/prestadores";
+import type { Prestador } from "../../types/prestadores";
 
-const ListaPrestadores: React.FC<ListaPrestadoresProps> = ({ prestadores }) => {
+const ListaPrestadores: React.FC<{ prestadores: Prestador[] }> = ({ prestadores }) => {
     const navigate = useNavigate();
 
     const handleVerMas = (id: number) => {
@@ -21,7 +21,7 @@ const ListaPrestadores: React.FC<ListaPrestadoresProps> = ({ prestadores }) => {
                         <div className="card-header">
                             <h4 className="prestador-nombre">{prestador.nombreCompleto}</h4>
                             {prestador.especialidades.map((especialidad, i) =>(
-                                <span key={i} className="prestador-especialidad">{especialidad}</span>
+                                <span key={i} className="prestador-especialidad">{String(especialidad)}</span>
                             ))}
                         </div>
                         <div className="card-actions">

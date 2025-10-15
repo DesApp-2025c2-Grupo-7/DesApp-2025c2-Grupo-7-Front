@@ -4,10 +4,54 @@ import Header from "../components/genericos/Header";
 import HeaderAfiliado from "../components/afiliados/HeaderAfiliados";
 import AfiliadosForm from "../components/afiliados/AfiliadosForm";
 import "./AfiliadoProfile.css"; 
-import type {Persona,Integrante, Afiliado,GrupoFamiliar } from "../types/afiliados";
+import type {Afiliado,GrupoFamiliar } from "../types/afiliados";
 import { useModal } from "../hooks/useModal";
 import Modal from "../components/genericos/Modal";
 import { getApiUrl } from "../config/env";
+import { personasService } from "../services/personasService";
+
+/**
+ * Función auxiliar para limpiar los datos de un afiliado antes de enviarlos al backend
+ * Elimina todas las relaciones y propiedades que puedan causar errores en TypeORM
+ */
+const limpiarDatosParaBackend = (afiliado: Afiliado) => {
+  // Extraer y excluir todas las relaciones y propiedades problemáticas
+  const { 
+    direccion, 
+    situacionesTerapeuticas, 
+    grupoFamiliar, 
+    miembrosGrupo, 
+    ...datosBasicos 
+  } = afiliado;
+  
+  // Crear una copia limpia
+  const datosLimpios = { ...datosBasicos };
+  
+  // Eliminar propiedades problemáticas pero mantener arrays de primitivos
+  Object.keys(datosLimpios).forEach(key => {
+    const valor = (datosLimpios as any)[key];
+    
+    if (Array.isArray(valor)) {
+      // Mantener arrays de primitivos (como telefono, email)
+      // Eliminar arrays de objetos (como direcciones, situaciones terapéuticas)
+      const esPrimitivo = valor.length === 0 || typeof valor[0] !== 'object';
+      if (!esPrimitivo) {
+        delete (datosLimpios as any)[key];
+      }
+    } else if (typeof valor === 'object' && valor !== null) {
+      // Eliminar objetos con índices numéricos (como grupoFamiliar.0, grupoFamiliar.1)
+      if (Object.keys(valor).some(k => !isNaN(Number(k)))) {
+        delete (datosLimpios as any)[key];
+      }
+    } else if (typeof valor === 'function') {
+      // Eliminar funciones
+      delete (datosLimpios as any)[key];
+    }
+  });
+  
+  return datosLimpios;
+};
+
 const AfiliadoProfile: React.FC = () => {
   const [afiliado, setAfiliado] = useState<Afiliado | null>(null); // Titular original (para referencia del grupo)
   const [afiliadoMostrado, setAfiliadoMostrado] = useState<Afiliado | null>(null); // El afiliado que se muestra (puede ser titular o integrante)
@@ -168,12 +212,21 @@ const AfiliadoProfile: React.FC = () => {
     try {
       console.log('Enviando datos al backend:', afiliadoModificado);
       
+      // Limpiar datos para enviar solo campos básicos al backend
+      const datosLimpios = limpiarDatosParaBackend(afiliadoModificado);
+      
+      console.log('Datos originales:', afiliadoModificado);
+      console.log('Datos limpios a enviar:', datosLimpios);
+      console.log('INCLUIDOS: campos básicos + arrays de primitivos (telefono, email)');
+      console.log('EXCLUIDOS: direccion, situacionesTerapeuticas, grupoFamiliar, arrays de objetos');
+      
+      // 1. Actualizar datos básicos del afiliado (solo campos primitivos)
       const response = await fetch(getApiUrl(`/personas/${afiliadoModificado.id}`), {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(afiliadoModificado),
+        body: JSON.stringify(datosLimpios),
       });
 
       if (!response.ok) {
@@ -182,7 +235,42 @@ const AfiliadoProfile: React.FC = () => {
         throw new Error(`Error al actualizar el afiliado: ${response.status} - ${errorText}`);
       }
 
-      // Actualizar el estado local
+      // 2. Manejar direcciones por separado usando endpoints específicos
+      if (afiliadoModificado.direccion && afiliadoModificado.direccion.length > 0) {
+        console.log('Sincronizando direcciones:', afiliadoModificado.direccion);
+        
+        try {
+          // Procesar direcciones una por una
+          
+          // Procesar cada dirección del cliente
+          for (const direccion of afiliadoModificado.direccion) {
+            if (direccion.id && direccion.id > 0) {
+              // Dirección existente - actualizar
+              console.log('Actualizando dirección existente:', direccion.id);
+              await personasService.updateDireccion(afiliadoModificado.id, direccion.id, direccion);
+            } else {
+              // Dirección nueva - crear
+              console.log('Creando nueva dirección:', direccion);
+              await personasService.createDireccion(afiliadoModificado.id, direccion);
+            }
+          }
+          
+          console.log('Direcciones sincronizadas exitosamente');
+        } catch (errorDirecciones) {
+          console.error('Error al sincronizar direcciones:', errorDirecciones);
+          // No fallar todo el guardado por errores de direcciones, solo avisar
+          modalUniversal.mostrarModal({
+            titulo: 'Advertencia',
+            mensaje: 'Los datos básicos se guardaron, pero hubo un problema al sincronizar las direcciones.',
+            tipo: 'warning',
+            soloInformacion: true
+          });
+        }
+      }
+      
+      console.log('Datos básicos actualizados exitosamente');
+
+      // Actualizar el estado local con los datos completos (incluyendo direcciones)
       setAfiliadoMostrado(afiliadoModificado);
       if (afiliadoModificado.id === afiliado?.id) {
         setAfiliado(afiliadoModificado);
@@ -195,8 +283,14 @@ const AfiliadoProfile: React.FC = () => {
 
       modalUniversal.mostrarExito(
         "Cambios guardados",
-        "Los cambios se guardaron exitosamente en el sistema."
+        "Los cambios se guardaron exitosamente en el sistema.",
+        "La página se recargará para mostrar los cambios actualizados."
       );
+
+      // Recargar la página después de un pequeño delay para que el usuario vea el mensaje
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
     } catch (error) {
       console.error("Error al guardar cambios:", error);
       modalUniversal.mostrarError(
@@ -211,6 +305,26 @@ const AfiliadoProfile: React.FC = () => {
     const nuevosParams = new URLSearchParams(searchParams);
     nuevosParams.delete('modo');
     setSearchParams(nuevosParams);
+  };
+
+  const handleActivarEdicion = () => {
+    // Activar el modo de edición agregando el parámetro 'modo=editar' a la URL
+    const nuevosParams = new URLSearchParams(searchParams);
+    nuevosParams.set('modo', 'editar');
+    setSearchParams(nuevosParams);
+  };
+
+  const handleIntegranteCreado = (nuevoIntegrante: any) => {
+    // Navegar al nuevo integrante después de un breve delay para que se vea el mensaje de éxito
+    setTimeout(() => {
+      if (nuevoIntegrante?.id) {
+        // Navegar al perfil del nuevo integrante
+        navigate(`/afiliados/${nuevoIntegrante.id}`);
+      } else {
+        // Si no tenemos el ID, simplemente recargar la página actual
+        window.location.reload();
+      }
+    }, 1500); // 1.5 segundos para que el usuario vea el mensaje de éxito
   };
 
   if (loading) {
@@ -258,6 +372,8 @@ const AfiliadoProfile: React.FC = () => {
             modoEdicion={modoEdicion}
             onGuardarCambios={handleGuardarCambios}
             onCancelarEdicion={handleCancelarEdicion}
+            onActivarEdicion={handleActivarEdicion}
+            onIntegranteCreado={handleIntegranteCreado}
           />
         ) : (
           <p>No se encontró el afiliado</p>

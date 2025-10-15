@@ -151,6 +151,104 @@ class PersonasService {
 
     return response.json();
   }
+
+  // === MÉTODOS PARA DIRECCIONES ===
+  
+  // Crear una nueva dirección para una persona
+  async createDireccion(personaId: number, direccionData: Omit<import('../types/afiliados').Direccion, 'id'>) {
+    const response = await fetch(getApiUrl(`/personas/${personaId}/direcciones`), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(direccionData),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return response.json();
+  }
+
+  // Actualizar una dirección existente
+  async updateDireccion(personaId: number, direccionId: number, direccionData: Partial<import('../types/afiliados').Direccion>) {
+    const response = await fetch(getApiUrl(`/personas/${personaId}/direcciones/${direccionId}`), {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(direccionData),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return response.json();
+  }
+
+  // Eliminar una dirección
+  async deleteDireccion(personaId: number, direccionId: number) {
+    const response = await fetch(getApiUrl(`/personas/${personaId}/direcciones/${direccionId}`), {
+      method: 'DELETE',
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return response.json();
+  }
+
+  // === MÉTODOS PARA SITUACIONES TERAPÉUTICAS ===
+  
+  // Crear una nueva situación terapéutica para una persona
+  async createSituacionTerapeutica(personaId: number, situacionData: Omit<import('../types/afiliados').SituacionTerapeutica, 'id'>) {
+    const response = await fetch(getApiUrl(`/personas/${personaId}/situaciones-terapeuticas`), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(situacionData),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return response.json();
+  }
+
+  // Actualizar una situación terapéutica existente
+  async updateSituacionTerapeutica(personaId: number, situacionId: number, situacionData: Partial<import('../types/afiliados').SituacionTerapeutica>) {
+    const response = await fetch(getApiUrl(`/personas/${personaId}/situaciones-terapeuticas/${situacionId}`), {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(situacionData),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return response.json();
+  }
+
+  // Eliminar una situación terapéutica
+  async deleteSituacionTerapeutica(personaId: number, situacionId: number) {
+    const response = await fetch(getApiUrl(`/personas/${personaId}/situaciones-terapeuticas/${situacionId}`), {
+      method: 'DELETE',
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return response.json();
+  }
 }
 
 export const personasService = new PersonasService();

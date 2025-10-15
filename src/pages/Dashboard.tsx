@@ -28,7 +28,7 @@ const Dashboard: React.FC = () => {
       
       // Agregar los integrantes del grupo familiar
       if (afiliado.grupoFamiliar && afiliado.grupoFamiliar.length > 0) {
-        afiliado.grupoFamiliar.forEach(integrante => {
+        afiliado.grupoFamiliar.forEach((integrante: { credencial: any; sufijo: any; }) => {
           const integranteKey = `${integrante.credencial}-${integrante.sufijo}`;
           personasUnicas.add(integranteKey);
         });

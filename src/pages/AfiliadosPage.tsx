@@ -124,7 +124,7 @@ const AfiliadosPage: React.FC = () => {
           <p>Cargando afiliados...</p>
         ) : afiliadosVisibles.length > 0 ? (
           <>
-            <ListaAfiliados afiliados={afiliadosVisibles} />
+            <ListaAfiliados afiliados={afiliadosVisibles} totalAfiliados={afiliadosFiltrados.length} />
             <Paginacion
               totalPages={totalPages}
               currentPage={currentPage}

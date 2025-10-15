@@ -1,7 +1,9 @@
 import Input from "../genericos/Input";
 import Select from "../genericos/Select";
+import CardDireccionesAfiliados from "./CardDireccionesAfiliados";
 import "./ListaAfiliados.css";
 import Button from "../genericos/Button";
+import type { Direccion } from "../../types/afiliados";
 
 export default function AfiliadosFormEdit() {
   return (
@@ -52,32 +54,14 @@ export default function AfiliadosFormEdit() {
         <label>Fecha de nacimiento</label>
         <Input type="date" className="input-valor" />
       </div>
-      {/* Datos de dirección */}
-      <div className="form-row">
-        <label>Calle</label>
-        <Input type="text" name="calle" />
-      </div>
+      {/* Direcciones dinámicas */}
+      <CardDireccionesAfiliados
+        direcciones={[]}
+        personaId={0}
+        modoEdicion={false}
 
-      <div className="form-row-double">
-        <div className="form-row-double-item-left">
-          <label>Número</label>
-          <Input type="text" name="numero" />
-        </div>
-        <div className="form-row-double-item-right">
-          <label>Departamento</label>
-          <Input type="text" name="depto" />
-        </div>
-      </div>
-
-      <div className="form-row">
-        <label>Código Postal</label>
-        <Input type="text" name="codigoPostal" />
-      </div>
-
-      <div className="form-row">
-        <label>Localidad</label>
-        <Input type="text" name="localidad" />
-      </div>
+        onDireccionesChange={(direcciones) => console.log('Direcciones:', direcciones)}
+      />
       {/*Teléfono*/}
       <div className="form-row">
         <label>Teléfono</label>

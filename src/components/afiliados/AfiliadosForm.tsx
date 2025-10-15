@@ -5,11 +5,13 @@ import Select from "../genericos/Select";
 import ModalConfirmacion from "../genericos/ModalConfirmacion";
 import Modal from "../genericos/Modal";
 import GrupoFamiliarAccordion from "./GrupoFamiliarAccordion";
-import { AlertTriangle, UserX, UserPlus, Plus, Trash2 } from "lucide-react";
+import CardDireccionesAfiliados from "./CardDireccionesAfiliados";
+import { AlertTriangle, UserX, UserPlus, Plus, Trash2, Edit2 } from "lucide-react";
 import { useModal } from "../../hooks/useModal";
 import { personasService } from "../../services/personasService";
+import { calcularProximoSufijo } from "../../utils/calcularSufijo";
 import "./ListaAfiliados.css"
-import type { Afiliado, GrupoFamiliar } from "../../types/afiliados";
+import type { Afiliado, GrupoFamiliar, Direccion } from "../../types/afiliados";
 
 interface AfiliadoFormProps {
   afiliado: Afiliado | null;
@@ -20,6 +22,8 @@ interface AfiliadoFormProps {
   modoEdicion?: boolean; // Nuevo prop para controlar si está en modo edición
   onGuardarCambios?: (afiliadoModificado: Afiliado) => void; // Callback para guardar cambios
   onCancelarEdicion?: () => void; // Callback para cancelar edición
+  onActivarEdicion?: () => void; // Callback para activar modo edición
+  onIntegranteCreado?: (nuevoIntegrante: any) => void; // Callback para manejar integrante creado
 }
 
 const AfiliadosForm: React.FC<AfiliadoFormProps> = ({ 
@@ -30,11 +34,14 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
     onDarDeBaja,
     modoEdicion = false,
     onGuardarCambios,
-    onCancelarEdicion
+    onCancelarEdicion,
+    onActivarEdicion,
+    onIntegranteCreado
 }) => {
     const [mostrarModalBaja, setMostrarModalBaja] = useState(false);
     const [mostrarModalAgregarIntegrante, setMostrarModalAgregarIntegrante] = useState(false);
     const [situacionesTerapeuticas, setSituacionesTerapeuticas] = useState<Array<{diagnostico: string, fechaInicio: string, fechaFin: string}>>([]);
+    const [direcciones, setDirecciones] = useState<Direccion[]>(afiliado?.direccion || []);
     
     // Hook para el modal
     const modal = useModal();
@@ -76,6 +83,7 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
                     depto: afiliado.direccion?.[0]?.depto || ''
                 }
             });
+            setDirecciones(afiliado.direccion || []);
         }
     }, [afiliado]);
 
@@ -250,6 +258,9 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
         const numeroDocumento = getInputValue('numeroDocumento');
         const fechaAlta = getInputValue('fechaAlta');
         
+        // Calcular el próximo sufijo para mostrarlo en la confirmación
+        const proximoSufijo = calcularProximoSufijo(miembrosGrupo);
+        
         // Crear contenido extra con los datos del integrante
         const datosIntegrante = (
             <div className="datos-confirmacion">
@@ -259,6 +270,9 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
                 </div>
                 <div className="dato-confirmacion">
                     <strong>• DNI:</strong> {numeroDocumento}
+                </div>
+                <div className="dato-confirmacion">
+                    <strong>• Credencial:</strong> {afiliado?.credencial}-{proximoSufijo}
                 </div>
                 <div className="dato-confirmacion">
                     <strong>• Fecha de Alta:</strong> {fechaAlta}
@@ -296,6 +310,11 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
 
         // Crear el integrante en el backend
         try {
+            // Calcular el próximo sufijo disponible
+            const proximoSufijo = calcularProximoSufijo(miembrosGrupo);
+            console.log('Próximo sufijo calculado para el nuevo integrante:', proximoSufijo);
+            console.log('Miembros actuales del grupo:', miembrosGrupo.map(m => ({id: m.id, sufijo: m.sufijo, nombre: m.nombre})));
+
             const integranteData = {
                 nombre: getInputValue('nombre'),
                 apellido: getInputValue('apellido'),
@@ -307,6 +326,7 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
                 parentesco: getInputValue('parentesco') || 'Integrante',
                 fechaAlta: getInputValue('fechaAlta'),
                 fechaBaja: getInputValue('fechaBaja') || null,
+                sufijo: proximoSufijo, // ← Agregar el sufijo calculado
                 // Direcciones
                 direccion: [{
                     calle: getInputValue('calle') || '',
@@ -334,6 +354,11 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
                 `Se agregó un nuevo integrante al grupo familiar de ${afiliado?.nombre} ${afiliado?.apellido}.`,
                 'La página se actualizará automáticamente para mostrar los cambios.'
             );
+
+            // Llamar al callback para manejar la navegación
+            if (onIntegranteCreado) {
+                onIntegranteCreado(nuevoIntegrante);
+            }
         } catch (error) {
             console.error('Error al crear el integrante:', error);
             modal.mostrarError(
@@ -379,6 +404,11 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
             ...prev,
             emails: prev.emails.map((email, i) => i === index ? valor : email)
         }));
+    };
+
+    // Función para manejar cambios en las direcciones
+    const handleDireccionesChange = (nuevasDirecciones: Direccion[]) => {
+        setDirecciones(nuevasDirecciones);
     };
 
     // Funciones para manejar teléfonos
@@ -507,13 +537,7 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
                 fechaNacimiento: datosEditables.fechaNacimiento,
                 tipoDocumento: datosEditables.tipoDocumento,
                 numeroDocumento: datosEditables.numeroDocumento,
-                direccion: [{
-                    calle: datosEditables.direccion.calle,
-                    numero: datosEditables.direccion.numero,
-                    localidad: datosEditables.direccion.localidad,
-                    codigoPostal: datosEditables.direccion.codigoPostal,
-                    depto: datosEditables.direccion.depto || null
-                }]
+                direccion: direcciones
             };
             
             onGuardarCambios(afiliadoModificado);
@@ -677,55 +701,13 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
                   />
                 </div>
 
-                {/* Dirección editable */}
-                <div className="form-section">
-                  <h4>Dirección</h4>
-                  <div className="form-row-double">
-                    <div className="form-row-double-item-left">
-                      <label>Calle</label>
-                      <Input 
-                        type="text" 
-                        value={datosEditables.direccion.calle}
-                        onChange={(value) => handleCampoChange('direccion.calle', value)}
-                      />
-                    </div>
-                    <div className="form-row-double-item-right">
-                      <label>Número</label>
-                      <Input 
-                        type="text" 
-                        value={datosEditables.direccion.numero}
-                        onChange={(value) => handleCampoChange('direccion.numero', value)}
-                      />
-                    </div>
-                  </div>
-                  <div className="form-row-double">
-                    <div className="form-row-double-item-left">
-                      <label>Localidad</label>
-                      <Input 
-                        type="text" 
-                        value={datosEditables.direccion.localidad}
-                        onChange={(value) => handleCampoChange('direccion.localidad', value)}
-                      />
-                    </div>
-                    <div className="form-row-double-item-right">
-                      <label>Código Postal</label>
-                      <Input 
-                        type="text" 
-                        value={datosEditables.direccion.codigoPostal}
-                        onChange={(value) => handleCampoChange('direccion.codigoPostal', value)}
-                      />
-                    </div>
-                  </div>
-                  <div className="form-row">
-                    <label>Departamento</label>
-                    <Input 
-                      type="text" 
-                      value={datosEditables.direccion.depto}
-                      onChange={(value) => handleCampoChange('direccion.depto', value)}
-                      placeholder="Opcional"
-                    />
-                  </div>
-                </div>
+                {/* Direcciones dinámicas */}
+                <CardDireccionesAfiliados
+                  direcciones={direcciones}
+                  personaId={afiliado?.id || 0}
+                  modoEdicion={modoEdicion}
+                  onDireccionesChange={handleDireccionesChange}
+                />
 
               <div>
                 <h4>Datos de contacto</h4>
@@ -819,20 +801,22 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
                   <span>{afiliado?.fechaNacimiento}</span>
                 </div>
 
-                <div className="form-row">
-                  <label>Dirección</label>
-                  {afiliado?.direccion.map((d, index) => <span key={index}>{`${d.calle} ${d.numero}${d.depto ? `, ${d.depto}`: ""}, ${d.codigoPostal}, ${d.localidad}`}</span>)}
-                </div>
+                <CardDireccionesAfiliados
+                  direcciones={afiliado?.direccion || []}
+                  personaId={afiliado?.id || 0}
+                  modoEdicion={modoEdicion}
+                  onDireccionesChange={handleDireccionesChange}
+                />
                 
                 {/* Datos de Contacto - Visualización alineada */}
                 <div className="form-row-double">
                   <div className="form-row-double-item-left">
                     <label>Teléfono</label>
-                    {afiliado?.telefono.map((tel, index) => <span key={index}>{tel}</span> )}
+                    {afiliado?.telefono.map((tel: string, index: number) => <span key={index}>{tel}</span> )}
                   </div>
                   <div className="form-row-double-item-right">
                     <label>Email</label>
-                    {afiliado?.email.map((e, index) => <span key={index}>{`${e}`}</span>)}
+                    {afiliado?.email.map((e: string, index: number) => <span key={index}>{`${e}`}</span>)}
                   </div>
                 </div>
               </>
@@ -842,7 +826,7 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
             
 
               {afiliado && afiliado.situacionesTerapeuticas && afiliado.situacionesTerapeuticas.length > 0
-                ? afiliado.situacionesTerapeuticas.map((st, index) => st.fechaFin === null ?
+                ? afiliado.situacionesTerapeuticas.map((st: any, index: number) => st.fechaFin === null ?
                   <div key={index}>
                   <div className="form-row-double">
                     <div className="form-row-double-item-left">
@@ -907,9 +891,21 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
                 </Button>
               </>
             ) : (
-              <Button size="large" variant="danger" type="button" onClick={handleAbrirModalBaja}>
-                Dar de baja
-              </Button>
+              <>
+                <Button 
+                  size="large" 
+                  variant="primary" 
+                  type="button" 
+                  onClick={onActivarEdicion}
+                  disabled={!onActivarEdicion}
+                >
+                  <Edit2 size={16} style={{marginRight: '8px'}} />
+                  Editar
+                </Button>
+                <Button size="large" variant="danger" type="button" onClick={handleAbrirModalBaja}>
+                  Dar de baja
+                </Button>
+              </>
             )}
           </div>
           </div>
