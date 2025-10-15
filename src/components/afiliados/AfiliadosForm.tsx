@@ -890,8 +890,9 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
                       <label>Diagnóstico</label>
                       {renderFieldWithIcon(<span>No posee situaciones terapeuticas</span>, true)}
                     </>
-      )}
-    </div>
+                  )
+          }
+          </div>
 
           <div className={`form-row ${getFieldClassName(true)}`}>
             <h4>Ingreso/Egreso al Sistema</h4>
