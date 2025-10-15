@@ -1,0 +1,28 @@
+.direccion-input {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.direccion-calle {
+  flex: 2;
+}
+
+.direccion-numero {
+  flex: 1;
+  max-width: 80px;
+}
+
+.direccion-depto {
+  flex: 1;
+  max-width: 100px;
+}
+
+.direccion-localidad {
+  flex: 2;
+}
+
+.direccion-codigoPostal {
+  flex: 1;
+  max-width: 100px;
+}
