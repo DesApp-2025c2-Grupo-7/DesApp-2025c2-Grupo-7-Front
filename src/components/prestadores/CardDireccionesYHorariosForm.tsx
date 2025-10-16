@@ -3,7 +3,6 @@ import Button from "../genericos/Button";
 import ModalDireccion from "./ModalDireccion";
 import type { Direccion, HorarioAtencion } from "../../types/prestadores";
 
-
 // Función segura para convertir "HH:MM" a minutos
 const horaAMinutos = (hora?: string) => {
   if (!hora) return 0;
@@ -32,7 +31,7 @@ const calcularTurnos = (horario: HorarioAtencion) => {
 
 interface CardDireccionesYHorariosFormProps {
   direcciones?: Direccion[];
-  prestadorId: number;
+  prestadorId?: number; // ahora opcional
 }
 
 const CardDireccionesYHorariosForm: React.FC<CardDireccionesYHorariosFormProps> = ({
@@ -46,14 +45,20 @@ const CardDireccionesYHorariosForm: React.FC<CardDireccionesYHorariosFormProps> 
   const handleCloseModal = () => setDireccionSeleccionada(null);
 
   const handleSaveDireccion = (dirActualizada: Direccion) => {
-    setListaDirecciones(prev => {
-      const existe = prev.find(d => d.id === dirActualizada.id);
+    // Asignar ID temporal si no existe
+    const idFinal = dirActualizada.id || Date.now();
+
+    const direccionFinal = { ...dirActualizada, id: idFinal };
+
+    setListaDirecciones((prev) => {
+      const existe = prev.find((d) => d.id === direccionFinal.id);
       if (existe) {
-        return prev.map(d => (d.id === dirActualizada.id ? dirActualizada : d));
+        return prev.map((d) => (d.id === direccionFinal.id ? direccionFinal : d));
       } else {
-        return [...prev, dirActualizada];
+        return [...prev, direccionFinal];
       }
     });
+
     setDireccionSeleccionada(null);
   };
 
@@ -65,6 +70,7 @@ const CardDireccionesYHorariosForm: React.FC<CardDireccionesYHorariosFormProps> 
       localidad: "",
       codigoPostal: "",
       horariosAtencion: [],
+      esTemporal: true, // marcada como temporal
     };
     handleVerMas(nuevaDireccion);
   };
@@ -72,7 +78,14 @@ const CardDireccionesYHorariosForm: React.FC<CardDireccionesYHorariosFormProps> 
   const handleEliminarDireccion = async (direccion: Direccion) => {
     if (!window.confirm("¿Deseas eliminar esta dirección y todos sus horarios?")) return;
 
+    // Si es temporal o el prestador no existe, eliminamos localmente
+    if (!prestadorId || prestadorId === 0 || direccion.esTemporal || direccion.id === 0) {
+      setListaDirecciones((prev) => prev.filter((d) => d.id !== direccion.id));
+      return;
+    }
+
     try {
+      // Eliminar horarios en backend
       for (const hor of direccion.horariosAtencion) {
         if (hor.id) {
           await fetch(
@@ -82,11 +95,12 @@ const CardDireccionesYHorariosForm: React.FC<CardDireccionesYHorariosFormProps> 
         }
       }
 
+      // Eliminar dirección en backend
       await fetch(`http://localhost:3000/prestadores/${prestadorId}/direcciones/${direccion.id}`, {
         method: "DELETE",
       });
 
-      setListaDirecciones(prev => prev.filter(d => d.id !== direccion.id));
+      setListaDirecciones((prev) => prev.filter((d) => d.id !== direccion.id));
     } catch (err) {
       console.error("Error eliminando dirección y horarios", err);
       alert("No se pudo eliminar la dirección");
@@ -134,7 +148,7 @@ const CardDireccionesYHorariosForm: React.FC<CardDireccionesYHorariosFormProps> 
 
       {direccionSeleccionada && (
         <ModalDireccion
-          prestadorId={prestadorId}
+          prestadorId={prestadorId || 0}
           direccion={direccionSeleccionada}
           todasDirecciones={listaDirecciones}
           onClose={handleCloseModal}

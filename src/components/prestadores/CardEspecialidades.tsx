@@ -1,10 +1,11 @@
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
+import type { Especialidad } from "../../types/prestadores";
 
 interface CardEspecialidadesProps {
-  especialidades: string[];
-  seleccionadas: string[];
-  onChange: (seleccionadas: string[]) => void;
+  especialidades: Especialidad[];
+  seleccionadas: Especialidad[];
+  onChange: (seleccionadas: Especialidad[]) => void;
 }
 
 export default function CardEspecialidades({
@@ -12,26 +13,26 @@ export default function CardEspecialidades({
   seleccionadas,
   onChange,
 }: CardEspecialidadesProps) {
-  const handleCheckboxChange = (nombre: string) => {
-    if (seleccionadas.includes(nombre)) {
-      onChange(seleccionadas.filter((e) => e !== nombre));
+  const handleCheckboxChange = (esp: Especialidad) => {
+    if (seleccionadas.some((e) => e.id === esp.id)) {
+      onChange(seleccionadas.filter((e) => e.id !== esp.id));
     } else {
-      onChange([...seleccionadas, nombre]);
+      onChange([...seleccionadas, esp]);
     }
   };
 
   return (
     <Card sx={{ maxWidth: 400, margin: "1rem auto" }}>
       <CardContent>
-        {especialidades.map((especialidad) => (
-          <div key={especialidad}>
+        {especialidades.map((esp) => (
+          <div key={esp.id}>
             <input
               type="checkbox"
-              id={especialidad}
-              checked={seleccionadas.includes(especialidad)}
-              onChange={() => handleCheckboxChange(especialidad)}
+              id={esp.id.toString()}
+              checked={seleccionadas.some((e) => e.id === esp.id)}
+              onChange={() => handleCheckboxChange(esp)}
             />
-            <label htmlFor={especialidad}>{especialidad}</label>
+            <label htmlFor={esp.id.toString()}>{esp.nombre}</label>
           </div>
         ))}
       </CardContent>

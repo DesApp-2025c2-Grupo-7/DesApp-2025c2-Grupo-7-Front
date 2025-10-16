@@ -4,7 +4,7 @@ import type { Direccion, HorarioAtencion } from "../../types/prestadores";
 import "./ModalDireccion.css";
 
 interface ModalDireccionProps {
-  prestadorId: number;
+  prestadorId: number; // Puede ser 0 si el prestador aún no existe
   direccion: Direccion | null;
   onClose: () => void;
   onSave: (direccion: Direccion) => void;
@@ -19,14 +19,29 @@ const ModalDireccion: React.FC<ModalDireccionProps> = ({
   todasDirecciones = [],
 }) => {
   const [form, setForm] = useState<Direccion>(
-    direccion || { id: 0, calle: "", numero: "", localidad: "", codigoPostal: "", horariosAtencion: [] }
+    direccion || {
+      id: 0,
+      calle: "",
+      numero: "",
+      localidad: "",
+      codigoPostal: "",
+      horariosAtencion: [],
+      esTemporal: true, // Marca que es temporal si prestador aún no existe
+    }
   );
   const [errores, setErrores] = useState<{ [key: number]: string[] }>({});
- 
 
   useEffect(() => {
     setForm(
-      direccion || { id: 0, calle: "", numero: "", localidad: "", codigoPostal: "", horariosAtencion: [] }
+      direccion || {
+        id: 0,
+        calle: "",
+        numero: "",
+        localidad: "",
+        codigoPostal: "",
+        horariosAtencion: [],
+        esTemporal: true,
+      }
     );
     setErrores({});
   }, [direccion]);
@@ -44,7 +59,9 @@ const ModalDireccion: React.FC<ModalDireccionProps> = ({
     const fin = horaAMinutos(horario.hasta);
     if (inicio >= fin) nuevosErrores.push("Hora inicio es mayor o igual a hora fin");
 
-    let duracion = horario.duracionTurno.includes(":") ? horaAMinutos(horario.duracionTurno) : Number(horario.duracionTurno);
+    let duracion = horario.duracionTurno.includes(":")
+      ? horaAMinutos(horario.duracionTurno)
+      : Number(horario.duracionTurno);
     if (duracion <= 0) nuevosErrores.push("Duración inválida");
 
     // Solapamiento con otras direcciones
@@ -67,7 +84,8 @@ const ModalDireccion: React.FC<ModalDireccionProps> = ({
       if (hI.dia === horario.dia) {
         const inicioI = horaAMinutos(hI.desde);
         const finI = horaAMinutos(hI.hasta);
-        if (!(fin <= inicioI || inicio >= finI)) nuevosErrores.push("Se superpone con otro horario en esta dirección");
+        if (!(fin <= inicioI || inicio >= finI))
+          nuevosErrores.push("Se superpone con otro horario en esta dirección");
       }
     });
 
@@ -76,12 +94,18 @@ const ModalDireccion: React.FC<ModalDireccionProps> = ({
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setForm(prev => ({ ...prev, [name]: value }));
+    setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleHorarioChange = (index: number, field: keyof HorarioAtencion, value: string) => {
-    const nuevosHorarios = form.horariosAtencion.map((h, i) => (i === index ? { ...h, [field]: value } : h));
-    setForm(prev => ({ ...prev, horariosAtencion: nuevosHorarios }));
+  const handleHorarioChange = (
+    index: number,
+    field: keyof HorarioAtencion,
+    value: string
+  ) => {
+    const nuevosHorarios = form.horariosAtencion.map((h, i) =>
+      i === index ? { ...h, [field]: value } : h
+    );
+    setForm((prev) => ({ ...prev, horariosAtencion: nuevosHorarios }));
 
     const erroresTotales: { [key: number]: string[] } = {};
     nuevosHorarios.forEach((h, i) => {
@@ -93,13 +117,13 @@ const ModalDireccion: React.FC<ModalDireccionProps> = ({
 
   const handleAddHorario = () => {
     const nuevo: HorarioAtencion = { id: 0, dia: "", desde: "", hasta: "", duracionTurno: "" };
-    setForm(prev => ({ ...prev, horariosAtencion: [...prev.horariosAtencion, nuevo] }));
+    setForm((prev) => ({ ...prev, horariosAtencion: [...prev.horariosAtencion, nuevo] }));
   };
 
   const handleDeleteHorario = (index: number) => {
     if (!window.confirm("¿Deseas eliminar este horario?")) return;
     const nuevos = form.horariosAtencion.filter((_, i) => i !== index);
-    setForm(prev => ({ ...prev, horariosAtencion: nuevos }));
+    setForm((prev) => ({ ...prev, horariosAtencion: nuevos }));
 
     // Revalidar
     const erroresTotales: { [key: number]: string[] } = {};
@@ -118,6 +142,13 @@ const ModalDireccion: React.FC<ModalDireccionProps> = ({
 
     if (!window.confirm("¿Deseas guardar los cambios realizados?")) return;
 
+    // ⚙️ Si el prestador aún no existe, guardamos localmente
+    if (!prestadorId || prestadorId === 0) {
+      onSave({ ...form, esTemporal: true });
+      onClose();
+      return;
+    }
+
     try {
       const method = form.id === 0 ? "POST" : "PUT";
       const url =
@@ -135,13 +166,20 @@ const ModalDireccion: React.FC<ModalDireccionProps> = ({
           codigoPostal: form.codigoPostal,
         }),
       });
+
       if (!resDir.ok) throw new Error("Error al guardar dirección");
       const dirGuardada: Direccion = await resDir.json();
 
       // Guardar horarios
       const horariosActualizados: HorarioAtencion[] = [];
       for (const hor of form.horariosAtencion) {
-        const horData = { ...hor, duracionTurno: hor.duracionTurno.includes("min") ? hor.duracionTurno : hor.duracionTurno + " minutos" };
+        const horData = {
+          ...hor,
+          duracionTurno: hor.duracionTurno.includes("min")
+            ? hor.duracionTurno
+            : hor.duracionTurno + " minutos",
+        };
+
         let resHor;
         if (hor.id && hor.id !== 0) {
           resHor = await fetch(
@@ -154,11 +192,11 @@ const ModalDireccion: React.FC<ModalDireccionProps> = ({
             { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(horData) }
           );
         }
+
         const dataHor = await resHor.json();
         horariosActualizados.push({ ...hor, id: dataHor.id });
       }
 
-      // Actualiza la dirección con horarios en la UI
       onSave({ ...dirGuardada, horariosAtencion: horariosActualizados });
       onClose();
     } catch (err) {
@@ -176,9 +214,17 @@ const ModalDireccion: React.FC<ModalDireccionProps> = ({
       <div className="modal-card">
         <h3>{form.id === 0 ? "Nueva Dirección" : "Editar Dirección"}</h3>
 
-        {/* ERRORES ARRIBA */}
         {Object.keys(errores).length > 0 && (
-          <div style={{ color: "red", backgroundColor: "#ffe6e6", padding: "0.5rem", marginBottom: "1rem", borderRadius: "4px", border: "1px solid red" }}>
+          <div
+            style={{
+              color: "red",
+              backgroundColor: "#ffe6e6",
+              padding: "0.5rem",
+              marginBottom: "1rem",
+              borderRadius: "4px",
+              border: "1px solid red",
+            }}
+          >
             {Object.entries(errores).map(([idx, errs]) => (
               <div key={idx}>
                 Horario {Number(idx) + 1}: {errs.join(", ")}
@@ -188,27 +234,42 @@ const ModalDireccion: React.FC<ModalDireccionProps> = ({
         )}
 
         <div className="modal-content" style={{ maxHeight: "60vh", overflowY: "auto" }}>
-          <label>Calle: <input type="text" name="calle" value={form.calle} onChange={handleChange} /></label>
-          <label>Número: <input type="text" name="numero" value={form.numero} onChange={handleChange} /></label>
-          <label>Localidad: <input type="text" name="localidad" value={form.localidad} onChange={handleChange} /></label>
-          <label>Código Postal: <input type="text" name="codigoPostal" value={form.codigoPostal} onChange={handleChange} /></label>
+          <label>
+            Calle: <input type="text" name="calle" value={form.calle} onChange={handleChange} />
+          </label>
+          <label>
+            Número: <input type="text" name="numero" value={form.numero} onChange={handleChange} />
+          </label>
+          <label>
+            Localidad: <input type="text" name="localidad" value={form.localidad} onChange={handleChange} />
+          </label>
+          <label>
+            Código Postal: <input type="text" name="codigoPostal" value={form.codigoPostal} onChange={handleChange} />
+          </label>
 
           <h4>Horarios de Atención</h4>
           {form.horariosAtencion.map((hor, i) => (
             <div key={i} className="horario-item" style={{ marginBottom: "0.5rem" }}>
-              <label>Día: <input type="text" value={hor.dia} onChange={e => handleHorarioChange(i, "dia", e.target.value)} style={{ borderColor: errores[i] ? "red" : undefined }} /></label>
-              <label>Desde: <input type="time" value={hor.desde} onChange={e => handleHorarioChange(i, "desde", e.target.value)} style={{ borderColor: errores[i] ? "red" : undefined }} /></label>
-              <label>Hasta: <input type="time" value={hor.hasta} onChange={e => handleHorarioChange(i, "hasta", e.target.value)} style={{ borderColor: errores[i] ? "red" : undefined }} /></label>
-              <label>Duración: <input type="text" value={hor.duracionTurno} onChange={e => handleHorarioChange(i, "duracionTurno", e.target.value)} style={{ borderColor: errores[i] ? "red" : undefined }} /></label>
+              <label>
+                Día: <input type="text" value={hor.dia} onChange={(e) => handleHorarioChange(i, "dia", e.target.value)} style={{ borderColor: errores[i] ? "red" : undefined }} />
+              </label>
+              <label>
+                Desde: <input type="time" value={hor.desde} onChange={(e) => handleHorarioChange(i, "desde", e.target.value)} style={{ borderColor: errores[i] ? "red" : undefined }} />
+              </label>
+              <label>
+                Hasta: <input type="time" value={hor.hasta} onChange={(e) => handleHorarioChange(i, "hasta", e.target.value)} style={{ borderColor: errores[i] ? "red" : undefined }} />
+              </label>
+              <label>
+                Duración: <input type="text" value={hor.duracionTurno} onChange={(e) => handleHorarioChange(i, "duracionTurno", e.target.value)} style={{ borderColor: errores[i] ? "red" : undefined }} />
+              </label>
               <Button variant="danger" size="small" onClick={() => handleDeleteHorario(i)}>Eliminar</Button>
             </div>
           ))}
-          <Button variant="primary" onClick={handleAddHorario}>+ Agregar nuevo horario</Button>
+          <Button variant="secondary" onClick={handleAddHorario}>+ Agregar nuevo horario</Button>
         </div>
 
-        {/* BOTONES FIJOS ABAJO */}
         <div className="modal-actions" style={{ position: "sticky", bottom: 0, backgroundColor: "white", paddingTop: "0.5rem", paddingBottom: "0.5rem", display: "flex", justifyContent: "flex-end", gap: "0.5rem", borderTop: "1px solid #ccc" }}>
-          <Button variant="cancel" onClick={onClose}>Cancelar</Button>
+          <Button variant="secondary" onClick={onClose}>Cancelar</Button>
           <Button variant="primary" onClick={handleSave}>Guardar</Button>
         </div>
       </div>

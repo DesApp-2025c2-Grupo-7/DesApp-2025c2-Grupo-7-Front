@@ -6,11 +6,13 @@ import "../genericos/HeaderEstilos.css";
 interface PrestadoresHeaderProps {
     onVolver?: () => void;
     onAlta?: () => void;
+    mostrarAlta?: boolean; // ✅ nueva prop
 }
 
 const PrestadoresHeader: React.FC<PrestadoresHeaderProps> = ({
     onVolver,
     onAlta,
+    mostrarAlta = true, // por defecto true
 }) => {
     return (
         <div className="seccion-header">
@@ -19,9 +21,11 @@ const PrestadoresHeader: React.FC<PrestadoresHeaderProps> = ({
                 <Button variant="back" icon={ArrowLeft} onClick={onVolver}>
                     Volver al menú
                 </Button>
-                <Button variant="primary" icon={UserPlus} onClick={onAlta}>
-                    Dar de alta Prestador
-                </Button>
+                {mostrarAlta && (
+                    <Button variant="primary" icon={UserPlus} onClick={onAlta}>
+                        Dar de alta Prestador
+                    </Button>
+                )}
             </div>
         </div>
     );

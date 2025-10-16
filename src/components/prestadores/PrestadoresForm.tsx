@@ -2,6 +2,7 @@ import React from "react";
 import "./ListaPrestadores.css";
 import type { Prestador } from "../../types/prestadores";
 import CardDireccionesYHorariosForm from "./CardDireccionesYHorariosForm";
+import Button from "../genericos/Button";
 
 interface PrestadoresFormProps {
   prestador: Prestador | null;
@@ -15,33 +16,24 @@ const PrestadoresForm: React.FC<PrestadoresFormProps> = ({ prestador }) => {
       {/* Tipo de prestador */}
       <div className="form-row">
         <label>Tipo de prestador</label>
-        {prestador.esProfesionalIndependiente ? (
-          <span>Profesional Independiente</span>
-        ) : (
-          <span>Centro de Salud</span>
-        )}
+        <span>
+          {prestador.esProfesionalIndependiente ? "Profesional Independiente" : "Centro de Salud"}
+        </span>
       </div>
 
       {/* Especialidades */}
       <div className="form-row">
         <label>Especialidades</label>
-        <div
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            gap: "0.2rem 0.2rem",
-            color: "#646b72ff",
-          }}
-        >
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "0.2rem", color: "#646b72ff" }}>
           {prestador.especialidades.length > 0
-            ? prestador.especialidades.map((esp, i) => <span key={i}>{esp}</span>)
+            ? prestador.especialidades.map((esp) => <span key={esp.id}>{esp.nombre}</span>)
             : <span>No posee especialidades asignadas</span>}
         </div>
       </div>
 
       {/* Datos principales */}
       <div className="form-row">
-        <label>Nro de CUIL o CUIT</label>
+        <label>CUIL/CUIT</label>
         <span>{prestador.numeroCUIL}</span>
       </div>
       <div className="form-row">
@@ -50,15 +42,15 @@ const PrestadoresForm: React.FC<PrestadoresFormProps> = ({ prestador }) => {
       </div>
       <div className="form-row">
         <label>Teléfono</label>
-        {prestador.telefono.map((tel, i) => (
-          <span key={i}>{tel}</span>
-        ))}
+        {prestador.telefono.length > 0
+          ? prestador.telefono.map((tel, i) => <span key={i}>{tel}</span>)
+          : <span>No registrado</span>}
       </div>
       <div className="form-row">
         <label>Email</label>
-        {prestador.email.map((email, i) => (
-          <span key={i} key={i}>{email}</span>
-        ))}
+        {prestador.email.length > 0
+          ? prestador.email.map((email, i) => <span key={i}>{email}</span>)
+          : <span>No registrado</span>}
       </div>
 
       {/* Fecha de baja */}
@@ -70,11 +62,11 @@ const PrestadoresForm: React.FC<PrestadoresFormProps> = ({ prestador }) => {
       {/* Card de direcciones y horarios */}
       <CardDireccionesYHorariosForm
         direcciones={prestador.direccion}
-        prestadorId={prestador.id} // ✅ pasamos el ID real
+        prestadorId={prestador.id} 
       />
-      
-      
+      <Button variant="primary" >Editar</Button>
     </div>
+    
   );
 };
 
