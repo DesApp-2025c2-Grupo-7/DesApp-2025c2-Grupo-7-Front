@@ -8,6 +8,7 @@ import "./PrestadorProfile.css";
 import type { Prestador } from "../types/prestadores";
 
 
+
 const PrestadorProfilePage: React.FC = () => {
   const [prestador, setPrestador] = useState<Prestador | null>(null);
   const [loading, setLoading] = useState(true);
@@ -68,9 +69,10 @@ const PrestadorProfilePage: React.FC = () => {
         subtitle="Prestador - Información y estado"
       />
       <div className="admin-content">
-        <HeaderPrestador onVolver={handleVolver} />
+        <HeaderPrestador onVolver={handleVolver} mostrarAlta={false}/>
         <PrestadoresForm prestador={prestador} />
       </div>
+      
     </div>
   );
 };

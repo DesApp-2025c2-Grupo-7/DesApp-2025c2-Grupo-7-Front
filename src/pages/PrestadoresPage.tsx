@@ -77,7 +77,7 @@ const PrestadoresPage: React.FC = () => {
       />
 
       <div className="admin-content">
-        <PrestadoresHeader onVolver={handleVolver} onAlta={handleAlta} />
+        <PrestadoresHeader onVolver={handleVolver} onAlta={handleAlta} mostrarAlta={true} />
 
         <BarraBusqueda busqueda={busqueda} setBusqueda={setBusqueda} />
 
