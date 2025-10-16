@@ -30,7 +30,8 @@ const AfiliadosPage: React.FC = () => {
 
     if (afiliadosFromState) {
       setAfiliados(afiliadosFromState);
-      const listaTransformada = transformarAfiliadosParaLista(afiliadosFromState);
+      const listaTransformada =
+        transformarAfiliadosParaLista(afiliadosFromState);
       setAfiliadosLista(listaTransformada);
       setLoading(false);
     } else {
@@ -43,36 +44,42 @@ const AfiliadosPage: React.FC = () => {
             throw new Error("Error al obtener la lista de afiliados");
           }
           const titulares: Afiliado[] = await response.json();
-          
+
           // Para cada titular, obtener su grupo familiar completo
           const afiliadosCompletos = await Promise.all(
             titulares.map(async (titular) => {
               try {
-                const grupoResponse = await fetch(getApiUrl(`/personas/grupo/${titular.credencial}`));
+                const grupoResponse = await fetch(
+                  getApiUrl(`/personas/grupo/${titular.credencial}`)
+                );
                 if (grupoResponse.ok) {
                   const grupoCompleto = await grupoResponse.json();
                   return {
                     ...titular,
-                    grupoFamiliar: grupoCompleto.grupoFamiliar || []
+                    grupoFamiliar: grupoCompleto.grupoFamiliar || [],
                   };
                 }
                 return {
                   ...titular,
-                  grupoFamiliar: []
+                  grupoFamiliar: [],
                 };
               } catch (error) {
-                console.warn(`Error obteniendo grupo de ${titular.credencial}:`, error);
+                console.warn(
+                  `Error obteniendo grupo de ${titular.credencial}:`,
+                  error
+                );
                 return {
                   ...titular,
-                  grupoFamiliar: []
+                  grupoFamiliar: [],
                 };
               }
             })
           );
-          
+
           setAfiliados(afiliadosCompletos);
           // Transformar para mostrar TODOS los afiliados e integrantes en la lista
-          const listaTransformada = transformarAfiliadosParaLista(afiliadosCompletos);
+          const listaTransformada =
+            transformarAfiliadosParaLista(afiliadosCompletos);
           setAfiliadosLista(listaTransformada);
         } catch (error) {
           console.error("Error al cargar afiliados:", error);
@@ -101,7 +108,10 @@ const AfiliadosPage: React.FC = () => {
   // 👇 Lógica de paginación
   const totalPages = Math.ceil(afiliadosFiltrados.length / afiliadosPerPage);
   const startIndex = (currentPage - 1) * afiliadosPerPage;
-  const afiliadosVisibles = afiliadosFiltrados.slice(startIndex, startIndex + afiliadosPerPage);
+  const afiliadosVisibles = afiliadosFiltrados.slice(
+    startIndex,
+    startIndex + afiliadosPerPage
+  );
 
   // 👇 Reiniciar a página 1 si cambia la búsqueda
   useEffect(() => {
@@ -116,7 +126,11 @@ const AfiliadosPage: React.FC = () => {
       />
 
       <div className="admin-content">
-        <AfiliadosHeader onVolver={handleVolver} onAlta={handleAlta} />
+        <AfiliadosHeader
+          onVolver={handleVolver}
+          onAlta={handleAlta}
+          afiliadoButtonText="Dar de alta afiliado"
+        />
 
         <BarraBusqueda busqueda={busqueda} setBusqueda={setBusqueda} />
 
@@ -124,7 +138,10 @@ const AfiliadosPage: React.FC = () => {
           <p>Cargando afiliados...</p>
         ) : afiliadosVisibles.length > 0 ? (
           <>
-            <ListaAfiliados afiliados={afiliadosVisibles} totalAfiliados={afiliadosFiltrados.length} />
+            <ListaAfiliados
+              afiliados={afiliadosVisibles}
+              totalAfiliados={afiliadosFiltrados.length}
+            />
             <Paginacion
               totalPages={totalPages}
               currentPage={currentPage}

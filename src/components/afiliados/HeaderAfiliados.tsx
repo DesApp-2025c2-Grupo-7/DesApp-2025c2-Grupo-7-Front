@@ -4,60 +4,41 @@ import "../genericos/HeaderEstilos.css";
 import { ArrowLeft, UserPlus } from "lucide-react";
 
 interface AfiliadosHeaderProps {
-    onVolver?: () => void;
-    onAlta?: () => void;
-    modoEdicion?: boolean;
-    esTitular?: boolean;
-    contexto?: 'lista' | 'titular' | 'integrante';
+  onVolver?: () => void;
+  onAlta?: () => void;
+  modoEdicion?: boolean;
+  afiliadoButtonText?: string;
 }
 
 const AfiliadosHeader: React.FC<AfiliadosHeaderProps> = ({
-    onVolver,
-    onAlta,
-    modoEdicion = false,
-    esTitular = true,
-    contexto = 'lista',
+  onVolver,
+  onAlta,
+  modoEdicion = false,
+  afiliadoButtonText,
 }) => {
-    return (
-        <div className="seccion-header">
-            <div className="titulo-con-estado">
-                <h2>Gestión de Afiliados</h2>
-                {modoEdicion && (
-                    <span className="badge-modo-edicion">
-                        Modo Edición
-                    </span>
-                )}
-            </div>
-            <div className="seccion-header-buttons">
-                <Button variant="back"  icon={ArrowLeft} onClick={onVolver}>
-                    Volver
-                </Button>
-                
-                {/* Lista de afiliados: mostrar "Dar de alta afiliado" */}
-                {contexto === 'lista' && (
-                    <Button variant="primary" icon={UserPlus} onClick={onAlta}>
-                        Dar de alta Afiliado
-                    </Button>
-                )}
-                
-                {/* Info de titular: mostrar "Agregar integrante" si no está en modo edición */}
-                {contexto === 'titular' && !modoEdicion && (
-                    <Button 
-                        variant="primary" 
-                        icon={UserPlus} 
-                        onClick={() => {
-                            // Disparar evento personalizado para que lo capture AfiliadosForm
-                            window.dispatchEvent(new CustomEvent('abrirModalAgregarIntegrante'));
-                        }}
-                    >
-                        Agregar Integrante
-                    </Button>
-                )}
-                
-                {/* Info de integrante: no mostrar ningún botón adicional */}
-            </div>
-        </div>
-    );
+  return (
+    <div className="seccion-header">
+      <div className="titulo-con-estado">
+        <h2>Gestión de Afiliados</h2>
+        {modoEdicion && (
+          <span className="badge-modo-edicion">Modo Edición</span>
+        )}
+      </div>
+      <div className="seccion-header-buttons">
+        {onVolver && (
+          <Button variant="back" icon={ArrowLeft} onClick={onVolver}>
+            Volver
+          </Button>
+        )}
+
+        {onAlta && (
+          <Button variant="primary" icon={UserPlus} onClick={onAlta}>
+            {afiliadoButtonText}
+          </Button>
+        )}
+      </div>
+    </div>
+  );
 };
 
 export default AfiliadosHeader;
