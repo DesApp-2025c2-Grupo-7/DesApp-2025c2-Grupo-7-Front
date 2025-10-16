@@ -13,6 +13,9 @@ export interface Direccion {
     localidad: string;
     codigoPostal: string;
     horariosAtencion: HorarioAtencion[];
+
+    /** Campo opcional para manejar datos locales antes de persistir en el backend */
+    esTemporal?: boolean; // 👈 agregado
 }
 
 export interface Prestador {
@@ -24,6 +27,9 @@ export interface Prestador {
     telefono: string[];
     email: string[];
     direccion: Direccion[];
+
+    /** Indica que el prestador aún no fue guardado en la base */
+    esTemporal?: boolean; // 👈 agregado
 }
 
 export interface Especialidad {
