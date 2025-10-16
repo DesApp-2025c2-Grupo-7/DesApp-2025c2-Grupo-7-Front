@@ -903,7 +903,7 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
               </div>
               <div className={`form-row-double-item-right ${getFieldClassName(true)}`}>
                 <label>Fecha Baja</label>
-                {renderFieldWithIcon(<span>{afiliado?.fechaBaja}</span>, true)}
+                {renderFieldWithIcon(<span>{afiliado.fechaBaja ? afiliado.fechaBaja : 'No posee fecha de baja'}</span>, true)}
               </div>
             </div>
         

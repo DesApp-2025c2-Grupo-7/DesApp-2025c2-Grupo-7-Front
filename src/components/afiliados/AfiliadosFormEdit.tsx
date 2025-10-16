@@ -215,28 +215,28 @@ export default function AfiliadosFormEdit() {
           ...st,
           fechaFin: st.fechaFin.trim() === '' ? null : st.fechaFin
         })),
-        // Datos del grupo familiar
+        // planMedico va en la raíz del DTO (el backend lo lee desde dto.planMedico)
+        planMedico: formData.planMedico,
+        // Datos del grupo familiar opcionales (dejamos fechaAlta si se necesita)
         grupoFamiliar: {
-          planMedico: formData.planMedico,
           fechaAlta: formData.fechaAlta,
           estado: 'ACTIVO'
         }
       };
 
       // Llamar al servicio para crear el titular (usando createIntegrante para titular)
-      const nuevoAfiliado = await personasService.createIntegrante(0, datosAfiliado);
+      const nuevoAfiliado = await personasService.createAfiliado(datosAfiliado);
       
-      // Mostrar modal de éxito
-      modal.mostrarExito(
-        '¡Afiliado creado exitosamente!',
-        `Se ha dado de alta al titular ${formData.nombre} ${formData.apellido} con la credencial ${formData.credencial}-00.`,
-        'Será redirigido al perfil del afiliado.'
-      );
-
-      // Redirigir al perfil después de 2 segundos
-      setTimeout(() => {
-        navigate(`/afiliados/${nuevoAfiliado.id}`);
-      }, 2000);
+      // Mostrar modal de éxito y navegar cuando el usuario confirme
+      modal.mostrarModal({
+        titulo: '¡Afiliado creado exitosamente!',
+        mensaje: `Se ha dado de alta al titular ${formData.nombre} ${formData.apellido} con la credencial ${formData.credencial}-00.`,
+        submensaje: 'Presione Aceptar para ir al perfil del afiliado.',
+        tipo: 'success',
+        textoBotonConfirmar: 'Aceptar',
+        soloInformacion: true,
+        onConfirmar: () => navigate(`/afiliados/${nuevoAfiliado.id}`)
+      });
 
     } catch (error: any) {
       console.error('Error al crear afiliado:', error);

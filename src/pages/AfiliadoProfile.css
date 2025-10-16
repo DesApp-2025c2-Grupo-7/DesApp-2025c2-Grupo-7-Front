@@ -43,7 +43,8 @@
   border: 1px solid #ccd6e0;
   background-color: #f4f4f4;
   border-radius: 8px;
-  padding: 0.7rem 1rem;
+  padding: 0.25rem 1rem;
+  margin: 0.25rem;
   font-size: 0.95rem;
   color: #2c3e50;
   font-weight: 500;
@@ -152,6 +153,9 @@
 .field-with-icon span {
   flex: 1;
   padding-right: 2.5rem !important; /* Espacio para el ícono */
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+
 }
 
 .field-readonly-icon {

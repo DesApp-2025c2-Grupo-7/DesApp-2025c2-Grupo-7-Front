@@ -281,16 +281,16 @@ const AfiliadoProfile: React.FC = () => {
       nuevosParams.delete('modo');
       setSearchParams(nuevosParams);
 
-      modalUniversal.mostrarExito(
-        "Cambios guardados",
-        "Los cambios se guardaron exitosamente en el sistema.",
-        "La página se recargará para mostrar los cambios actualizados."
-      );
-
-      // Recargar la página después de un pequeño delay para que el usuario vea el mensaje
-      setTimeout(() => {
-        window.location.reload();
-      }, 1500);
+      // Mostrar modal de éxito y recargar la página cuando el usuario confirme
+      modalUniversal.mostrarModal({
+        titulo: 'Cambios guardados',
+        mensaje: 'Los cambios se guardaron exitosamente en el sistema.',
+        submensaje: 'Presione Aceptar para ver los cambios actualizados.',
+        tipo: 'success',
+        soloInformacion: true,
+        textoBotonConfirmar: 'Aceptar',
+        onConfirmar: () => window.location.reload()
+      });
     } catch (error) {
       console.error("Error al guardar cambios:", error);
       modalUniversal.mostrarError(
@@ -315,16 +315,22 @@ const AfiliadoProfile: React.FC = () => {
   };
 
   const handleIntegranteCreado = (nuevoIntegrante: any) => {
-    // Navegar al nuevo integrante después de un breve delay para que se vea el mensaje de éxito
-    setTimeout(() => {
-      if (nuevoIntegrante?.id) {
-        // Navegar al perfil del nuevo integrante
-        navigate(`/afiliados/${nuevoIntegrante.id}`);
-      } else {
-        // Si no tenemos el ID, simplemente recargar la página actual
-        window.location.reload();
+    // Mostrar modal de éxito y navegar cuando el usuario confirme
+    modalUniversal.mostrarModal({
+      titulo: 'Integrante agregado',
+      mensaje: 'Se agregó un nuevo integrante al grupo familiar.',
+      submensaje: 'Presione Aceptar para ver el perfil del integrante.',
+      tipo: 'success',
+      soloInformacion: true,
+      textoBotonConfirmar: 'Aceptar',
+      onConfirmar: () => {
+        if (nuevoIntegrante?.id) {
+          navigate(`/afiliados/${nuevoIntegrante.id}`);
+        } else {
+          window.location.reload();
+        }
       }
-    }, 1500); // 1.5 segundos para que el usuario vea el mensaje de éxito
+    });
   };
 
   if (loading) {

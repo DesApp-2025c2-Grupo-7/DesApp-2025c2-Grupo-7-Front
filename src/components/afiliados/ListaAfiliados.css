@@ -428,7 +428,7 @@
 
 .afiliado-form.modo-edicion input,
 .afiliado-form.modo-edicion select {
-    border: 2px solid #ced4da;
+    border: 1px solid #ced4da;
     transition: border-color 0.3s ease;
 }
 
@@ -687,24 +687,7 @@
     }
 }
 
-/* Estilos para diferenciar titular de integrantes */
-.titular {
-    color: #28a745;
-    font-weight: 600;
-    background-color: #d4edda;
-    padding: 2px 8px;
-    border-radius: 4px;
-    border: 1px solid #c3e6cb;
-}
 
-.integrante {
-    color: #6c757d;
-    font-weight: 500;
-    background-color: #f8f9fa;
-    padding: 2px 8px;
-    border-radius: 4px;
-    border: 1px solid #dee2e6;
-}
 
 /* Modal de confirmación para agregar integrante */
 .modal-confirmacion {

@@ -60,6 +60,23 @@ export interface PersonaConGrupo {
 }
 
 class PersonasService {
+  // Crear un nuevo afiliado (titular)
+  async createAfiliado(afiliadoData: Partial<Afiliado> | any) {
+    const response = await fetch(getApiUrl('/personas'), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(afiliadoData),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return response.json();
+  }
+
   // Crear un nuevo integrante en el grupo familiar
   async createIntegrante(afiliadoId: number, integranteData: IntegranteData) {
     const response = await fetch(getApiUrl(`/personas/${afiliadoId}/integrantes`), {
