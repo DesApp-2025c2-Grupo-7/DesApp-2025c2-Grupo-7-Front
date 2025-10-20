@@ -9,7 +9,6 @@ const ListaAfiliados: React.FC<ListaAfiliadosProps> = ({ afiliados, totalAfiliad
     const navigate = useNavigate();
 
     const handleVerMas = (afiliado: any) => {
-        // Si es un integrante, navegar al perfil del titular pero marcando el integrante actual
         if (!afiliado.esTitular && afiliado.titularId) {
             const integranteKey = `${afiliado.credencial}-${afiliado.sufijo}`;
             navigate(`/afiliados/${afiliado.titularId}?integrante=${integranteKey}`);
@@ -19,7 +18,6 @@ const ListaAfiliados: React.FC<ListaAfiliadosProps> = ({ afiliados, totalAfiliad
     };
 
     const handleEditar = (afiliado: any) => {
-        // Si es un integrante, navegar al perfil del titular pero marcando el integrante actual y modo edición
         if (!afiliado.esTitular && afiliado.titularId) {
             const integranteKey = `${afiliado.credencial}-${afiliado.sufijo}`;
             navigate(`/afiliados/${afiliado.titularId}?integrante=${integranteKey}&modo=editar`);
@@ -45,7 +43,7 @@ const ListaAfiliados: React.FC<ListaAfiliadosProps> = ({ afiliados, totalAfiliad
 
     return (
         <div className="lista-estilos">
-            <h3>Resultados ({totalAfiliados ?? afiliados.length} afiliados)</h3>
+            <h3>Resultados ({totalAfiliados ?? (afiliados || []).length} afiliados)</h3>
             <ul>
                 {afiliados.map((afiliado) => (
                     <li key={`${afiliado.esTitular ? 'titular' : 'integrante'}-${afiliado.id}`}>
@@ -57,9 +55,14 @@ const ListaAfiliados: React.FC<ListaAfiliadosProps> = ({ afiliados, totalAfiliad
                                     <> | <span className="fecha-baja">Fecha baja: {afiliado.fechaBaja}</span></>
                                 )}
                             </span>
-                            <span className={`estado ${isActiveAfiliado(afiliado) ? 'activo' : 'inactivo'}`}>
-                                {getEstadoText(afiliado)}
-                            </span>
+                            <div className="badges">
+                                <span className={`estado ${isActiveAfiliado(afiliado) ? 'activo' : 'inactivo'}`}>
+                                    {getEstadoText(afiliado)}
+                                </span>
+                                <span className={`role ${afiliado.esTitular ? 'titular' : 'integrante'}`}>
+                                    {afiliado.esTitular ? 'Titular' : 'Integrante'}
+                                </span>
+                            </div>
                         </div>
                         <div className="acciones">
                             <Button

@@ -2,7 +2,12 @@ import React, { useEffect, useState } from "react";
 import { Edit, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Button from "../genericos/Button";
-import type { Prestador, ListaPrestadoresProps } from "../../types/prestadores";
+import type { Prestador } from "../../types/prestadores";
+
+type ListaPrestadoresProps = {
+  prestadores?: Prestador[];
+};
+
 import "./ListaPrestadores.css";
 
 const apiUrl = "http://localhost:3000"; // ajustá a tu backend

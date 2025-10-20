@@ -8,6 +8,36 @@
     font-weight: 600;
 }
 
+.filtros-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin: 12px 0 18px 0;
+}
+
+.buscar-input {
+    width: 420px;
+    max-width: 60%;
+    padding: 10px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+}
+
+.filtros-checks {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.filtros-checks label {
+    font-size: 13px;
+    color: #424242;
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+}
+
 /* Lista base */
 .lista-estilos ul {
     list-style: none;
@@ -114,7 +144,6 @@
     font-weight: 600;
     text-transform: uppercase;
     display: inline-block;
-    margin-top: 0.25rem;
 }
 
 .lista-estilos .estado.inactivo {
@@ -128,7 +157,6 @@
     font-weight: 600;
     text-transform: uppercase;
     display: inline-block;
-    margin-top: 0.25rem;
 }
 
 .lista-estilos .item-info .nombre {
@@ -799,6 +827,22 @@
     transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
 }
 
+.contacto-dinamico-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 10px; /* separación vertical mínima entre filas de contacto */
+}
+
+.contacto-dinamico-row:last-child {
+    margin-bottom: 0;
+}
+
+.agregar-contacto-wrap {
+    margin-top: 8px;
+}
+
+
 .contacto-editable input:focus {
     background-color: white;
     border-color: #80bdff;
@@ -937,4 +981,28 @@
 
 .edicion-buttons button {
     min-width: 100px;
+}
+
+/* Role tag (Titular / Integrante) */
+.lista-estilos .badges {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.lista-estilos .role {
+    display: inline-block;
+    padding: 0.25rem 0.6rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.lista-estilos .role.titular,
+.lista-estilos .role.integrante {
+    /* make them visually similar to estado.active */
+    background: #e9f0fa;
+    color: #1f487f;
+    border: 1px solid #c4e3fc;
 }

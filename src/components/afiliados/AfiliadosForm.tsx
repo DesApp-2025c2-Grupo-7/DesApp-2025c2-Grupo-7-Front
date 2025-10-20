@@ -13,6 +13,15 @@ import { calcularProximoSufijo } from "../../utils/calcularSufijo";
 import "./ListaAfiliados.css"
 import type { Afiliado, GrupoFamiliar, Direccion } from "../../types/afiliados";
 
+// Tipo local para direcciones creadas en el modal (no requieren id hasta que el backend las genere)
+type NewDireccion = {
+  calle: string;
+  numero: string;
+  depto?: string;
+  localidad: string;
+  codigoPostal?: string;
+}
+
 interface AfiliadoFormProps {
   afiliado: Afiliado | null;
   afiliadoTitular?: Afiliado | null; // Titular original para referencia del grupo
@@ -42,6 +51,12 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
     const [mostrarModalAgregarIntegrante, setMostrarModalAgregarIntegrante] = useState(false);
     const [situacionesTerapeuticas, setSituacionesTerapeuticas] = useState<Array<{diagnostico: string, fechaInicio: string, fechaFin: string}>>([]);
     const [direcciones, setDirecciones] = useState<Direccion[]>(afiliado?.direccion || []);
+  // Estados específicos del modal de Agregar Integrante para múltiples contactos/direcciones
+  const [modalEmails, setModalEmails] = useState<string[]>(['']);
+  const [modalTelefonos, setModalTelefonos] = useState<string[]>(['']);
+  const [modalDirecciones, setModalDirecciones] = useState<NewDireccion[]>([
+    { calle: '', numero: '', localidad: '', codigoPostal: '', depto: '' }
+  ]);
     
     // Hook para el modal
     const modal = useModal();
@@ -90,9 +105,14 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
     // Escuchar evento personalizado del header
     useEffect(() => {
         const handleAbrirModal = () => {
-            if (esTitular()) {
-                setMostrarModalAgregarIntegrante(true);
-            }
+      if (esTitular()) {
+        // inicializar valores del modal antes de abrir
+        setModalEmails(['']);
+        setModalTelefonos(['']);
+                setModalDirecciones([{ calle: '', numero: '', localidad: '', codigoPostal: '', depto: '' }]);
+        setSituacionesTerapeuticas([{ diagnostico: '', fechaInicio: '', fechaFin: '' }]);
+        setMostrarModalAgregarIntegrante(true);
+      }
         };
 
         window.addEventListener('abrirModalAgregarIntegrante', handleAbrirModal);
@@ -170,33 +190,37 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
     };
 
     const handleAbrirModalAgregarIntegrante = () => {
-        setMostrarModalAgregarIntegrante(true);
+    // Inicializar estados del modal
+    setModalEmails(['']);
+    setModalTelefonos(['']);
+    setModalDirecciones([{ calle: '', numero: '', localidad: '', codigoPostal: '', depto: '' }]);
+    setSituacionesTerapeuticas([{ diagnostico: '', fechaInicio: '', fechaFin: '' }]);
+    setMostrarModalAgregarIntegrante(true);
     };
 
-    const handleCerrarModalAgregarIntegrante = () => {
-        // Confirmar si hay datos en el formulario
-        const form = document.querySelector('.modal-agregar-integrante form') as HTMLFormElement;
-        if (form) {
-            const formData = new FormData(form);
-            const tieneContenido = Array.from(formData.values()).some(value => 
-                typeof value === 'string' && value.trim() !== '' && 
-                value !== new Date().toISOString().split('T')[0] // No considerar la fecha actual como contenido
-            ) || situacionesTerapeuticas.some(st => st.diagnostico.trim() !== '' || st.fechaInicio.trim() !== '');
-            
-            if (tieneContenido) {
-                const confirmarCierre = confirm(
-                    '¿Está seguro que desea cerrar el formulario?\n\n' +
-                    'Se perderán todos los datos ingresados.'
-                );
-                if (!confirmarCierre) {
-                    return;
-                }
-            }
-        }
-        
-        setMostrarModalAgregarIntegrante(false);
-        setSituacionesTerapeuticas([{ diagnostico: '', fechaInicio: '', fechaFin: '' }]); // Resetear a uno vacío
-    };
+  const handleCerrarModalAgregarIntegrante = () => {
+    // Confirmar si hay datos en el formulario (revisar estados del modal)
+    const tieneContenidoEnModal = (
+      modalEmails.some(e => e.trim() !== '') ||
+      modalTelefonos.some(t => t.trim() !== '') ||
+      modalDirecciones.some(d => d.calle.trim() !== '' || d.numero.trim() !== '' || d.localidad.trim() !== '') ||
+      situacionesTerapeuticas.some(st => st.diagnostico.trim() !== '' || st.fechaInicio.trim() !== '')
+    );
+
+    if (tieneContenidoEnModal) {
+      const confirmarCierre = confirm(
+        '¿Está seguro que desea cerrar el formulario?\n\n' +
+        'Se perderán todos los datos ingresados.'
+      );
+      if (!confirmarCierre) return;
+    }
+
+    setMostrarModalAgregarIntegrante(false);
+    setSituacionesTerapeuticas([{ diagnostico: '', fechaInicio: '', fechaFin: '' }]); // Resetear a uno vacío
+    setModalEmails(['']);
+    setModalTelefonos(['']);
+    setModalDirecciones([{ calle: '', numero: '', localidad: '', codigoPostal: '', depto: '' }]);
+  };
 
     const validarFormularioIntegrante = (): { esValido: boolean; errores: string[] } => {
         const errores: string[] = [];
@@ -214,10 +238,17 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
         if (!getInputValue('tipoDocumento')) errores.push('Tipo de documento es obligatorio');
         if (!getInputValue('numeroDocumento')) errores.push('Número de documento es obligatorio');
         if (!getInputValue('fechaNacimiento')) errores.push('Fecha de nacimiento es obligatoria');
-        if (!getInputValue('calle')) errores.push('Calle es obligatoria');
-        if (!getInputValue('numero')) errores.push('Número de dirección es obligatorio');
-        if (!getInputValue('codigoPostal')) errores.push('Código postal es obligatorio');
-        if (!getInputValue('localidad')) errores.push('Localidad es obligatoria');
+    // Validar al menos una dirección válida (desde modalDirecciones)
+    const direccionesValidas = modalDirecciones.filter(d => (d.calle || '').trim() !== '' || (d.numero || '').trim() !== '' || (d.localidad || '').trim() !== '');
+    if (direccionesValidas.length === 0) {
+      errores.push('Debe ingresar al menos una dirección con calle, número y localidad');
+    } else {
+      const dir = direccionesValidas[0];
+      if (!(dir.calle || '').trim()) errores.push('Calle es obligatoria');
+      if (!(dir.numero || '').trim()) errores.push('Número de dirección es obligatorio');
+      if (!String(dir.codigoPostal || '').trim()) errores.push('Código postal es obligatorio');
+      if (!(dir.localidad || '').trim()) errores.push('Localidad es obligatoria');
+    }
         if (!getInputValue('fechaAlta')) errores.push('Fecha de alta es obligatoria');
         
         // Validar fechas del sistema
@@ -245,10 +276,8 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
             if (situacion.fechaFin && situacion.fechaInicio && situacion.fechaFin < situacion.fechaInicio) {
                 errores.push(`Fecha de fin no puede ser anterior a fecha de inicio en situación ${index + 1}`);
             }
-            // Validar que las fechas de situaciones terapéuticas sean coherentes con fechas del sistema
-            if (situacion.fechaInicio && fechaAlta && situacion.fechaInicio < fechaAlta) {
-                errores.push(`Fecha de inicio de situación ${index + 1} no puede ser anterior a la fecha de alta del sistema`);
-            }
+      // Permitimos que la fecha de inicio de una situación terapéutica sea anterior a la fecha de alta
+      // (caso de condiciones preexistentes). No se agrega validación adicional aquí.
         });
         
         return { esValido: errores.length === 0, errores };
@@ -328,38 +357,32 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
             return input?.value || '';
         };
 
-        // Crear el integrante en el backend
+  // Crear el integrante en el backend
         try {
             // Calcular el próximo sufijo disponible
             const proximoSufijo = calcularProximoSufijo(miembrosGrupo);
             console.log('Próximo sufijo calculado para el nuevo integrante:', proximoSufijo);
             console.log('Miembros actuales del grupo:', miembrosGrupo.map(m => ({id: m.id, sufijo: m.sufijo, nombre: m.nombre})));
 
-            const integranteData = {
-                nombre: getInputValue('nombre'),
-                apellido: getInputValue('apellido'),
-                tipoDocumento: getInputValue('tipoDocumento'),
-                numeroDocumento: getInputValue('numeroDocumento'),
-                fechaNacimiento: getInputValue('fechaNacimiento'),
-                telefono: getInputValue('telefono') ? [getInputValue('telefono')] : [],
-                email: getInputValue('email') ? [getInputValue('email')] : [],
-                parentesco: getInputValue('parentesco') || 'Integrante',
-                fechaAlta: getInputValue('fechaAlta'),
-                fechaBaja: getInputValue('fechaBaja') || null,
-                sufijo: proximoSufijo, // ← Agregar el sufijo calculado
-                // Direcciones
-                direccion: [{
-                    calle: getInputValue('calle') || '',
-                    numero: getInputValue('numero') || '',
-                    localidad: getInputValue('localidad') || '',
-                    codigoPostal: getInputValue('codigoPostal') || '',
-                    depto: getInputValue('depto') || null
-                }],
-                // Situaciones terapéuticas se pueden agregar después si es necesario
-                situacionesTerapeuticas: situacionesTerapeuticas.filter(st => 
-                    st.diagnostico.trim() !== '' || st.fechaInicio.trim() !== ''
-                )
-            };
+      const integranteData = {
+        nombre: getInputValue('nombre'),
+        apellido: getInputValue('apellido'),
+        tipoDocumento: getInputValue('tipoDocumento'),
+        numeroDocumento: getInputValue('numeroDocumento'),
+        fechaNacimiento: getInputValue('fechaNacimiento'),
+        telefono: modalTelefonos.filter(t => t.trim() !== ''),
+        email: modalEmails.filter(e => e.trim() !== ''),
+        parentesco: getInputValue('parentesco') || 'Integrante',
+        fechaAlta: getInputValue('fechaAlta'),
+        fechaBaja: getInputValue('fechaBaja') || null,
+        sufijo: proximoSufijo,
+        direccion: modalDirecciones
+          .filter(d => (d.calle || '').trim() !== '' || (d.numero || '').trim() !== '' || (d.localidad || '').trim() !== '')
+          .map(d => ({ calle: d.calle || '', numero: d.numero || '', localidad: d.localidad || '', codigoPostal: String(d.codigoPostal || ''), depto: d.depto && d.depto.trim() !== '' ? d.depto : null })),
+        situacionesTerapeuticas: situacionesTerapeuticas.filter(st => 
+          st.diagnostico.trim() !== '' || st.fechaInicio.trim() !== ''
+        )
+      };
 
             const idTitular = afiliadoTitular?.id || afiliado?.id;
             if (!idTitular) {
@@ -1047,12 +1070,42 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
                     
                     <div className="form-row-double">
                       <div className="form-row-double-item-left">
-                        <label>Email</label>
-                        <Input type="email" name="email" placeholder="ejemplo@email.com" />
+                        <label>Email(s)</label>
+                        <div className="contactos-dinamicos">
+                          {modalEmails.map((email, idx) => (
+                            <div key={idx} className="contacto-dinamico-row">
+                              <Input type="email" value={email} onChange={(v: string) => {
+                                setModalEmails(prev => prev.map((e,i)=> i===idx? v : e));
+                              }} placeholder="ejemplo@email.com" />
+                              <div>
+                                {modalEmails.length > 1 && (
+                                  <Button size="small" variant="danger" icon={Trash2} onClick={() => setModalEmails(prev => prev.filter((_,i)=>i!==idx))} />
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                          <div className="agregar-contacto-wrap">
+                            <Button size="small" variant="primary" icon={Plus} onClick={() => setModalEmails(prev => [...prev, ''])}>Agregar Email</Button>
+                          </div>
+                        </div>
                       </div>
                       <div className="form-row-double-item-right">
-                        <label>Teléfono</label>
-                        <Input type="tel" name="telefono" placeholder="11-1234-5678" />
+                        <label>Teléfono(s)</label>
+                        <div className="contactos-dinamicos">
+                          {modalTelefonos.map((tel, idx) => (
+                            <div key={idx} className="contacto-dinamico-row">
+                              <Input type="tel" value={tel} onChange={(v: string) => setModalTelefonos(prev => prev.map((t,i)=> i===idx? v : t))} placeholder="11-1234-5678" />
+                              <div>
+                                {modalTelefonos.length > 1 && (
+                                  <Button size="small" variant="danger" icon={Trash2} onClick={() => setModalTelefonos(prev => prev.filter((_,i)=>i!==idx))} />
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                          <div className="agregar-contacto-wrap">
+                            <Button size="small" variant="primary" icon={Plus} onClick={() => setModalTelefonos(prev => [...prev, ''])}>Agregar Teléfono</Button>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -1061,29 +1114,45 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
                   <div className="form-section">
                     <h4 className="section-title">Dirección de Residencia</h4>
                     
-                    <div className="form-row-double">
-                      <div className="form-row-double-item-left">
-                        <label>Calle *</label>
-                        <Input type="text" name="calle" required placeholder="Av. Corrientes" />
-                      </div>
-                      <div className="form-row-double-item-right">
-                        <label>Número *</label>
-                        <Input type="text" name="numero" required placeholder="1234" />
-                      </div>
-                    </div>
+                    <div className="direcciones-dinamicas">
+                      {modalDirecciones.map((d, idx) => (
+                        <div key={idx} className="direccion-item">
+                          <div className="form-row-double">
+                            <div className="form-row-double-item-left">
+                              <label>Calle *</label>
+                              <Input type="text" value={d.calle} onChange={(v: string) => setModalDirecciones(prev => prev.map((x,i)=> i===idx? {...x, calle: v} : x))} placeholder="Av. Corrientes" />
+                            </div>
+                            <div className="form-row-double-item-right">
+                              <label>Número *</label>
+                              <Input type="text" value={d.numero} onChange={(v: string) => setModalDirecciones(prev => prev.map((x,i)=> i===idx? {...x, numero: v} : x))} placeholder="1234" />
+                            </div>
+                          </div>
 
-                    <div className="form-row-triple">
-                      <div className="form-row-triple-item">
-                        <label>Departamento</label>
-                        <Input type="text" name="departamento" placeholder="1A" />
-                      </div>
-                      <div className="form-row-triple-item">
-                        <label>Código Postal *</label>
-                        <Input type="text" name="codigoPostal" required placeholder="1043" />
-                      </div>
-                      <div className="form-row-triple-item">
-                        <label>Localidad *</label>
-                        <Input type="text" name="localidad" required placeholder="CABA" />
+                          <div className="form-row-triple">
+                            <div className="form-row-triple-item">
+                              <label>Departamento</label>
+                              <Input type="text" value={d.depto ?? ''} onChange={(v: string) => setModalDirecciones(prev => prev.map((x,i)=> i===idx? {...x, depto: v} : x))} placeholder="1A" />
+                            </div>
+                            <div className="form-row-triple-item">
+                              <label>Código Postal *</label>
+                              <Input type="text" value={d.codigoPostal ?? ''} onChange={(v: string) => setModalDirecciones(prev => prev.map((x,i)=> i===idx? {...x, codigoPostal: v} : x))} placeholder="1043" />
+                            </div>
+                            <div className="form-row-triple-item">
+                              <label>Localidad *</label>
+                              <Input type="text" value={d.localidad} onChange={(v: string) => setModalDirecciones(prev => prev.map((x,i)=> i===idx? {...x, localidad: v} : x))} placeholder="CABA" />
+                            </div>
+                          </div>
+
+                          <div className="direccion-actions">
+                            {modalDirecciones.length > 1 && (
+                              <Button size="small" variant="danger" icon={Trash2} onClick={() => setModalDirecciones(prev => prev.filter((_,i)=>i!==idx))}>Eliminar Dirección</Button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+
+                      <div className="agregar-direccion-action">
+                        <Button size="small" variant="primary" icon={Plus} onClick={() => setModalDirecciones(prev => [...prev, { calle: '', numero: '', localidad: '', codigoPostal: '', depto: '' }])}>Agregar Dirección</Button>
                       </div>
                     </div>
                   </div>
