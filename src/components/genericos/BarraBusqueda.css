@@ -33,16 +33,23 @@
 .busqueda-body {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 16px;
+    justify-content: space-between;
 }
 
-.busqueda-body input {
-    flex: 0 0 500px;
-    /* ancho fijo menor para el input */
-    padding: 8px 12px;
+.busqueda-contenedor-input {
+    flex: 1 1 auto;
+    display: flex;
+    align-items: center;
+}
+
+.busqueda-contenedor-input input,
+.busqueda-contenedor-input .input-root {
+    width: 100%;
+    padding: 10px 14px;
     font-size: 0.95rem;
-    border-radius: 6px;
-    border: 1px solid #ccc;
+    border-radius: 12px;
+    border: 1px solid #d2d8e0;
 }
 
 /* Selects con fondo oscuro y texto blanco */
@@ -60,4 +67,31 @@ select {
     height: 40px;
     object-fit: contain;
     margin-right: 8px; /* espacio entre icono y título */
+}
+
+.busqueda-filtros-inline {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    white-space: nowrap;
+}
+
+.busqueda-filtros-inline label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.95rem;
+    color: #333;
+}
+
+@media (max-width: 980px) {
+    .busqueda-body {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+    .busqueda-filtros-inline {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
 }

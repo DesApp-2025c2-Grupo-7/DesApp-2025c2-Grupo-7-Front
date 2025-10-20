@@ -1,5 +1,5 @@
 // AfiliadosPage.tsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import Header from "../components/genericos/Header";
 import BarraBusqueda from "../components/genericos/BarraBusqueda";
@@ -7,13 +7,20 @@ import ListaAfiliados from "../components/afiliados/ListaAfiliados";
 import Paginacion from "../components/genericos/Paginacion";
 import AfiliadosHeader from "../components/afiliados/HeaderAfiliados";
 import "../components/genericos/PaginaEstilos.css";
-import { filtrarPorBusqueda } from "../utils/filtroBusqueda";
+// search filtering is implemented inline in this page
 import { transformarAfiliadosParaLista } from "../utils/transformarAfiliados";
 import type { Afiliado, AfiliadoListItem } from "../types/afiliados";
 import { getApiUrl } from "../config/env";
 
 const AfiliadosPage: React.FC = () => {
   const [busqueda, setBusqueda] = useState("");
+  // filtros que se pasan a la barra de búsqueda
+  const [searchByNombre, setSearchByNombre] = useState(true);
+  const [searchByApellido, setSearchByApellido] = useState(true);
+  const [searchByCredencial, setSearchByCredencial] = useState(false);
+  const [searchByDni, setSearchByDni] = useState(true);
+  const [onlyTitulares, setOnlyTitulares] = useState(false);
+  const [includeInactivos, setIncludeInactivos] = useState(false);
   const [afiliados, setAfiliados] = useState<Afiliado[]>([]);
   const [afiliadosLista, setAfiliadosLista] = useState<AfiliadoListItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -95,8 +102,40 @@ const AfiliadosPage: React.FC = () => {
     navigate("/afiliados/alta");
   };
 
-  // Filtrado por búsqueda
-  const afiliadosFiltrados = filtrarPorBusqueda(afiliadosLista, busqueda);
+  // Filtrado por búsqueda y por checkboxes (centralizado antes de la paginación)
+    const afiliadosFiltrados = useMemo(() => {
+    const q = busqueda.trim().toLowerCase();
+    const today = new Date().toISOString().split('T')[0];
+
+    return (afiliadosLista || []).filter((a) => {
+      // filtro por activos/inactivos
+      const isActive = !a.fechaBaja || a.fechaBaja > today;
+      if (!includeInactivos && !isActive) return false;
+
+      // filtro solo titulares
+      if (onlyTitulares && !a.esTitular) return false;
+
+      if (!q) return true;
+
+      const matches: boolean[] = [];
+      if (searchByNombre && a.nombre) matches.push(String(a.nombre).toLowerCase().includes(q));
+      if (searchByApellido && a.apellido) matches.push(String(a.apellido).toLowerCase().includes(q));
+      if (searchByCredencial) {
+        const cred = `${a.credencial || ''}`.toLowerCase();
+        const suf = `${a.sufijo || ''}`.toLowerCase();
+        const full = `${cred}-${suf}`.toLowerCase();
+        matches.push(cred.includes(q) || suf.includes(q) || full.includes(q));
+      }
+      if (searchByDni && a.numeroDocumento) {
+        matches.push(String(a.numeroDocumento).toLowerCase().includes(q));
+      }
+
+      // si no hay campos seleccionados para la búsqueda, no matchea
+      if (matches.length === 0) return false;
+
+      return matches.some(Boolean);
+    });
+  }, [afiliadosLista, busqueda, searchByNombre, searchByApellido, searchByCredencial, searchByDni, onlyTitulares, includeInactivos]);
 
   // 👇 Lógica de paginación
   const totalPages = Math.ceil(afiliadosFiltrados.length / afiliadosPerPage);
@@ -118,7 +157,22 @@ const AfiliadosPage: React.FC = () => {
       <div className="admin-content">
         <AfiliadosHeader onVolver={handleVolver} onAlta={handleAlta} />
 
-        <BarraBusqueda busqueda={busqueda} setBusqueda={setBusqueda} />
+        <BarraBusqueda
+          busqueda={busqueda}
+          setBusqueda={setBusqueda}
+          searchByNombre={searchByNombre}
+          setSearchByNombre={setSearchByNombre}
+          searchByApellido={searchByApellido}
+          setSearchByApellido={setSearchByApellido}
+          searchByCredencial={searchByCredencial}
+          setSearchByCredencial={setSearchByCredencial}
+          searchByDni={searchByDni}
+          setSearchByDni={setSearchByDni}
+          onlyTitulares={onlyTitulares}
+          setOnlyTitulares={setOnlyTitulares}
+          includeInactivos={includeInactivos}
+          setIncludeInactivos={setIncludeInactivos}
+        />
 
         {loading ? (
           <p>Cargando afiliados...</p>

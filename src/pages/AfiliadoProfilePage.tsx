@@ -324,9 +324,22 @@ const AfiliadoProfile: React.FC = () => {
       soloInformacion: true,
       textoBotonConfirmar: 'Aceptar',
       onConfirmar: () => {
-        if (nuevoIntegrante?.id) {
-          navigate(`/afiliados/${nuevoIntegrante.id}`);
+        // Queremos navegar al perfil del TITULAR y pasar el integrante por query
+        // Construir la key integrante como credencial-sufijo si está disponible en la respuesta
+        const cred = nuevoIntegrante?.credencial || nuevoIntegrante?.credencialTitular || afiliado?.credencial;
+        const suf = nuevoIntegrante?.sufijo || nuevoIntegrante?.sufijoAsignado || nuevoIntegrante?.sufijoAsignado || '';
+
+        // Preferir navegar al titular que tenemos en estado `afiliado` (titular completo)
+        const idTitular = afiliado?.id || nuevoIntegrante?.titularId || nuevoIntegrante?.titular?.id;
+
+        if (idTitular && cred) {
+          const integranteKey = `${cred}-${suf}`;
+          navigate(`/afiliados/${idTitular}?integrante=${integranteKey}`);
+        } else if (idTitular) {
+          // Si no tenemos credencial/sufijo, navegar al titular (sin query)
+          navigate(`/afiliados/${idTitular}`);
         } else {
+          // Fallback: recargar la página para reflejar el nuevo integrante
           window.location.reload();
         }
       }

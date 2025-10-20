@@ -287,12 +287,6 @@
   letter-spacing: 0.5px;
 }
 
-.form-row-double-item-left span,
-.form-row-double-item-right span {
-  color: #424242;
-  font-weight: 500;
-}
-
 /* Estilos para el estado del grupo */
 .estado-grupo {
   font-weight: 600;
