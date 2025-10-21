@@ -7,6 +7,7 @@ import Select from "../genericos/Select";
 import CardEspecialidades from "./CardEspecialidades";
 import ModalDireccion from "./ModalDireccion";
 import type { Direccion, HorarioAtencion, Especialidad } from "../../types/prestadores";
+import { getApiUrl } from "../../config/env";
 
 const horaAMinutos = (hora?: string) => {
   if (!hora) return 0;
@@ -61,7 +62,7 @@ const PrestadoresFormEdit: React.FC = () => {
   const [seleccionadas, setSeleccionadas] = useState<Especialidad[]>([]);
 
   useEffect(() => {
-    fetch("http://localhost:3000/especialidades")
+    fetch(getApiUrl("/especialidades"))
       .then((res) => res.json())
       .then((data: Especialidad[]) => {
         setEspecialidades(data);
@@ -107,13 +108,13 @@ const PrestadoresFormEdit: React.FC = () => {
       for (const hor of direccion.horariosAtencion) {
         if (hor.id) {
           await fetch(
-            `http://localhost:3000/prestadores/1/direcciones/${direccion.id}/horarios/${hor.id}`,
+            getApiUrl(`/prestadores/1/direcciones/${direccion.id}/horarios/${hor.id}`),
             { method: "DELETE" }
           );
         }
       }
 
-      await fetch(`http://localhost:3000/prestadores/1/direcciones/${direccion.id}`, {
+      await fetch(getApiUrl(`/prestadores/1/direcciones/${direccion.id}`), {
         method: "DELETE",
       });
 
@@ -143,7 +144,7 @@ const PrestadoresFormEdit: React.FC = () => {
         direccion: listaDirecciones,
       };
 
-      const res = await fetch("http://localhost:3000/prestadores", {
+      const res = await fetch(getApiUrl("/prestadores"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(prestadorData),

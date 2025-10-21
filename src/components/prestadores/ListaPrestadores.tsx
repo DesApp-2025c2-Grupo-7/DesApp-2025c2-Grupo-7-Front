@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { Edit, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Button from "../genericos/Button";
 import type { Prestador } from "../../types/prestadores";
+import { getApiUrl } from "../../config/env";
 
 type ListaPrestadoresProps = {
   prestadores?: Prestador[];
@@ -10,9 +11,7 @@ type ListaPrestadoresProps = {
 
 import "./ListaPrestadores.css";
 
-const apiUrl = "http://localhost:3000"; // ajustá a tu backend
-
-const ListaPrestadores: React.FC<ListaPrestadoresProps> = ({ prestadores: prestadoresInicial }) => {
+const ListaPrestadores: React.FC<ListaPrestadoresProps> = () => {
   const navigate = useNavigate();
   const [prestadores, setPrestadores] = useState<Prestador[]>([]);
   const [loading, setLoading] = useState(true);
@@ -22,7 +21,7 @@ const ListaPrestadores: React.FC<ListaPrestadoresProps> = ({ prestadores: presta
   const fetchPrestadores = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`${apiUrl}/prestadores`);
+      const res = await fetch(getApiUrl("/prestadores"));
       const text = await res.text();
 
       let data: Prestador[];
@@ -56,7 +55,7 @@ const ListaPrestadores: React.FC<ListaPrestadoresProps> = ({ prestadores: presta
     if (!window.confirm("¿Estás seguro que quieres eliminar este prestador?")) return;
 
     try {
-      const res = await fetch(`${apiUrl}/prestadores/${id}`, { method: "DELETE" });
+      const res = await fetch(getApiUrl(`/prestadores/${id}`), { method: "DELETE" });
       if (!res.ok) throw new Error("No se pudo eliminar el prestador");
       // Actualizar lista localmente
       setPrestadores(prestadores.filter((p) => p.id !== id));

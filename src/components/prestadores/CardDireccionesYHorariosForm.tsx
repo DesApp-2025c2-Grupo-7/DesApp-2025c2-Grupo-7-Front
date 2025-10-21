@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import Button from "../genericos/Button";
 import ModalDireccion from "./ModalDireccion";
 import type { Direccion, HorarioAtencion } from "../../types/prestadores";
+import { getApiUrl } from "../../config/env";
 
 // Función segura para convertir "HH:MM" a minutos
 const horaAMinutos = (hora?: string) => {
@@ -89,14 +90,14 @@ const CardDireccionesYHorariosForm: React.FC<CardDireccionesYHorariosFormProps> 
       for (const hor of direccion.horariosAtencion) {
         if (hor.id) {
           await fetch(
-            `http://localhost:3000/prestadores/${prestadorId}/direcciones/${direccion.id}/horarios/${hor.id}`,
+            getApiUrl(`/prestadores/${prestadorId}/direcciones/${direccion.id}/horarios/${hor.id}`),
             { method: "DELETE" }
           );
         }
       }
 
       // Eliminar dirección en backend
-      await fetch(`http://localhost:3000/prestadores/${prestadorId}/direcciones/${direccion.id}`, {
+      await fetch(getApiUrl(`/prestadores/${prestadorId}/direcciones/${direccion.id}`), {
         method: "DELETE",
       });
 

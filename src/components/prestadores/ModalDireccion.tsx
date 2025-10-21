@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import Button from "../genericos/Button";
 import type { Direccion, HorarioAtencion } from "../../types/prestadores";
 import "./ModalDireccion.css";
+import { getApiUrl } from "../../config/env";
 
 interface ModalDireccionProps {
   prestadorId: number; // Puede ser 0 si el prestador aún no existe
@@ -153,8 +154,8 @@ const ModalDireccion: React.FC<ModalDireccionProps> = ({
       const method = form.id === 0 ? "POST" : "PUT";
       const url =
         form.id === 0
-          ? `http://localhost:3000/prestadores/${prestadorId}/direcciones`
-          : `http://localhost:3000/prestadores/${prestadorId}/direcciones/${form.id}`;
+          ? `${getApiUrl(`/prestadores/${prestadorId}/direcciones`)}`
+          : `${getApiUrl(`/prestadores/${prestadorId}/direcciones/${form.id}`)}`;
 
       const resDir = await fetch(url, {
         method,
@@ -183,12 +184,12 @@ const ModalDireccion: React.FC<ModalDireccionProps> = ({
         let resHor;
         if (hor.id && hor.id !== 0) {
           resHor = await fetch(
-            `http://localhost:3000/prestadores/${prestadorId}/direcciones/${dirGuardada.id}/horarios/${hor.id}`,
+            `${getApiUrl(`/prestadores/${prestadorId}/direcciones/${dirGuardada.id}/horarios/${hor.id}`)}`,
             { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(horData) }
           );
         } else {
           resHor = await fetch(
-            `http://localhost:3000/prestadores/${prestadorId}/direcciones/${dirGuardada.id}/horarios`,
+            `${getApiUrl(`/prestadores/${prestadorId}/direcciones/${dirGuardada.id}/horarios`)}`,
             { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(horData) }
           );
         }
