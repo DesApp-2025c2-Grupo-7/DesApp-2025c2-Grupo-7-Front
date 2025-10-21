@@ -3,6 +3,7 @@ import Button from "../genericos/Button";
 import Input from "../genericos/Input";
 
 import type { Direccion } from "../../types/afiliados";
+import { getApiUrl } from "../../config/env";
 
 interface CardDireccionesAfiliadosProps {
   direcciones?: Direccion[];
@@ -20,7 +21,6 @@ const CardDireccionesAfiliados: React.FC<CardDireccionesAfiliadosProps> = ({
   const [listaDirecciones, setListaDirecciones] = useState<Direccion[]>(direcciones);
   const [direccionSeleccionada, setDireccionSeleccionada] = useState<Direccion | null>(null);
 
-  // Usar el modo de edición que viene del padre, no el interno
   const estaEnModoEdicion = modoEdicion;
 
   const handleVerMas = (direccion: Direccion) => {
@@ -29,7 +29,6 @@ const CardDireccionesAfiliados: React.FC<CardDireccionesAfiliadosProps> = ({
     }
   };
 
-  // Sincronizar direcciones cuando cambian desde el exterior
   useEffect(() => {
     setListaDirecciones(direcciones);
   }, [direcciones]);
@@ -38,25 +37,27 @@ const CardDireccionesAfiliados: React.FC<CardDireccionesAfiliadosProps> = ({
 
   const handleSaveDireccion = (dirActualizada: Direccion) => {
     const nuevasDirecciones = (() => {
-      const existe = listaDirecciones.find(d => d.id === dirActualizada.id);
+      const existe = listaDirecciones.find((d) => d.id === dirActualizada.id);
       if (existe) {
-        return listaDirecciones.map(d => (d.id === dirActualizada.id ? dirActualizada : d));
+        return listaDirecciones.map((d) => (d.id === dirActualizada.id ? dirActualizada : d));
       } else {
         return [...listaDirecciones, dirActualizada];
       }
     })();
-    
+
     setListaDirecciones(nuevasDirecciones);
-    // Notificar cambios al componente padre para que se incluyan en el objeto del afiliado
     onDireccionesChange?.(nuevasDirecciones);
     setDireccionSeleccionada(null);
   };
 
-  // Modal simple inline
-  const ModalSimple = ({ direccion, onClose, onSave }: { 
-    direccion: Direccion; 
-    onClose: () => void; 
-    onSave: (dir: Direccion) => void; 
+  const ModalSimple = ({
+    direccion,
+    onClose,
+    onSave,
+  }: {
+    direccion: Direccion;
+    onClose: () => void;
+    onSave: (dir: Direccion) => void;
   }) => {
     const [formData, setFormData] = useState<Direccion>(direccion);
 
@@ -69,44 +70,48 @@ const CardDireccionesAfiliados: React.FC<CardDireccionesAfiliadosProps> = ({
     };
 
     return (
-      <div style={{ 
-        position: 'fixed', 
-        top: 0, 
-        left: 0, 
-        right: 0, 
-        bottom: 0, 
-        backgroundColor: 'rgba(0,0,0,0.5)', 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'center', 
-        zIndex: 1000 
-      }}>
-        <div style={{ 
-          background: 'white', 
-          padding: '2rem', 
-          borderRadius: '8px', 
-          maxWidth: '500px', 
-          width: '90%' 
-        }}>
+      <div
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: "rgba(0,0,0,0.5)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 1000,
+        }}
+      >
+        <div
+          style={{
+            background: "white",
+            padding: "2rem",
+            borderRadius: "8px",
+            maxWidth: "500px",
+            width: "90%",
+          }}
+        >
           <h3>{formData.id ? "Editar Dirección" : "Nueva Dirección"}</h3>
-          
-          <div style={{ marginBottom: '1rem' }}>
+
+          <div style={{ marginBottom: "1rem" }}>
             <label>Calle *</label>
             <Input
               type="text"
               value={formData.calle}
-              onChange={(value) => setFormData(prev => ({ ...prev, calle: value }))}
+              onChange={(value) => setFormData((prev) => ({ ...prev, calle: value }))}
               placeholder="Ingresa la calle"
             />
           </div>
 
-          <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
+          <div style={{ display: "flex", gap: "1rem", marginBottom: "1rem" }}>
             <div style={{ flex: 1 }}>
               <label>Número *</label>
               <Input
                 type="text"
                 value={formData.numero}
-                onChange={(value) => setFormData(prev => ({ ...prev, numero: value }))}
+                onChange={(value) => setFormData((prev) => ({ ...prev, numero: value }))}
                 placeholder="Nº"
               />
             </div>
@@ -115,33 +120,33 @@ const CardDireccionesAfiliados: React.FC<CardDireccionesAfiliadosProps> = ({
               <Input
                 type="text"
                 value={formData.depto || ""}
-                onChange={(value) => setFormData(prev => ({ ...prev, depto: value || null }))}
+                onChange={(value) => setFormData((prev) => ({ ...prev, depto: value || null }))}
                 placeholder="Depto (opcional)"
               />
             </div>
           </div>
 
-          <div style={{ marginBottom: '1rem' }}>
+          <div style={{ marginBottom: "1rem" }}>
             <label>Localidad *</label>
             <Input
               type="text"
               value={formData.localidad}
-              onChange={(value) => setFormData(prev => ({ ...prev, localidad: value }))}
+              onChange={(value) => setFormData((prev) => ({ ...prev, localidad: value }))}
               placeholder="Ingresa la localidad"
             />
           </div>
 
-          <div style={{ marginBottom: '2rem' }}>
+          <div style={{ marginBottom: "2rem" }}>
             <label>Código Postal</label>
             <Input
               type="text"
               value={formData.codigoPostal || ""}
-              onChange={(value) => setFormData(prev => ({ ...prev, codigoPostal: value }))}
+              onChange={(value) => setFormData((prev) => ({ ...prev, codigoPostal: value }))}
               placeholder="Código postal (opcional)"
             />
           </div>
 
-          <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+          <div style={{ display: "flex", gap: "1rem", justifyContent: "flex-end" }}>
             <Button variant="cancel" onClick={onClose}>
               Cancelar
             </Button>
@@ -156,7 +161,7 @@ const CardDireccionesAfiliados: React.FC<CardDireccionesAfiliadosProps> = ({
 
   const handleAgregarNuevaDireccion = () => {
     const nuevaDireccion: Direccion = {
-      id: 0, // ID temporal, se asignará al guardar
+      id: 0,
       calle: "",
       numero: "",
       localidad: "",
@@ -171,20 +176,18 @@ const CardDireccionesAfiliados: React.FC<CardDireccionesAfiliadosProps> = ({
 
     try {
       if (direccion.id && direccion.id > 0) {
-        // Solo hacer DELETE si tiene un ID real del backend
         const response = await fetch(
-          `http://localhost:3000/personas/${personaId}/direcciones/${direccion.id}`,
+          getApiUrl(`/personas/${personaId}/direcciones/${direccion.id}`),
           { method: "DELETE" }
         );
-        
+
         if (!response.ok) {
           throw new Error("Error al eliminar dirección del servidor");
         }
       }
 
-      const nuevasDirecciones = listaDirecciones.filter(d => d.id !== direccion.id);
+      const nuevasDirecciones = listaDirecciones.filter((d) => d.id !== direccion.id);
       setListaDirecciones(nuevasDirecciones);
-      // Notificar cambios al componente padre
       onDireccionesChange?.(nuevasDirecciones);
     } catch (err) {
       console.error("Error eliminando dirección", err);
@@ -200,10 +203,14 @@ const CardDireccionesAfiliados: React.FC<CardDireccionesAfiliadosProps> = ({
           <div className="direccion-card" key={dir.id || i}>
             <div className="direccion-info">
               <p>
-                <strong>{dir.calle} {dir.numero}</strong>
+                <strong>
+                  {dir.calle} {dir.numero}
+                </strong>
                 {dir.depto && `, Depto ${dir.depto}`}
               </p>
-              <p>{dir.localidad} - CP: {dir.codigoPostal || "—"}</p>
+              <p>
+                {dir.localidad} - CP: {dir.codigoPostal || "—"}
+              </p>
             </div>
             {estaEnModoEdicion && (
               <div className="direccion-actions">
@@ -218,8 +225,6 @@ const CardDireccionesAfiliados: React.FC<CardDireccionesAfiliadosProps> = ({
           </div>
         ))}
       </div>
-
-      {/* Las direcciones solo pueden editarse cuando el formulario completo está en modo edición */}
 
       {estaEnModoEdicion && (
         <div className="add-direccion-button">
