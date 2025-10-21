@@ -6,6 +6,7 @@ import HeaderPrestador from "../components/prestadores/HeaderPrestadores";
 import PrestadoresForm from "../components/prestadores/PrestadoresForm";
 import "./PrestadorProfile.css";
 import type { Prestador } from "../types/prestadores";
+import { getApiUrl } from "../config/env";
 
 
 
@@ -21,7 +22,7 @@ const PrestadorProfilePage: React.FC = () => {
     const fetchPrestador = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`http://localhost:3000/prestadores/${id}`);
+        const response = await fetch(getApiUrl(`/prestadores/${id}`));
         if (!response.ok) {
           throw new Error("Error al obtener los datos del prestador");
         }

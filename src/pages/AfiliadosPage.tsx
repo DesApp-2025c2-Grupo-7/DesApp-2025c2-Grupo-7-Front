@@ -1,4 +1,3 @@
-// AfiliadosPage.tsx
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import Header from "../components/genericos/Header";
@@ -7,14 +6,15 @@ import ListaAfiliados from "../components/afiliados/ListaAfiliados";
 import Paginacion from "../components/genericos/Paginacion";
 import AfiliadosHeader from "../components/afiliados/HeaderAfiliados";
 import "../components/genericos/PaginaEstilos.css";
-// search filtering is implemented inline in this page
 import { transformarAfiliadosParaLista } from "../utils/transformarAfiliados";
 import type { Afiliado, AfiliadoListItem } from "../types/afiliados";
 import { getApiUrl } from "../config/env";
 
+const CACHE_KEY = "afiliados_cache";
+const CACHE_DURATION_HOURS = 0.02; // ~3 minutos
+
 const AfiliadosPage: React.FC = () => {
   const [busqueda, setBusqueda] = useState("");
-  // filtros que se pasan a la barra de búsqueda
   const [searchByNombre, setSearchByNombre] = useState(true);
   const [searchByApellido, setSearchByApellido] = useState(true);
   const [searchByCredencial, setSearchByCredencial] = useState(false);
@@ -25,12 +25,58 @@ const AfiliadosPage: React.FC = () => {
   const [afiliadosLista, setAfiliadosLista] = useState<AfiliadoListItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // 👇 Estado para paginación
   const [currentPage, setCurrentPage] = useState(1);
-  const afiliadosPerPage = 3; // cantidad por página
+  const afiliadosPerPage = 5;
 
   const navigate = useNavigate();
   const location = useLocation();
+
+  // 🧠 Restaurar filtros desde localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem("afiliados_filters");
+    if (saved) {
+      try {
+        const filters = JSON.parse(saved);
+        if (filters.busqueda) setBusqueda(filters.busqueda);
+        if (typeof filters.searchByNombre === "boolean")
+          setSearchByNombre(filters.searchByNombre);
+        if (typeof filters.searchByApellido === "boolean")
+          setSearchByApellido(filters.searchByApellido);
+        if (typeof filters.searchByCredencial === "boolean")
+          setSearchByCredencial(filters.searchByCredencial);
+        if (typeof filters.searchByDni === "boolean")
+          setSearchByDni(filters.searchByDni);
+        if (typeof filters.onlyTitulares === "boolean")
+          setOnlyTitulares(filters.onlyTitulares);
+        if (typeof filters.includeInactivos === "boolean")
+          setIncludeInactivos(filters.includeInactivos);
+      } catch (err) {
+        console.warn("Error leyendo filtros de afiliados:", err);
+      }
+    }
+  }, []);
+
+  // 💾 Guardar filtros en localStorage cada vez que cambien
+  useEffect(() => {
+    const filters = {
+      busqueda,
+      searchByNombre,
+      searchByApellido,
+      searchByCredencial,
+      searchByDni,
+      onlyTitulares,
+      includeInactivos,
+    };
+    localStorage.setItem("afiliados_filters", JSON.stringify(filters));
+  }, [
+    busqueda,
+    searchByNombre,
+    searchByApellido,
+    searchByCredencial,
+    searchByDni,
+    onlyTitulares,
+    includeInactivos,
+  ]);
 
   useEffect(() => {
     const afiliadosFromState = location.state?.afiliados;
@@ -45,14 +91,26 @@ const AfiliadosPage: React.FC = () => {
       const fetchAfiliados = async () => {
         try {
           setLoading(true);
-          // Obtener solo los titulares (AFILIADO) desde el backend
+
+          // 🧩 Intentar usar cache
+          const cacheStr = localStorage.getItem(CACHE_KEY);
+          if (cacheStr) {
+            const cache = JSON.parse(cacheStr);
+            const ageHours = (Date.now() - cache.timestamp) / (1000 * 60 * 60);
+            if (ageHours < CACHE_DURATION_HOURS) {
+              setAfiliados(cache.afiliados);
+              setAfiliadosLista(cache.afiliadosLista);
+              setLoading(false);
+              return;
+            }
+          }
+
           const response = await fetch(getApiUrl("/personas"));
           if (!response.ok) {
             throw new Error("Error al obtener la lista de afiliados");
           }
           const titulares: Afiliado[] = await response.json();
 
-          // Para cada titular, obtener su grupo familiar completo
           const afiliadosCompletos = await Promise.all(
             titulares.map(async (titular) => {
               try {
@@ -66,28 +124,31 @@ const AfiliadosPage: React.FC = () => {
                     grupoFamiliar: grupoCompleto.grupoFamiliar || [],
                   };
                 }
-                return {
-                  ...titular,
-                  grupoFamiliar: [],
-                };
+                return { ...titular, grupoFamiliar: [] };
               } catch (error) {
                 console.warn(
                   `Error obteniendo grupo de ${titular.credencial}:`,
                   error
                 );
-                return {
-                  ...titular,
-                  grupoFamiliar: [],
-                };
+                return { ...titular, grupoFamiliar: [] };
               }
             })
           );
 
           setAfiliados(afiliadosCompletos);
-          // Transformar para mostrar TODOS los afiliados e integrantes en la lista
           const listaTransformada =
             transformarAfiliadosParaLista(afiliadosCompletos);
           setAfiliadosLista(listaTransformada);
+
+          // 💾 Guardar cache
+          localStorage.setItem(
+            CACHE_KEY,
+            JSON.stringify({
+              timestamp: Date.now(),
+              afiliados: afiliadosCompletos,
+              afiliadosLista: listaTransformada,
+            })
+          );
         } catch (error) {
           console.error("Error al cargar afiliados:", error);
           setAfiliados([]);
@@ -109,27 +170,24 @@ const AfiliadosPage: React.FC = () => {
     navigate("/afiliados/alta");
   };
 
-  // Filtrado por búsqueda y por checkboxes (centralizado antes de la paginación)
-    const afiliadosFiltrados = useMemo(() => {
+  const afiliadosFiltrados = useMemo(() => {
     const q = busqueda.trim().toLowerCase();
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toISOString().split("T")[0];
 
     return (afiliadosLista || []).filter((a) => {
-      // filtro por activos/inactivos
       const isActive = !a.fechaBaja || a.fechaBaja > today;
       if (!includeInactivos && !isActive) return false;
-
-      // filtro solo titulares
       if (onlyTitulares && !a.esTitular) return false;
-
       if (!q) return true;
 
       const matches: boolean[] = [];
-      if (searchByNombre && a.nombre) matches.push(String(a.nombre).toLowerCase().includes(q));
-      if (searchByApellido && a.apellido) matches.push(String(a.apellido).toLowerCase().includes(q));
+      if (searchByNombre && a.nombre)
+        matches.push(String(a.nombre).toLowerCase().includes(q));
+      if (searchByApellido && a.apellido)
+        matches.push(String(a.apellido).toLowerCase().includes(q));
       if (searchByCredencial) {
-        const cred = `${a.credencial || ''}`.toLowerCase();
-        const suf = `${a.sufijo || ''}`.toLowerCase();
+        const cred = `${a.credencial || ""}`.toLowerCase();
+        const suf = `${a.sufijo || ""}`.toLowerCase();
         const full = `${cred}-${suf}`.toLowerCase();
         matches.push(cred.includes(q) || suf.includes(q) || full.includes(q));
       }
@@ -137,14 +195,20 @@ const AfiliadosPage: React.FC = () => {
         matches.push(String(a.numeroDocumento).toLowerCase().includes(q));
       }
 
-      // si no hay campos seleccionados para la búsqueda, no matchea
       if (matches.length === 0) return false;
-
       return matches.some(Boolean);
     });
-  }, [afiliadosLista, busqueda, searchByNombre, searchByApellido, searchByCredencial, searchByDni, onlyTitulares, includeInactivos]);
+  }, [
+    afiliadosLista,
+    busqueda,
+    searchByNombre,
+    searchByApellido,
+    searchByCredencial,
+    searchByDni,
+    onlyTitulares,
+    includeInactivos,
+  ]);
 
-  // 👇 Lógica de paginación
   const totalPages = Math.ceil(afiliadosFiltrados.length / afiliadosPerPage);
   const startIndex = (currentPage - 1) * afiliadosPerPage;
   const afiliadosVisibles = afiliadosFiltrados.slice(
@@ -152,7 +216,6 @@ const AfiliadosPage: React.FC = () => {
     startIndex + afiliadosPerPage
   );
 
-  // 👇 Reiniciar a página 1 si cambia la búsqueda
   useEffect(() => {
     setCurrentPage(1);
   }, [busqueda]);

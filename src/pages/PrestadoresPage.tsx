@@ -9,6 +9,7 @@ import Paginacion from "../components/genericos/Paginacion";
 import "../components/genericos/PaginaEstilos.css";
 import { filtrarPorBusqueda } from "../utils/filtroBusqueda";
 import type { Prestador } from "../types/prestadores";
+import { getApiUrl } from "../config/env";
 
 const PrestadoresPage: React.FC = () => {
   const [busqueda, setBusqueda] = useState("");
@@ -32,7 +33,7 @@ const PrestadoresPage: React.FC = () => {
       const fetchPrestadores = async () => {
         try {
           setLoading(true);
-          const response = await fetch("http://localhost:3000/prestadores");
+          const response = await fetch(getApiUrl("/prestadores"));
           if (!response.ok) {
             throw new Error("Error al obtener los prestadores");
           }

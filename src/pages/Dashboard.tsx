@@ -9,6 +9,8 @@ import type { Afiliado } from "../types/afiliados";
 import type { Prestador } from "../types/prestadores";
 import { getApiUrl } from "../config/env";
 
+const CACHE_KEY = "dashboardData";
+const CACHE_DURATION_HOURS = 0.02; // tiempo de validez del cache
 
 const Dashboard: React.FC = () => {
   const [afiliados, setAfiliados] = useState<Afiliado[]>([]);
@@ -42,7 +44,20 @@ const Dashboard: React.FC = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        
+
+        // Verificar cache existente
+        const cacheStr = localStorage.getItem(CACHE_KEY);
+        if (cacheStr) {
+          const cache = JSON.parse(cacheStr);
+          const ageHours = (Date.now() - cache.timestamp) / (1000 * 60 * 60);
+          if (ageHours < CACHE_DURATION_HOURS) {
+            setAfiliados(cache.afiliados);
+            setPrestadores(cache.prestadores);
+            setLoading(false);
+            return;
+          }
+        }
+
         // Consultar afiliados y prestadores en paralelo
         const [afiliadosResponse, prestadoresResponse] = await Promise.all([
           fetch(getApiUrl("/personas")),
@@ -87,8 +102,20 @@ const Dashboard: React.FC = () => {
 
         setAfiliados(afiliadosCompletos);
         setPrestadores(prestadoresData);
+
+        // Guardar en cache
+        localStorage.setItem(
+          CACHE_KEY,
+          JSON.stringify({
+            timestamp: Date.now(),
+            afiliados: afiliadosCompletos,
+            prestadores: prestadoresData
+          })
+        );
+
       } catch (error) {
         console.error("Error al cargar datos:", error);
+        localStorage.removeItem(CACHE_KEY);
         setAfiliados([]);
         setPrestadores([]);
       } finally {
