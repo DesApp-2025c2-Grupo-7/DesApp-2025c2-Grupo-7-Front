@@ -1,5 +1,5 @@
 import type { Afiliado, Integrante, AfiliadoListItem, GrupoFamiliar } from '../types/afiliados';
-import type { PersonaConGrupo } from '../services/personasService';
+
 
 /**
  * Transforma los datos del backend para mostrar todos los afiliados (titulares e integrantes) en una lista plana
@@ -8,11 +8,11 @@ export const transformarAfiliadosParaLista = (afiliados: Afiliado[]): AfiliadoLi
   const listaCompleta: AfiliadoListItem[] = [];
   const procesados = new Set<string>(); // Para evitar duplicados
 
-  afiliados.forEach(titular => {
+  afiliados.forEach((titular: any) => {
     // Verificar si el titular ya está incluido en su propio grupoFamiliar
     let titularYaIncluido = false;
     if (titular.grupoFamiliar && titular.grupoFamiliar.length > 0) {
-      titularYaIncluido = titular.grupoFamiliar.some(miembro => 
+      titularYaIncluido = titular.grupoFamiliar.some((miembro: any) => 
         miembro.id === titular.id || 
         (miembro.credencial === titular.credencial && miembro.sufijo === titular.sufijo)
       );
@@ -49,7 +49,7 @@ export const transformarAfiliadosParaLista = (afiliados: Afiliado[]): AfiliadoLi
 
     // Agregar todos los miembros del grupo familiar (que puede incluir o no al titular)
     if (titular.grupoFamiliar && titular.grupoFamiliar.length > 0) {
-      titular.grupoFamiliar.forEach(miembro => {
+      titular.grupoFamiliar.forEach((miembro: any) => {
         const miembroKey = `${miembro.credencial}-${miembro.sufijo}`;
         if (!procesados.has(miembroKey)) {
           const integranteItem: AfiliadoListItem = {
@@ -88,7 +88,7 @@ export const transformarAfiliadosParaLista = (afiliados: Afiliado[]): AfiliadoLi
  */
 export const encontrarAfiliadoConGrupo = (afiliados: Afiliado[], id: number): { titular: Afiliado; integranteActual?: Integrante } | null => {
   // Buscar si es un titular
-  const titular = afiliados.find(a => a.id === id);
+  const titular = afiliados.find((a: any) => a.id === id);
   if (titular) {
     return { titular };
   }
@@ -96,7 +96,7 @@ export const encontrarAfiliadoConGrupo = (afiliados: Afiliado[], id: number): { 
   // Buscar si es un integrante
   for (const afiliado of afiliados) {
     if (afiliado.grupoFamiliar) {
-      const integrante = afiliado.grupoFamiliar.find(i => i.id === id);
+      const integrante = afiliado.grupoFamiliar.find((i: any) => i.id === id);
       if (integrante) {
         return { titular: afiliado, integranteActual: integrante };
       }
@@ -135,7 +135,7 @@ export const obtenerMiembrosGrupoFamiliar = (titular: Afiliado): AfiliadoListIte
 
   // Agregar los integrantes
   if (titular.grupoFamiliar && titular.grupoFamiliar.length > 0) {
-    titular.grupoFamiliar.forEach(integrante => {
+    titular.grupoFamiliar.forEach((integrante: any) => {
       miembros.push({
         id: integrante.id,
         credencial: integrante.credencial,
@@ -160,12 +160,12 @@ export const obtenerMiembrosGrupoFamiliar = (titular: Afiliado): AfiliadoListIte
   }
 
   return miembros;
-}
+};
 
 /**
  * Transforma una persona del backend al formato Afiliado del frontend
  */
-export const transformPersonaToAfiliado = (persona: PersonaConGrupo): Afiliado => {
+export const transformPersonaToAfiliado = (persona: any): Afiliado => {
   return {
     id: persona.id,
     credencial: persona.credencial,
@@ -177,27 +177,34 @@ export const transformPersonaToAfiliado = (persona: PersonaConGrupo): Afiliado =
     fechaNacimiento: persona.fechaNacimiento,
     telefono: persona.telefono || [],
     email: persona.email || [],
-    direccion: persona.direccion || [],
+    direccion: (persona.direccion || []).map((dir: any) => ({
+      id: dir.id || 0,
+      calle: dir.calle,
+      numero: dir.numero,
+      localidad: dir.localidad,
+      codigoPostal: dir.codigoPostal,
+      depto: dir.depto || null
+    })),
     parentesco: persona.tipoPersona === 'AFILIADO' ? 'Titular' : (persona.parentesco || 'Integrante'),
     situacionesTerapeuticas: persona.situacionesTerapeuticas || [],
     planMedico: persona.planMedico,
     fechaAlta: persona.fechaAlta,
     fechaBaja: persona.fechaBaja,
-    grupoFamiliar: [] // Se llena por separado para evitar recursión infinita
+    grupoFamiliar: []
   };
 };
 
 /**
  * Extrae información del grupo familiar desde una persona con su grupo
  */
-export const extractGrupoFamiliarInfo = (personaConGrupo: PersonaConGrupo): GrupoFamiliar => {
+export const extractGrupoFamiliarInfo = (personaConGrupo: any): GrupoFamiliar => {
   return {
     credencial: personaConGrupo.credencial,
     planMedico: personaConGrupo.planMedico,
-    estado: 'Activo', // Por defecto activo
+    estado: 'Activo',
     fechaAlta: personaConGrupo.fechaAlta,
     fechaBaja: personaConGrupo.fechaBaja,
-    personas: [personaConGrupo, ...(personaConGrupo.grupoFamiliar || [])].map(persona => ({
+    personas: [personaConGrupo, ...(personaConGrupo.grupoFamiliar || [])].map((persona: any) => ({
       id: persona.id,
       credencial: persona.credencial,
       sufijo: persona.sufijo,
@@ -210,7 +217,14 @@ export const extractGrupoFamiliarInfo = (personaConGrupo: PersonaConGrupo): Grup
       telefono: persona.telefono || [],
       email: persona.email || [],
       parentesco: persona.parentesco,
-      direccion: persona.direccion || [],
+      direccion: (persona.direccion || []).map((dir: any) => ({
+        id: dir.id || 0,
+        calle: dir.calle,
+        numero: dir.numero,
+        localidad: dir.localidad,
+        codigoPostal: dir.codigoPostal,
+        depto: dir.depto || null
+      })),
       situacionesTerapeuticas: persona.situacionesTerapeuticas || [],
       grupoFamiliar: {} as GrupoFamiliar,
       grupoFamiliarId: persona.credencial,
@@ -224,7 +238,7 @@ export const extractGrupoFamiliarInfo = (personaConGrupo: PersonaConGrupo): Grup
 /**
  * Obtiene todos los miembros del grupo familiar (titular + integrantes)
  */
-export const getAllMiembrosGrupo = (personaConGrupo: PersonaConGrupo): Afiliado[] => {
+export const getAllMiembrosGrupo = (personaConGrupo: any): Afiliado[] => {
   const titular = transformPersonaToAfiliado(personaConGrupo);
   const integrantes = (personaConGrupo.grupoFamiliar || []).map(transformPersonaToAfiliado);
   
@@ -246,4 +260,4 @@ export const obtenerParentescoTexto = (persona: any): string => {
     return 'Titular';
   }
   return persona.parentesco || 'Integrante';
-};;
+};
