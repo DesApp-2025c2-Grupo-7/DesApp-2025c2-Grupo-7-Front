@@ -1,6 +1,6 @@
 // Servicio para manejar todas las llamadas a la API de personas
 import { getApiUrl } from '../config/env';
-import type { Afiliado, Persona } from '../types/afiliados';
+import type { Afiliado } from '../types/afiliados';
 
 export interface IntegranteData {
   nombre: string;
