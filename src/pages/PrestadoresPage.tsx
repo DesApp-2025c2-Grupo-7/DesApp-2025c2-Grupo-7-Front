@@ -16,9 +16,9 @@ const PrestadoresPage: React.FC = () => {
   const [prestadores, setPrestadores] = useState<Prestador[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // 👇 Nuevo estado para paginación
+  // 👇 Paginación
   const [currentPage, setCurrentPage] = useState(1);
-  const prestadoresPerPage = 5; // cantidad de elementos por página
+  const prestadoresPerPage = 5;
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -51,16 +51,14 @@ const PrestadoresPage: React.FC = () => {
     }
   }, [location.state]);
 
-  // Función para volver al Dashboard
+  // Funciones de navegación
   const handleVolver = () => navigate("/");
-
-  // Función para dar de alta prestador
   const handleAlta = () => navigate("/prestadores/alta");
 
   // Filtrado por búsqueda
   const prestadoresFiltrados = filtrarPorBusqueda(prestadores, busqueda);
 
-  // 👇 Lógica de paginación
+  // 👇 Paginación
   const totalPages = Math.ceil(prestadoresFiltrados.length / prestadoresPerPage);
   const startIndex = (currentPage - 1) * prestadoresPerPage;
   const prestadoresVisibles = prestadoresFiltrados.slice(startIndex, startIndex + prestadoresPerPage);
@@ -80,7 +78,23 @@ const PrestadoresPage: React.FC = () => {
       <div className="admin-content">
         <PrestadoresHeader onVolver={handleVolver} onAlta={handleAlta} mostrarAlta={true} />
 
-        <BarraBusqueda busqueda={busqueda} setBusqueda={setBusqueda} />
+        {/* ✅ Pasamos props dummy para evitar error de tipos */}
+        <BarraBusqueda
+          busqueda={busqueda}
+          setBusqueda={setBusqueda}
+          searchByNombre={false}
+          setSearchByNombre={() => {}}
+          searchByApellido={false}
+          setSearchByApellido={() => {}}
+          searchByCredencial={false}
+          setSearchByCredencial={() => {}}
+          searchByDni={false}
+          setSearchByDni={() => {}}
+          onlyTitulares={false}
+          setOnlyTitulares={() => {}}
+          includeInactivos={false}
+          setIncludeInactivos={() => {}}
+        />
 
         {loading ? (
           <p>Cargando prestadores...</p>
