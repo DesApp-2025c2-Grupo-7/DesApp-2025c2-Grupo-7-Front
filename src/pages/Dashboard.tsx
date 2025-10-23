@@ -155,10 +155,10 @@ const Dashboard: React.FC = () => {
             icon={UserCheck}
           />
           <CardDashboard
-            title="Horarios de atención"
-            buttonText="+ Ver Horarios de Atención"
+            title="Agenda de Turnos"
+            buttonText="+ Ver Agenda de Turnos"
             number={50}
-            onButtonClick={() => console.log("Ver Horarios")}
+            onButtonClick={() => navigate('/agenda')}
             icon={Clock}
             />
         </div>

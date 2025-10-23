@@ -27,7 +27,7 @@ const AfiliadosHeader: React.FC<AfiliadosHeaderProps> = ({
       <div className="seccion-header-buttons">
         {onVolver && (
           <Button variant="back" icon={ArrowLeft} onClick={onVolver}>
-            Volver
+            Volver al menú
           </Button>
         )}
 
