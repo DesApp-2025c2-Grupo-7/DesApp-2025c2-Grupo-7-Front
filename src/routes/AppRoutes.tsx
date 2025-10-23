@@ -7,6 +7,7 @@ import AfiliadoProfile from "../pages/AfiliadoProfilePage";
 import PrestadorProfilePage from "../pages/PrestadoresProfilePage";
 import { PrestadorDarDeAlta } from "../pages/PrestadorDarDeAltaPage";
 import { AfiliadoDarDeAlta } from "../pages/AfiliadoDarDeAltaPage";
+import AgendaPage from "../pages/AgendaPage";
 
 const AppRoutes: React.FC = () => {
   return (
@@ -18,6 +19,7 @@ const AppRoutes: React.FC = () => {
       <Route path="/prestadores/:id" element={<PrestadorProfilePage />} />
       <Route path="/prestadores/alta" element={<PrestadorDarDeAlta />} />
       <Route path="/afiliados/alta" element={<AfiliadoDarDeAlta />} />
+      <Route path="/agenda" element={<AgendaPage />} />
     </Routes>
   );
 };

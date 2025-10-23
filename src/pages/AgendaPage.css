@@ -1,0 +1,112 @@
+:root{
+  --brand-green: #0b8a55;
+  --muted: #6b7280;
+  --card-bg: #ffffff;
+  --surface: #f7faf9;
+}
+
+.agenda-calendar .rbc-toolbar {
+  display: none; /* hide default toolbar since we use custom */
+}
+
+.rbc-custom-toolbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:12px 16px;
+  background:var(--card-bg);
+  border-bottom:1px solid #e6eef0;
+  gap:12px;
+}
+
+.rbc-toolbar-left, .rbc-toolbar-right{
+  display:flex;gap:8px;align-items:center;
+}
+
+.rbc-toolbar-center{
+  font-weight:600;color:var(--brand-green);
+}
+
+.rbc-btn{
+  background:transparent;border:1px solid #e0e6e6;padding:6px 8px;border-radius:6px;cursor:pointer;color:var(--brand-green);
+}
+.rbc-btn.small{padding:4px 6px;font-size:0.9rem}
+.rbc-btn:hover{background:rgba(11,138,85,0.06)}
+
+/* Calendar cell and event styling */
+.rbc-day-slot .rbc-time-slot, .rbc-time-slot{
+  border-top: 1px dashed #eef2f2;
+}
+
+.rbc-event{
+  background: linear-gradient(90deg,var(--brand-green), #0aa06b);
+  color: white;
+  border-radius:6px;
+  padding:4px 6px;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.06);
+  border: none;
+}
+
+.rbc-month-row, .rbc-off-range-bg {
+  background: var(--surface);
+}
+
+/* resource list header */
+.rbc-resource-header {
+  background: #fbfffc;border-bottom:1px solid #eef6f2;color:var(--muted);padding:8px;font-weight:600
+}
+
+/* responsive tweaks */
+@media (max-width: 800px){
+  .rbc-custom-toolbar{flex-direction:column;align-items:flex-start}
+  .rbc-toolbar-right{margin-top:8px}
+}
+
+/* Day cards view styles */
+.day-cards-view{
+  display:flex;gap:12px;flex-wrap:wrap;padding:12px;
+}
+.prestador-card{
+  background:var(--card-bg);border:1px solid #e8f3ef;padding:12px;border-radius:8px;width:220px;box-shadow:0 1px 2px rgba(0,0,0,0.04)
+}
+.prestador-card h4{margin:0 0 8px 0;color:var(--brand-green)}
+.muted{color:var(--muted)}
+.turno-chip{background:#f0fff6;border:1px solid #d7f3e6;padding:8px;border-radius:6px;margin-bottom:8px}
+.turno-chip strong{display:block}
+
+.creating-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.25);display:flex;align-items:center;justify-content:center;z-index:1200}
+.creating-box{background:var(--card-bg);padding:16px 20px;border-radius:8px;box-shadow:0 6px 24px rgba(0,0,0,0.16);color:var(--brand-green);font-weight:700}
+
+.week-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:12px}
+.week-day{background:var(--card-bg);border-radius:8px;border:1px solid rgba(0,0,0,0.06);padding:8px;min-height:200px;display:flex;flex-direction:column}
+.day-header{font-size:13px;color:var(--muted);display:flex;align-items:baseline;gap:8px}
+.day-num{font-weight:700;color:var(--text)}
+.day-body{margin-top:8px;display:flex;flex-direction:column;gap:8px}
+.chip{padding:8px;border-radius:12px;border:1px solid #ddd;display:flex;flex-direction:row;gap:8px;align-items:center;cursor:pointer;box-shadow:0 1px 0 rgba(0,0,0,0.04)}
+.chip-time{font-weight:700;font-size:12px;color:var(--text-secondary);min-width:64px}
+.chip-title{font-size:12px;color:var(--text)}
+.muted.small{font-size:12px;color:var(--muted)}
+
+.day-header-large{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.day-header-large h3{margin:0;color:#0b66d1}
+.today-badge{background:rgba(11,102,209,0.12);color:#0b66d1;padding:6px 10px;border-radius:8px;font-weight:700}
+
+.turno-chip{background: #eaf6ff;border:1px solid rgba(11,102,209,0.12);padding:12px;border-radius:8px;margin-bottom:8px}
+
+.view-segment{display:flex;gap:4px;margin-top:6px}
+.seg-btn{padding:6px 10px;border-radius:6px;border:1px solid rgba(0,0,0,0.08);background:transparent;cursor:pointer}
+.seg-btn.active{background:#0b66d1;color:white;border-color:transparent}
+
+.month-grid{display:flex;flex-direction:column;gap:8px}
+.month-week{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
+.month-day{background:var(--card-bg);border-radius:6px;border:1px solid rgba(0,0,0,0.04);padding:6px;min-height:100px}
+.month-day.other-month{opacity:0.45}
+.month-day .day-header{font-size:12px}
+.month-day .day-body{margin-top:6px;display:flex;flex-direction:column;gap:6px}
+
+.more-badge{margin-top:6px;padding:6px;border-radius:8px;background:#f1f5fb;color:#0b66d1;font-weight:700;cursor:pointer;text-align:center;border:1px solid rgba(11,102,209,0.08)}
+
+/* Highlight today */
+.week-day .day-header .day-num, .month-day .day-header .day-num { padding:2px 6px;border-radius:6px }
+.week-day.today, .month-day.today { box-shadow: 0 0 0 3px rgba(11,102,209,0.08); border-color: rgba(11,102,209,0.18) }
+.week-day.today .day-num, .month-day.today .day-num { background: rgba(11,102,209,0.12); color: #0b66d1 }
