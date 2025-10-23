@@ -78,23 +78,19 @@ const PrestadoresPage: React.FC = () => {
       <div className="admin-content">
         <PrestadoresHeader onVolver={handleVolver} onAlta={handleAlta} mostrarAlta={true} />
 
-        {/* ✅ Pasamos props dummy para evitar error de tipos */}
-        <BarraBusqueda
-          busqueda={busqueda}
-          setBusqueda={setBusqueda}
-          searchByNombre={false}
-          setSearchByNombre={() => {}}
-          searchByApellido={false}
-          setSearchByApellido={() => {}}
-          searchByCredencial={false}
-          setSearchByCredencial={() => {}}
-          searchByDni={false}
-          setSearchByDni={() => {}}
-          onlyTitulares={false}
-          setOnlyTitulares={() => {}}
-          includeInactivos={false}
-          setIncludeInactivos={() => {}}
-        />
+        <BarraBusqueda busqueda={busqueda} setBusqueda={setBusqueda} searchByNombre={false} setSearchByNombre={function (): void {
+          throw new Error("Function not implemented.");
+        } } searchByApellido={false} setSearchByApellido={function (): void {
+          throw new Error("Function not implemented.");
+        } } searchByCredencial={false} setSearchByCredencial={function (): void {
+          throw new Error("Function not implemented.");
+        } } searchByDni={false} setSearchByDni={function (): void {
+          throw new Error("Function not implemented.");
+        } } onlyTitulares={false} setOnlyTitulares={function (): void {
+          throw new Error("Function not implemented.");
+        } } includeInactivos={false} setIncludeInactivos={function (): void {
+          throw new Error("Function not implemented.");
+        } } />
 
         {loading ? (
           <p>Cargando prestadores...</p>
