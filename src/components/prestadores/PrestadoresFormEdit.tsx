@@ -41,6 +41,11 @@ const calcularTurnos = (horario: HorarioAtencion) => {
 const PrestadoresFormEdit: React.FC = () => {
   const navigate = useNavigate();
 
+  // Función para cancelar y volver a la lista
+  const handleCancelar = () => {
+    navigate("/afiliados");
+  };
+
   /* Teléfonos */
   const [telefonos, setTelefonos] = useState<string[]>([""]);
   const actualizarTelefono = (telefonos: string[]) => {
@@ -304,6 +309,9 @@ const PrestadoresFormEdit: React.FC = () => {
         )}
       </div>
 
+      <Button type="button" variant="cancel" onClick={handleCancelar}>
+        Cancelar
+      </Button>
       <Button onClick={handleDarDeAlta}>Dar de alta</Button>
     </div>
   );
