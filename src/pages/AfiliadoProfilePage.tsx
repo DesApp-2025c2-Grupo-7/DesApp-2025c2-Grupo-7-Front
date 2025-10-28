@@ -411,7 +411,7 @@ const AfiliadoProfile: React.FC = () => {
           subtitle="Afiliado - Información personal y estado"
         />
         <div className="admin-content">
-          <SubHeader onVolver={handleVolver} />
+          <SubHeader title="Gestión de Afiliado" onVolver={handleVolver} />
           <div className="afiliado-form">
             {Array.from({ length: 12 }).map((_, i) => (
               <div className="form-row" key={i}>
@@ -433,9 +433,10 @@ const AfiliadoProfile: React.FC = () => {
       />
       <div className="admin-content">
         <SubHeader
+          title="Gestión de Afiliado"
           onVolver={handleVolver}
           modoEdicion={modoEdicion}
-          afiliadoButtonText="Dar de alta integrante"
+          buttonText="Dar de alta integrante"
           onAlta={() => {
             // Disparar evento personalizado para que lo capture AfiliadosForm
             window.dispatchEvent(

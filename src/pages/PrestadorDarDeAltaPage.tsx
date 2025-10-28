@@ -13,7 +13,7 @@ export function PrestadorDarDeAlta() {
         subtitle="Prestador - Dar de alta"
       />
       <div className="admin-content">
-        <SubHeader onVolver={handleVolver} />
+        <SubHeader title="Dar de alta Prestador" onVolver={handleVolver} />
         <PrestadoresFormEdit />
       </div>
     </div>

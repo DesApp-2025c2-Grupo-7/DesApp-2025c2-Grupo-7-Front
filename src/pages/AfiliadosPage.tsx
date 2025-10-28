@@ -229,9 +229,10 @@ const AfiliadosPage: React.FC = () => {
 
       <div className="admin-content">
         <SubHeader
+          title="Gestión de afiliados"
           onVolver={handleVolver}
           onAlta={handleAlta}
-          afiliadoButtonText="Dar de alta afiliado"
+          buttonText="Dar de alta afiliado"
         />
 
         <BarraBusqueda

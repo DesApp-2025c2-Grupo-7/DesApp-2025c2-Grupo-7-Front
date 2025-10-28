@@ -3,23 +3,28 @@ import Button from "./Button";
 import "../genericos/HeaderEstilos.css";
 import { ArrowLeft, UserPlus } from "lucide-react";
 
-interface AfiliadosHeaderProps {
+interface SubHeaderProps {
+  title: string;
+  subtitle?: string;
   onVolver?: () => void;
   onAlta?: () => void;
   modoEdicion?: boolean;
-  afiliadoButtonText?: string;
+  buttonText?: string;
 }
 
-const AfiliadosHeader: React.FC<AfiliadosHeaderProps> = ({
+const SubHeader: React.FC<SubHeaderProps> = ({
+  title,
+  subtitle,
   onVolver,
   onAlta,
   modoEdicion = false,
-  afiliadoButtonText,
+  buttonText,
 }) => {
   return (
     <div className="seccion-header">
       <div className="titulo-con-estado">
-        <h2>Gestión de Afiliados</h2>
+        <h2>{title}</h2>
+        {subtitle && <p className="subtitle">{subtitle}</p>}
         {modoEdicion && (
           <span className="badge-modo-edicion">Modo Edición</span>
         )}
@@ -33,7 +38,7 @@ const AfiliadosHeader: React.FC<AfiliadosHeaderProps> = ({
 
         {onAlta && (
           <Button variant="primary" icon={UserPlus} onClick={onAlta}>
-            {afiliadoButtonText}
+            {buttonText}
           </Button>
         )}
       </div>
@@ -41,4 +46,4 @@ const AfiliadosHeader: React.FC<AfiliadosHeaderProps> = ({
   );
 };
 
-export default AfiliadosHeader;
+export default SubHeader;
