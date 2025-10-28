@@ -1,6 +1,6 @@
 /* import { useNavigate } from "react-router-dom"; */
 import Header from "../components/genericos/Header";
-import HeaderAfiliado from "../components/afiliados/HeaderAfiliados";
+import SubHeader from "../components/genericos/SubHeader";
 import "./AfiliadoProfile.css";
 import AfiliadosFormEdit from "../components/afiliados/AfiliadosFormEdit";
 
@@ -14,7 +14,7 @@ export function AfiliadoDarDeAlta() {
         subtitle="Afiliado - Dar de alta afiliado"
       />
       <div className="admin-content">
-        <HeaderAfiliado /* onVolver={handleVolver} */ />
+        <SubHeader /* onVolver={handleVolver} */ />
         <AfiliadosFormEdit />
       </div>
     </div>

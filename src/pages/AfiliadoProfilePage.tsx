@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import Header from "../components/genericos/Header";
-import HeaderAfiliado from "../components/afiliados/HeaderAfiliados";
+import SubHeader from "../components/genericos/SubHeader";
 import AfiliadosForm from "../components/afiliados/AfiliadosForm";
 import "./AfiliadoProfile.css";
 import type { Afiliado, GrupoFamiliar } from "../types/afiliados";
@@ -373,11 +373,21 @@ const AfiliadoProfile: React.FC = () => {
       onConfirmar: () => {
         // Queremos navegar al perfil del TITULAR y pasar el integrante por query
         // Construir la key integrante como credencial-sufijo si está disponible en la respuesta
-        const cred = nuevoIntegrante?.credencial || nuevoIntegrante?.credencialTitular || afiliado?.credencial;
-        const suf = nuevoIntegrante?.sufijo || nuevoIntegrante?.sufijoAsignado || nuevoIntegrante?.sufijoAsignado || '';
+        const cred =
+          nuevoIntegrante?.credencial ||
+          nuevoIntegrante?.credencialTitular ||
+          afiliado?.credencial;
+        const suf =
+          nuevoIntegrante?.sufijo ||
+          nuevoIntegrante?.sufijoAsignado ||
+          nuevoIntegrante?.sufijoAsignado ||
+          "";
 
         // Preferir navegar al titular que tenemos en estado `afiliado` (titular completo)
-        const idTitular = afiliado?.id || nuevoIntegrante?.titularId || nuevoIntegrante?.titular?.id;
+        const idTitular =
+          afiliado?.id ||
+          nuevoIntegrante?.titularId ||
+          nuevoIntegrante?.titular?.id;
 
         if (idTitular && cred) {
           const integranteKey = `${cred}-${suf}`;
@@ -401,7 +411,7 @@ const AfiliadoProfile: React.FC = () => {
           subtitle="Afiliado - Información personal y estado"
         />
         <div className="admin-content">
-          <HeaderAfiliado onVolver={handleVolver} />
+          <SubHeader onVolver={handleVolver} />
           <div className="afiliado-form">
             {Array.from({ length: 12 }).map((_, i) => (
               <div className="form-row" key={i}>
@@ -422,7 +432,7 @@ const AfiliadoProfile: React.FC = () => {
         subtitle="Afiliado - Información personal y estado"
       />
       <div className="admin-content">
-        <HeaderAfiliado
+        <SubHeader
           onVolver={handleVolver}
           modoEdicion={modoEdicion}
           afiliadoButtonText="Dar de alta integrante"

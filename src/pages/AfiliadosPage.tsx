@@ -4,7 +4,7 @@ import Header from "../components/genericos/Header";
 import BarraBusqueda from "../components/genericos/BarraBusqueda";
 import ListaAfiliados from "../components/afiliados/ListaAfiliados";
 import Paginacion from "../components/genericos/Paginacion";
-import AfiliadosHeader from "../components/afiliados/HeaderAfiliados";
+import SubHeader from "../components/genericos/SubHeader";
 import "../components/genericos/PaginaEstilos.css";
 import { transformarAfiliadosParaLista } from "../utils/transformarAfiliados";
 import type { Afiliado, AfiliadoListItem } from "../types/afiliados";
@@ -228,7 +228,7 @@ const AfiliadosPage: React.FC = () => {
       />
 
       <div className="admin-content">
-        <AfiliadosHeader
+        <SubHeader
           onVolver={handleVolver}
           onAlta={handleAlta}
           afiliadoButtonText="Dar de alta afiliado"
