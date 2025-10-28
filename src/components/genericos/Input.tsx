@@ -11,7 +11,8 @@ interface InputProps {
     | "search"
     | "tel"
     | "url"
-    | "date";
+    | "date"
+    | "time";
   placeholder?: string;
   value?: string;
   onChange?: (value: string) => void;

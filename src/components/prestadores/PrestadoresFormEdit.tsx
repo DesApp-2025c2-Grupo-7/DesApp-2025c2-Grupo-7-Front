@@ -6,8 +6,13 @@ import Input from "../genericos/Input";
 import Select from "../genericos/Select";
 import CardEspecialidades from "./CardEspecialidades";
 import ModalDireccion from "./ModalDireccion";
-import type { Direccion, HorarioAtencion, Especialidad } from "../../types/prestadores";
+import type {
+  Direccion,
+  HorarioAtencion,
+  Especialidad,
+} from "../../types/prestadores";
 import { getApiUrl } from "../../config/env";
+import MultipleInput from "../genericos/MultipleInput";
 
 const horaAMinutos = (hora?: string) => {
   if (!hora) return 0;
@@ -36,22 +41,21 @@ const calcularTurnos = (horario: HorarioAtencion) => {
 const PrestadoresFormEdit: React.FC = () => {
   const navigate = useNavigate();
 
+  // Función para cancelar y volver a la lista
+  const handleCancelar = () => {
+    navigate("/afiliados");
+  };
+
   /* Teléfonos */
   const [telefonos, setTelefonos] = useState<string[]>([""]);
-  const agregarTelefono = () => setTelefonos([...telefonos, ""]);
-  const actualizarTelefono = (index: number, valor: string) => {
-    const nuevos = [...telefonos];
-    nuevos[index] = valor;
-    setTelefonos(nuevos);
+  const actualizarTelefono = (telefonos: string[]) => {
+    setTelefonos(telefonos);
   };
 
   /* Emails */
   const [emails, setEmails] = useState<string[]>([""]);
-  const agregarEmail = () => setEmails([...emails, ""]);
-  const actualizarEmail = (index: number, valor: string) => {
-    const nuevos = [...emails];
-    nuevos[index] = valor;
-    setEmails(nuevos);
+  const actualizarEmail = (emails: string[]) => {
+    setEmails(emails);
   };
 
   /* Tipo de prestador */
@@ -72,16 +76,20 @@ const PrestadoresFormEdit: React.FC = () => {
 
   /* Direcciones y horarios */
   const [listaDirecciones, setListaDirecciones] = useState<Direccion[]>([]);
-  const [direccionSeleccionada, setDireccionSeleccionada] = useState<Direccion | null>(null);
+  const [direccionSeleccionada, setDireccionSeleccionada] =
+    useState<Direccion | null>(null);
 
-  const handleVerMas = (direccion: Direccion) => setDireccionSeleccionada(direccion);
+  const handleVerMas = (direccion: Direccion) =>
+    setDireccionSeleccionada(direccion);
   const handleCloseModal = () => setDireccionSeleccionada(null);
 
   const handleSaveDireccion = (dirActualizada: Direccion) => {
     setListaDirecciones((prev) => {
       const existe = prev.find((d) => d.id === dirActualizada.id);
       if (existe) {
-        return prev.map((d) => (d.id === dirActualizada.id ? dirActualizada : d));
+        return prev.map((d) =>
+          d.id === dirActualizada.id ? dirActualizada : d
+        );
       } else {
         return [...prev, dirActualizada];
       }
@@ -102,13 +110,18 @@ const PrestadoresFormEdit: React.FC = () => {
   };
 
   const handleEliminarDireccion = async (direccion: Direccion) => {
-    if (!window.confirm("¿Deseas eliminar esta dirección y todos sus horarios?")) return;
+    if (
+      !window.confirm("¿Deseas eliminar esta dirección y todos sus horarios?")
+    )
+      return;
 
     try {
       for (const hor of direccion.horariosAtencion) {
         if (hor.id) {
           await fetch(
-            getApiUrl(`/prestadores/1/direcciones/${direccion.id}/horarios/${hor.id}`),
+            getApiUrl(
+              `/prestadores/1/direcciones/${direccion.id}/horarios/${hor.id}`
+            ),
             { method: "DELETE" }
           );
         }
@@ -132,7 +145,8 @@ const PrestadoresFormEdit: React.FC = () => {
   const handleDarDeAlta = async () => {
     try {
       const prestadorData = {
-        esProfesionalIndependiente: tipoPrestador === "Profesional Independiente",
+        esProfesionalIndependiente:
+          tipoPrestador === "Profesional Independiente",
         nombreCompleto: nombre,
         numeroCUIL: cuil,
         telefono: telefonos,
@@ -171,7 +185,10 @@ const PrestadoresFormEdit: React.FC = () => {
         <Select
           options={[
             { value: "Centro Médico", label: "Centro Médico" },
-            { value: "Profesional Independiente", label: "Profesional Independiente" },
+            {
+              value: "Profesional Independiente",
+              label: "Profesional Independiente",
+            },
           ]}
           value={tipoPrestador}
           onChange={(valor: string) => setTipoPrestador(valor)}
@@ -181,7 +198,14 @@ const PrestadoresFormEdit: React.FC = () => {
       {/* Especialidades */}
       <div className="form-row">
         <label>Especialidades</label>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "0.2rem 0.2rem", color: "#646b72ff" }}>
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: "0.2rem 0.2rem",
+            color: "#646b72ff",
+          }}
+        >
           <CardEspecialidades
             especialidades={especialidades}
             seleccionadas={seleccionadas}
@@ -201,25 +225,25 @@ const PrestadoresFormEdit: React.FC = () => {
       </div>
 
       {/* Teléfonos */}
+
       <div className="form-row">
-        <label>Teléfonos</label>
-        {telefonos.map((tel, i) => (
-          <Input key={i} type="tel" value={tel} onChange={(v) => actualizarTelefono(i, v)} />
-        ))}
-        <button type="button" onClick={agregarTelefono}>
-          + Agregar teléfono
-        </button>
+        <label>Teléfono</label>
+        <MultipleInput
+          type="tel"
+          name="telefono"
+          onChange={(v) => actualizarTelefono(v)}
+        />
       </div>
 
       {/* Emails */}
+
       <div className="form-row">
         <label>Emails</label>
-        {emails.map((mail, i) => (
-          <Input key={i} type="email" value={mail} onChange={(v) => actualizarEmail(i, v)} />
-        ))}
-        <button type="button" onClick={agregarEmail}>
-          + Agregar email
-        </button>
+        <MultipleInput
+          type="email"
+          name="email"
+          onChange={(v) => actualizarEmail(v)}
+        />
       </div>
 
       {/* Direcciones y horarios */}
@@ -230,7 +254,8 @@ const PrestadoresFormEdit: React.FC = () => {
             <div className="schedule-card" key={i}>
               <div className="schedule-header">
                 <h4>
-                  Dirección: {dir.calle} {dir.numero}, {dir.localidad} ({dir.codigoPostal || "—"})
+                  Dirección: {dir.calle} {dir.numero}, {dir.localidad} (
+                  {dir.codigoPostal || "—"})
                 </h4>
               </div>
               <div className="schedule-list">
@@ -238,16 +263,25 @@ const PrestadoresFormEdit: React.FC = () => {
                   <div className="schedule-item" key={j}>
                     <strong>{hor.dia}</strong> - {hor.desde} a {hor.hasta}
                     <span className="schedule-badge">
-                      Duración: {hor.duracionTurno} | Turnos: {calcularTurnos(hor)}
+                      Duración: {hor.duracionTurno} | Turnos:{" "}
+                      {calcularTurnos(hor)}
                     </span>
                   </div>
                 ))}
               </div>
               <div className="schedule-actions">
-                <Button variant="primary" size="small" onClick={() => handleVerMas(dir)}>
+                <Button
+                  variant="primary"
+                  size="small"
+                  onClick={() => handleVerMas(dir)}
+                >
                   Editar
                 </Button>
-                <Button variant="danger" size="small" onClick={() => handleEliminarDireccion(dir)}>
+                <Button
+                  variant="danger"
+                  size="small"
+                  onClick={() => handleEliminarDireccion(dir)}
+                >
                   Eliminar
                 </Button>
               </div>
@@ -256,7 +290,10 @@ const PrestadoresFormEdit: React.FC = () => {
         </div>
 
         <div className="fixed-add-button">
-          <Button className="add-schedule" onClick={handleAgregarNuevaDireccion}>
+          <Button
+            className="add-schedule"
+            onClick={handleAgregarNuevaDireccion}
+          >
             + Agregar nueva dirección
           </Button>
         </div>
@@ -272,6 +309,9 @@ const PrestadoresFormEdit: React.FC = () => {
         )}
       </div>
 
+      <Button type="button" variant="cancel" onClick={handleCancelar}>
+        Cancelar
+      </Button>
       <Button onClick={handleDarDeAlta}>Dar de alta</Button>
     </div>
   );

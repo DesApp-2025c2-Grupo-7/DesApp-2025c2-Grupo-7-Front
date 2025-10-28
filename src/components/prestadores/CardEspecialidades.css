@@ -1,0 +1,83 @@
+/* sx={{ maxWidth: 100, margin: "1rem auto", width: "100%" }} */
+
+.cardEspecialidades {
+  border: 2px solid #4b81d8;
+  border-radius: 8px !important;
+  background-color: #ffffff;
+  transition: all 0.2s ease-in-out;
+  box-shadow: 0 2px 6px rgba(46, 125, 50, 0.08);
+  padding: 8px;
+  max-width: 100%;
+  padding-bottom: 0px;
+}
+
+.cardEspecialidades:hover {
+  border-color: #264a83;
+  box-shadow: 0 4px 10px rgba(46, 125, 50, 0.12);
+}
+
+/* Contenedor interno */
+.cardEspecialidades .MuiCardContent-root {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Cada opción de especialidad */
+.cardEspecialidades div {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  transition: background-color 0.2s ease-in-out;
+}
+
+/* Estilo del checkbox */
+.cardEspecialidades input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #4b81d8;
+  border-radius: 6px;
+  background-color: #fff;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  position: relative;
+}
+
+.cardEspecialidades input[type="checkbox"]:checked {
+  background-color: #4b81d8;
+  border-color: #4b81d8;
+}
+
+.cardEspecialidades input[type="checkbox"]:checked::after {
+  content: "✓";
+  position: absolute;
+  top: -1px;
+  left: 4px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.cardEspecialidades input[type="checkbox"]:hover {
+  border-color: #264a83;
+}
+
+/* Label */
+.cardEspecialidades label {
+  color: #424242;
+  font-family: inherit;
+  font-size: 16px;
+  cursor: pointer;
+  transition: color 0.2s ease-in-out;
+}
+
+.cardEspecialidades input[type="checkbox"]:checked + label {
+  color: #264a83;
+  font-weight: 500;
+}

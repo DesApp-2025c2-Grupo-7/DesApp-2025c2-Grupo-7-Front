@@ -1,6 +1,7 @@
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import type { Especialidad } from "../../types/prestadores";
+import "./CardEspecialidades.css";
 
 interface CardEspecialidadesProps {
   especialidades: Especialidad[];
@@ -22,7 +23,7 @@ export default function CardEspecialidades({
   };
 
   return (
-    <Card sx={{ maxWidth: 400, margin: "1rem auto" }}>
+    <Card className="cardEspecialidades">
       <CardContent>
         {especialidades.map((esp) => (
           <div key={esp.id}>

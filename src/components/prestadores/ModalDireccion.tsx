@@ -3,6 +3,8 @@ import Button from "../genericos/Button";
 import type { Direccion, HorarioAtencion } from "../../types/prestadores";
 import "./ModalDireccion.css";
 import { getApiUrl } from "../../config/env";
+import Input from "../genericos/Input";
+import Select from "../genericos/Select";
 
 interface ModalDireccionProps {
   prestadorId: number; // Puede ser 0 si el prestador aún no existe
@@ -52,13 +54,18 @@ const ModalDireccion: React.FC<ModalDireccionProps> = ({
     return h * 60 + m;
   };
 
-  const validarHorario = (horario: HorarioAtencion, index: number): string[] => {
+  const validarHorario = (
+    horario: HorarioAtencion,
+    index: number
+  ): string[] => {
     const nuevosErrores: string[] = [];
-    if (!horario.desde || !horario.hasta || !horario.duracionTurno) return nuevosErrores;
+    if (!horario.desde || !horario.hasta || !horario.duracionTurno)
+      return nuevosErrores;
 
     const inicio = horaAMinutos(horario.desde);
     const fin = horaAMinutos(horario.hasta);
-    if (inicio >= fin) nuevosErrores.push("Hora inicio es mayor o igual a hora fin");
+    if (inicio >= fin)
+      nuevosErrores.push("Hora inicio es mayor o igual a hora fin");
 
     let duracion = horario.duracionTurno.includes(":")
       ? horaAMinutos(horario.duracionTurno)
@@ -73,7 +80,9 @@ const ModalDireccion: React.FC<ModalDireccionProps> = ({
           const inicioO = horaAMinutos(hO.desde);
           const finO = horaAMinutos(hO.hasta);
           if (!(fin <= inicioO || inicio >= finO)) {
-            nuevosErrores.push(`Se superpone con otra dirección: ${dir.calle} ${dir.numero}`);
+            nuevosErrores.push(
+              `Se superpone con otra dirección: ${dir.calle} ${dir.numero}`
+            );
           }
         }
       }
@@ -117,8 +126,17 @@ const ModalDireccion: React.FC<ModalDireccionProps> = ({
   };
 
   const handleAddHorario = () => {
-    const nuevo: HorarioAtencion = { id: 0, dia: "", desde: "", hasta: "", duracionTurno: "" };
-    setForm((prev) => ({ ...prev, horariosAtencion: [...prev.horariosAtencion, nuevo] }));
+    const nuevo: HorarioAtencion = {
+      id: 0,
+      dia: "",
+      desde: "",
+      hasta: "",
+      duracionTurno: "",
+    };
+    setForm((prev) => ({
+      ...prev,
+      horariosAtencion: [...prev.horariosAtencion, nuevo],
+    }));
   };
 
   const handleDeleteHorario = (index: number) => {
@@ -155,7 +173,9 @@ const ModalDireccion: React.FC<ModalDireccionProps> = ({
       const url =
         form.id === 0
           ? `${getApiUrl(`/prestadores/${prestadorId}/direcciones`)}`
-          : `${getApiUrl(`/prestadores/${prestadorId}/direcciones/${form.id}`)}`;
+          : `${getApiUrl(
+              `/prestadores/${prestadorId}/direcciones/${form.id}`
+            )}`;
 
       const resDir = await fetch(url, {
         method,
@@ -184,13 +204,25 @@ const ModalDireccion: React.FC<ModalDireccionProps> = ({
         let resHor;
         if (hor.id && hor.id !== 0) {
           resHor = await fetch(
-            `${getApiUrl(`/prestadores/${prestadorId}/direcciones/${dirGuardada.id}/horarios/${hor.id}`)}`,
-            { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(horData) }
+            `${getApiUrl(
+              `/prestadores/${prestadorId}/direcciones/${dirGuardada.id}/horarios/${hor.id}`
+            )}`,
+            {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(horData),
+            }
           );
         } else {
           resHor = await fetch(
-            `${getApiUrl(`/prestadores/${prestadorId}/direcciones/${dirGuardada.id}/horarios`)}`,
-            { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(horData) }
+            `${getApiUrl(
+              `/prestadores/${prestadorId}/direcciones/${dirGuardada.id}/horarios`
+            )}`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(horData),
+            }
           );
         }
 
@@ -213,7 +245,9 @@ const ModalDireccion: React.FC<ModalDireccionProps> = ({
   return (
     <div className="modal-overlay" onKeyDown={handleKeyDown}>
       <div className="modal-card">
-        <h3>{form.id === 0 ? "Nueva Dirección" : "Editar Dirección"}</h3>
+        <h3 className="section-title">
+          {form.id === 0 ? "Nueva Dirección" : "Editar Dirección"}
+        </h3>
 
         {Object.keys(errores).length > 0 && (
           <div
@@ -234,44 +268,136 @@ const ModalDireccion: React.FC<ModalDireccionProps> = ({
           </div>
         )}
 
-        <div className="modal-content" style={{ maxHeight: "60vh", overflowY: "auto" }}>
+        <div
+          className="modal-content"
+          style={{ maxHeight: "60vh", overflowY: "auto" }}
+        >
           <label>
-            Calle: <input type="text" name="calle" value={form.calle} onChange={handleChange} />
+            Calle:{" "}
+            <Input
+              type="text"
+              name="calle"
+              value={form.calle}
+              onChange={() => handleChange}
+            />
           </label>
           <label>
-            Número: <input type="text" name="numero" value={form.numero} onChange={handleChange} />
+            Número:{" "}
+            <Input
+              type="text"
+              name="numero"
+              value={form.numero}
+              onChange={() => handleChange}
+            />
           </label>
           <label>
-            Localidad: <input type="text" name="localidad" value={form.localidad} onChange={handleChange} />
+            Localidad:{" "}
+            <Input
+              type="text"
+              name="localidad"
+              value={form.localidad}
+              onChange={() => handleChange}
+            />
           </label>
           <label>
-            Código Postal: <input type="text" name="codigoPostal" value={form.codigoPostal} onChange={handleChange} />
+            Código Postal:{" "}
+            <Input
+              type="text"
+              name="codigoPostal"
+              value={form.codigoPostal}
+              onChange={() => handleChange}
+            />
           </label>
 
           <h4>Horarios de Atención</h4>
           {form.horariosAtencion.map((hor, i) => (
-            <div key={i} className="horario-item" style={{ marginBottom: "0.5rem" }}>
+            <div
+              key={i}
+              className="horario-item"
+              style={{ marginBottom: "0.5rem" }}
+            >
               <label>
-                Día: <input type="text" value={hor.dia} onChange={(e) => handleHorarioChange(i, "dia", e.target.value)} style={{ borderColor: errores[i] ? "red" : undefined }} />
+                Día:{" "}
+                <Select
+                  value={hor.dia}
+                  onChange={(value) => handleHorarioChange(i, "dia", value)}
+                  options={[
+                    { value: "", label: "Seleccionar..." },
+                    { value: "Lunes", label: "Lunes" },
+                    { value: "Martes", label: "Martes" },
+                    { value: "Miercoles", label: "Miercoles" },
+                    { value: "Jueves", label: "Jueves" },
+                    { value: "Viernes", label: "Viernes" },
+                    { value: "Sabado", label: "Sábado" },
+                  ]}
+                />
               </label>
               <label>
-                Desde: <input type="time" value={hor.desde} onChange={(e) => handleHorarioChange(i, "desde", e.target.value)} style={{ borderColor: errores[i] ? "red" : undefined }} />
+                Desde:{" "}
+                <Input
+                  type="time"
+                  value={hor.desde}
+                  onChange={(value) => handleHorarioChange(i, "desde", value)}
+                />
               </label>
               <label>
-                Hasta: <input type="time" value={hor.hasta} onChange={(e) => handleHorarioChange(i, "hasta", e.target.value)} style={{ borderColor: errores[i] ? "red" : undefined }} />
+                Hasta:{" "}
+                <Input
+                  type="time"
+                  value={hor.hasta}
+                  onChange={(value) => handleHorarioChange(i, "hasta", value)}
+                />
               </label>
               <label>
-                Duración: <input type="text" value={hor.duracionTurno} onChange={(e) => handleHorarioChange(i, "duracionTurno", e.target.value)} style={{ borderColor: errores[i] ? "red" : undefined }} />
+                Duración:{" "}
+                <Input
+                  type="time"
+                  value={hor.duracionTurno}
+                  onChange={(value) =>
+                    handleHorarioChange(i, "duracionTurno", value)
+                  }
+                />
               </label>
-              <Button variant="danger" size="small" onClick={() => handleDeleteHorario(i)}>Eliminar</Button>
+              <div
+                style={{
+                  marginTop: "15px",
+                }}
+              >
+                <Button
+                  variant="danger"
+                  size="small"
+                  onClick={() => handleDeleteHorario(i)}
+                >
+                  Eliminar
+                </Button>
+              </div>
             </div>
           ))}
-          <Button variant="secondary" onClick={handleAddHorario}>+ Agregar nuevo horario</Button>
+          <Button variant="primary" onClick={handleAddHorario}>
+            + Agregar nuevo horario
+          </Button>
         </div>
 
-        <div className="modal-actions" style={{ position: "sticky", bottom: 0, backgroundColor: "white", paddingTop: "0.5rem", paddingBottom: "0.5rem", display: "flex", justifyContent: "flex-end", gap: "0.5rem", borderTop: "1px solid #ccc" }}>
-          <Button variant="secondary" onClick={onClose}>Cancelar</Button>
-          <Button variant="primary" onClick={handleSave}>Guardar</Button>
+        <div
+          className="modal-actions"
+          style={{
+            position: "sticky",
+            bottom: 0,
+            backgroundColor: "white",
+            paddingTop: "0.5rem",
+            paddingBottom: "0.5rem",
+            display: "flex",
+            justifyContent: "flex-end",
+            gap: "0.5rem",
+            borderTop: "1px solid #ccc",
+          }}
+        >
+          <Button variant="cancel" onClick={onClose}>
+            Cancelar
+          </Button>
+          <Button variant="primary" onClick={handleSave}>
+            Guardar
+          </Button>
         </div>
       </div>
     </div>
