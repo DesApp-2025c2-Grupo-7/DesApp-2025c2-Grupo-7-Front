@@ -7,7 +7,7 @@ import Input from "../genericos/Input";
 import Select from "../genericos/Select";
 
 interface ModalDireccionProps {
-  prestadorId: number; // Puede ser 0 si el prestador aún no existe
+  prestadorId: number;
   direccion: Direccion | null;
   onClose: () => void;
   onSave: (direccion: Direccion) => void;
@@ -29,7 +29,7 @@ const ModalDireccion: React.FC<ModalDireccionProps> = ({
       localidad: "",
       codigoPostal: "",
       horariosAtencion: [],
-      esTemporal: true, // Marca que es temporal si prestador aún no existe
+      esTemporal: true,
     }
   );
   const [errores, setErrores] = useState<{ [key: number]: string[] }>({});
@@ -54,10 +54,7 @@ const ModalDireccion: React.FC<ModalDireccionProps> = ({
     return h * 60 + m;
   };
 
-  const validarHorario = (
-    horario: HorarioAtencion,
-    index: number
-  ): string[] => {
+  const validarHorario = (horario: HorarioAtencion, index: number): string[] => {
     const nuevosErrores: string[] = [];
     if (!horario.desde || !horario.hasta || !horario.duracionTurno)
       return nuevosErrores;
@@ -102,8 +99,9 @@ const ModalDireccion: React.FC<ModalDireccionProps> = ({
     return nuevosErrores;
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: { target: { name?: string; value: string } }) => {
     const { name, value } = e.target;
+    if (!name) return;
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -278,7 +276,9 @@ const ModalDireccion: React.FC<ModalDireccionProps> = ({
               type="text"
               name="calle"
               value={form.calle}
-              onChange={() => handleChange}
+              onChange={(value) =>
+                handleChange({ target: { name: "calle", value } })
+              }
             />
           </label>
           <label>
@@ -287,7 +287,9 @@ const ModalDireccion: React.FC<ModalDireccionProps> = ({
               type="text"
               name="numero"
               value={form.numero}
-              onChange={() => handleChange}
+              onChange={(value) =>
+                handleChange({ target: { name: "numero", value } })
+              }
             />
           </label>
           <label>
@@ -296,7 +298,9 @@ const ModalDireccion: React.FC<ModalDireccionProps> = ({
               type="text"
               name="localidad"
               value={form.localidad}
-              onChange={() => handleChange}
+              onChange={(value) =>
+                handleChange({ target: { name: "localidad", value } })
+              }
             />
           </label>
           <label>
@@ -305,7 +309,9 @@ const ModalDireccion: React.FC<ModalDireccionProps> = ({
               type="text"
               name="codigoPostal"
               value={form.codigoPostal}
-              onChange={() => handleChange}
+              onChange={(value) =>
+                handleChange({ target: { name: "codigoPostal", value } })
+              }
             />
           </label>
 
@@ -322,10 +328,9 @@ const ModalDireccion: React.FC<ModalDireccionProps> = ({
                   value={hor.dia}
                   onChange={(value) => handleHorarioChange(i, "dia", value)}
                   options={[
-                    { value: "", label: "Seleccionar..." },
                     { value: "Lunes", label: "Lunes" },
                     { value: "Martes", label: "Martes" },
-                    { value: "Miercoles", label: "Miercoles" },
+                    { value: "Miercoles", label: "Miércoles" },
                     { value: "Jueves", label: "Jueves" },
                     { value: "Viernes", label: "Viernes" },
                     { value: "Sabado", label: "Sábado" },
@@ -337,7 +342,9 @@ const ModalDireccion: React.FC<ModalDireccionProps> = ({
                 <Input
                   type="time"
                   value={hor.desde}
-                  onChange={(value) => handleHorarioChange(i, "desde", value)}
+                  onChange={(value) =>
+                    handleHorarioChange(i, "desde", value)
+                  }
                 />
               </label>
               <label>
@@ -345,7 +352,9 @@ const ModalDireccion: React.FC<ModalDireccionProps> = ({
                 <Input
                   type="time"
                   value={hor.hasta}
-                  onChange={(value) => handleHorarioChange(i, "hasta", value)}
+                  onChange={(value) =>
+                    handleHorarioChange(i, "hasta", value)
+                  }
                 />
               </label>
               <label>
@@ -358,11 +367,7 @@ const ModalDireccion: React.FC<ModalDireccionProps> = ({
                   }
                 />
               </label>
-              <div
-                style={{
-                  marginTop: "15px",
-                }}
-              >
+              <div style={{ marginTop: "15px" }}>
                 <Button
                   variant="danger"
                   size="small"

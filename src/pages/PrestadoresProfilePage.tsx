@@ -1,14 +1,11 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Header from "../components/genericos/Header";
 import HeaderPrestador from "../components/prestadores/HeaderPrestadores";
-import PrestadoresForm from "../components/prestadores/PrestadoresForm";
+import PrestadoresFormEdit from "../components/prestadores/PrestadoresFormEdit";
 import "./PrestadorProfile.css";
 import type { Prestador } from "../types/prestadores";
 import { getApiUrl } from "../config/env";
-
-
 
 const PrestadorProfilePage: React.FC = () => {
   const [prestador, setPrestador] = useState<Prestador | null>(null);
@@ -70,13 +67,15 @@ const PrestadorProfilePage: React.FC = () => {
         subtitle="Prestador - Información y estado"
       />
       <div className="admin-content">
-        <HeaderPrestador onVolver={handleVolver} mostrarAlta={false}/>
-        <PrestadoresForm prestador={prestador} />
+        <HeaderPrestador onVolver={handleVolver} mostrarAlta={false} />
+        {prestador ? (
+          <PrestadoresFormEdit prestador={prestador} />
+        ) : (
+          <p>No se encontró el prestador</p>
+        )}
       </div>
-      
     </div>
   );
 };
 
 export default PrestadorProfilePage;
-

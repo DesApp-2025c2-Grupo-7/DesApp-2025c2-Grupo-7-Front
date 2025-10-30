@@ -16,16 +16,16 @@ const PrestadoresPage: React.FC = () => {
   const [prestadores, setPrestadores] = useState<Prestador[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // 👇 Paginación
+  // Paginación
   const [currentPage, setCurrentPage] = useState(1);
-  const prestadoresPerPage = 5;
+  const prestadoresPerPage = 10;
 
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Cargar prestadores
   useEffect(() => {
     const prestadoresFromState = location.state?.prestadores;
-
     if (prestadoresFromState) {
       setPrestadores(prestadoresFromState);
       setLoading(false);
@@ -46,27 +46,33 @@ const PrestadoresPage: React.FC = () => {
           setLoading(false);
         }
       };
-
       fetchPrestadores();
     }
   }, [location.state]);
 
-  // Funciones de navegación
   const handleVolver = () => navigate("/");
   const handleAlta = () => navigate("/prestadores/alta");
 
-  // Filtrado por búsqueda
+  // Filtrado
   const prestadoresFiltrados = filtrarPorBusqueda(prestadores, busqueda);
 
-  // 👇 Paginación
-  const totalPages = Math.ceil(prestadoresFiltrados.length / prestadoresPerPage);
-  const startIndex = (currentPage - 1) * prestadoresPerPage;
-  const prestadoresVisibles = prestadoresFiltrados.slice(startIndex, startIndex + prestadoresPerPage);
+  // Calcular total de páginas
+  const totalPages = Math.ceil(prestadoresFiltrados.length / prestadoresPerPage) || 1;
 
-  // 👇 Reiniciar a la página 1 si cambia la búsqueda
+  // Ajustar currentPage si queda fuera de rango
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
+
+  // Reiniciar página al cambiar búsqueda
   useEffect(() => {
     setCurrentPage(1);
   }, [busqueda]);
+
+  const startIndex = (currentPage - 1) * prestadoresPerPage;
+  const prestadoresVisibles = prestadoresFiltrados.slice(startIndex, startIndex + prestadoresPerPage);
 
   return (
     <div className="admin-page">
@@ -78,19 +84,22 @@ const PrestadoresPage: React.FC = () => {
       <div className="admin-content">
         <PrestadoresHeader onVolver={handleVolver} onAlta={handleAlta} mostrarAlta={true} />
 
-        <BarraBusqueda busqueda={busqueda} setBusqueda={setBusqueda} searchByNombre={false} setSearchByNombre={function (): void {
-          throw new Error("Function not implemented.");
-        } } searchByApellido={false} setSearchByApellido={function (): void {
-          throw new Error("Function not implemented.");
-        } } searchByCredencial={false} setSearchByCredencial={function (): void {
-          throw new Error("Function not implemented.");
-        } } searchByDni={false} setSearchByDni={function (): void {
-          throw new Error("Function not implemented.");
-        } } onlyTitulares={false} setOnlyTitulares={function (): void {
-          throw new Error("Function not implemented.");
-        } } includeInactivos={false} setIncludeInactivos={function (): void {
-          throw new Error("Function not implemented.");
-        } } />
+        <BarraBusqueda
+          busqueda={busqueda}
+          setBusqueda={setBusqueda}
+          searchByNombre={false}
+          setSearchByNombre={() => {}}
+          searchByApellido={false}
+          setSearchByApellido={() => {}}
+          searchByCredencial={false}
+          setSearchByCredencial={() => {}}
+          searchByDni={false}
+          setSearchByDni={() => {}}
+          onlyTitulares={false}
+          setOnlyTitulares={() => {}}
+          includeInactivos={false}
+          setIncludeInactivos={() => {}}
+        />
 
         {loading ? (
           <p>Cargando prestadores...</p>

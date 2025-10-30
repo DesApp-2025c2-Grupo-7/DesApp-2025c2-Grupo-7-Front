@@ -4,16 +4,14 @@ import "./ListaPrestadores.css";
 import Button from "../genericos/Button";
 import Input from "../genericos/Input";
 import Select from "../genericos/Select";
+import MultipleInput from "../genericos/MultipleInput";
 import CardEspecialidades from "./CardEspecialidades";
 import ModalDireccion from "./ModalDireccion";
-import type {
-  Direccion,
-  HorarioAtencion,
-  Especialidad,
-} from "../../types/prestadores";
+import Modal from "../genericos/Modal";
+import type { Direccion, HorarioAtencion, Especialidad, Prestador } from "../../types/prestadores";
 import { getApiUrl } from "../../config/env";
-import MultipleInput from "../genericos/MultipleInput";
 
+/* --- Funciones auxiliares --- */
 const horaAMinutos = (hora?: string) => {
   if (!hora) return 0;
   const [h, m] = hora.split(":").map(Number);
@@ -22,240 +20,242 @@ const horaAMinutos = (hora?: string) => {
 
 const calcularTurnos = (horario: HorarioAtencion) => {
   if (!horario.desde || !horario.hasta || !horario.duracionTurno) return 0;
-
   const inicio = horaAMinutos(horario.desde);
   const fin = horaAMinutos(horario.hasta);
-
-  let duracion = 0;
-  if (horario.duracionTurno.includes(":")) {
-    duracion = horaAMinutos(horario.duracionTurno);
-  } else {
-    const match = horario.duracionTurno.match(/\d+/);
-    duracion = match ? Number(match[0]) : 0;
-  }
-
+  let duracion = horario.duracionTurno.includes(":") ? horaAMinutos(horario.duracionTurno) : Number(horario.duracionTurno);
   if (duracion <= 0) return 0;
   return Math.floor((fin - inicio) / duracion);
 };
 
-const PrestadoresFormEdit: React.FC = () => {
+/* --- Componente principal --- */
+interface PrestadoresFormEditProps {
+  prestador?: Prestador | null;
+}
+
+const PrestadoresFormEdit: React.FC<PrestadoresFormEditProps> = ({ prestador }) => {
   const navigate = useNavigate();
 
-  // Función para cancelar y volver a la lista
-  const handleCancelar = () => {
-    navigate("/afiliados");
-  };
-
-  /* Teléfonos */
-  const [telefonos, setTelefonos] = useState<string[]>([""]);
-  const actualizarTelefono = (telefonos: string[]) => {
-    setTelefonos(telefonos);
-  };
-
-  /* Emails */
-  const [emails, setEmails] = useState<string[]>([""]);
-  const actualizarEmail = (emails: string[]) => {
-    setEmails(emails);
-  };
-
-  /* Tipo de prestador */
-  const [tipoPrestador, setTipoPrestador] = useState<string>("Centro Médico");
-
-  /* Especialidades */
+  /* --- Estado de formulario --- */
+  const [isEditing, setIsEditing] = useState(!prestador);
+  const [modalBajaOpen, setModalBajaOpen] = useState(false);
+  const [fechaBaja, setFechaBaja] = useState(prestador?.fechaBaja || "");
+  const [nombre, setNombre] = useState(prestador?.nombreCompleto || "");
+  const [cuil, setCuil] = useState(prestador?.numeroCUIL || "");
+  const [tipoPrestador, setTipoPrestador] = useState(prestador?.esProfesionalIndependiente ? "Profesional Independiente" : "Centro Médico");
+  const [telefonos, setTelefonos] = useState<string[]>(prestador?.telefono || [""]);
+  const [emails, setEmails] = useState<string[]>(prestador?.email || [""]);
   const [especialidades, setEspecialidades] = useState<Especialidad[]>([]);
-  const [seleccionadas, setSeleccionadas] = useState<Especialidad[]>([]);
+  const [seleccionadas, setSeleccionadas] = useState<Especialidad[]>(prestador?.especialidades || []);
+  const [listaDirecciones, setListaDirecciones] = useState<Direccion[]>(prestador?.direccion || []);
+  const [direccionSeleccionada, setDireccionSeleccionada] = useState<Direccion | null>(null);
 
+  // 🔹 Para profesionales independientes
+  const [centrosMedicos, setCentrosMedicos] = useState<Prestador[]>([]);
+  const [centroAsignadoId, setCentroAsignadoId] = useState<number | null>(prestador?.centroAsignadoId || null);
+
+  /* --- Cargar especialidades --- */
   useEffect(() => {
     fetch(getApiUrl("/especialidades"))
       .then((res) => res.json())
-      .then((data: Especialidad[]) => {
-        setEspecialidades(data);
-      })
+      .then((data: Especialidad[]) => setEspecialidades(data))
       .catch((err) => console.error("Error al cargar especialidades:", err));
   }, []);
 
-  /* Direcciones y horarios */
-  const [listaDirecciones, setListaDirecciones] = useState<Direccion[]>([]);
-  const [direccionSeleccionada, setDireccionSeleccionada] =
-    useState<Direccion | null>(null);
+  /* --- Cargar Centros Médicos (modo local) --- */
+  useEffect(() => {
+    fetch(getApiUrl("/prestadores"))
+      .then(res => res.json())
+      .then((data: Prestador[]) => {
+        const centros = data.filter(p => !p.esProfesionalIndependiente);
+        setCentrosMedicos(centros);
+      })
+      .catch(err => console.error("Error cargando centros médicos:", err));
+  }, []);
 
-  const handleVerMas = (direccion: Direccion) =>
-    setDireccionSeleccionada(direccion);
+  /* --- Funciones direcciones --- */
+  const handleVerMas = (dir: Direccion) => setDireccionSeleccionada(dir);
   const handleCloseModal = () => setDireccionSeleccionada(null);
 
   const handleSaveDireccion = (dirActualizada: Direccion) => {
-    setListaDirecciones((prev) => {
-      const existe = prev.find((d) => d.id === dirActualizada.id);
-      if (existe) {
-        return prev.map((d) =>
-          d.id === dirActualizada.id ? dirActualizada : d
-        );
-      } else {
-        return [...prev, dirActualizada];
-      }
+    setListaDirecciones(prev => {
+      const existe = prev.find(d => d.id === dirActualizada.id);
+      if (existe) return prev.map(d => d.id === dirActualizada.id ? dirActualizada : d);
+      return [...prev, dirActualizada];
     });
     setDireccionSeleccionada(null);
   };
 
   const handleAgregarNuevaDireccion = () => {
     const nuevaDireccion: Direccion = {
-      id: 0,
+      id: Date.now(),
       calle: "",
       numero: "",
       localidad: "",
       codigoPostal: "",
       horariosAtencion: [],
+      esTemporal: true,
     };
     handleVerMas(nuevaDireccion);
   };
 
-  const handleEliminarDireccion = async (direccion: Direccion) => {
-    if (
-      !window.confirm("¿Deseas eliminar esta dirección y todos sus horarios?")
-    )
-      return;
-
-    try {
-      for (const hor of direccion.horariosAtencion) {
-        if (hor.id) {
-          await fetch(
-            getApiUrl(
-              `/prestadores/1/direcciones/${direccion.id}/horarios/${hor.id}`
-            ),
-            { method: "DELETE" }
-          );
-        }
-      }
-
-      await fetch(getApiUrl(`/prestadores/1/direcciones/${direccion.id}`), {
-        method: "DELETE",
-      });
-
-      setListaDirecciones((prev) => prev.filter((d) => d.id !== direccion.id));
-    } catch (err) {
-      console.error("Error eliminando dirección y horarios", err);
-      alert("No se pudo eliminar la dirección");
-    }
+  const handleEliminarDireccion = (direccion: Direccion) => {
+    if (!window.confirm("¿Deseas eliminar esta dirección y todos sus horarios?")) return;
+    setListaDirecciones(prev => prev.filter(d => d.id !== direccion.id));
   };
 
-  /* Inputs principales */
-  const [nombre, setNombre] = useState("");
-  const [cuil, setCuil] = useState("");
-
-  const handleDarDeAlta = async () => {
+  /* --- Guardar cambios --- */
+  const handleGuardar = async () => {
     try {
       const prestadorData = {
-        esProfesionalIndependiente:
-          tipoPrestador === "Profesional Independiente",
-        nombreCompleto: nombre,
         numeroCUIL: cuil,
+        nombreCompleto: nombre,
+        esProfesionalIndependiente: tipoPrestador === "Profesional Independiente",
         telefono: telefonos,
         email: emails,
-        especialidades: seleccionadas.map((esp) => ({
-          id: esp.id,
-          nombre: esp.nombre,
-        })),
-        direccion: listaDirecciones,
+        especialidadIds: seleccionadas.map(e => e.id),
+        fechaBaja: fechaBaja || null,
+        centroAsignadoId: centroAsignadoId,
       };
 
-      const res = await fetch(getApiUrl("/prestadores"), {
-        method: "POST",
+      let url = getApiUrl("/prestadores");
+      let method: "POST" | "PUT" = "POST";
+      if (prestador) {
+        url += `/${prestador.id}`;
+        method = "PUT";
+      }
+
+      const res = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(prestadorData),
       });
 
-      if (!res.ok) throw new Error("Error al dar de alta el prestador");
-
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
-      alert("Prestador dado de alta correctamente!");
-      console.log("Prestador creado:", data);
+      console.log("✅ Prestador guardado:", data);
 
-      // Navegar al perfil del prestador recién creado
-      navigate(`/prestadores/${data.id}`);
+      // Guardar direcciones y horarios
+      for (const dir of listaDirecciones) {
+        const { id, esTemporal, ...dirParaBackend } = dir;
+        const dirUrl = prestador
+          ? getApiUrl(`/prestadores/${prestador.id}/direcciones${dir.esTemporal ? "" : `/${id}`}`)
+          : getApiUrl(`/prestadores/${data.id}/direcciones`);
+        const dirMethod: "POST" | "PUT" = prestador && !dir.esTemporal ? "PUT" : "POST";
+
+        const dirRes = await fetch(dirUrl, {
+          method: dirMethod,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(dirParaBackend),
+        });
+
+        if (!dirRes.ok) console.error("Error guardando dirección", await dirRes.text());
+        else {
+          const nuevaDir = await dirRes.json();
+          for (const hor of dir.horariosAtencion) {
+            const horRes = await fetch(
+              getApiUrl(`/prestadores/${prestador?.id || data.id}/direcciones/${nuevaDir.id}/horarios`),
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(hor),
+              }
+            );
+            if (!horRes.ok) console.error("Error creando horario", await horRes.text());
+          }
+        }
+      }
+
+      alert(`Prestador ${prestador ? "actualizado" : "creado"} correctamente`);
+      setIsEditing(false); // 🔹 volver a modo lectura
+      if (!prestador) navigate(`/prestadores/${data.id}`);
     } catch (err) {
-      console.error(err);
-      alert("Hubo un error al dar de alta el prestador");
+      console.error("🔥 Error guardando prestador:", err);
+      alert("Hubo un error al guardar el prestador");
     }
   };
 
+  const handleDarDeBaja = () => {
+    if (!fechaBaja) {
+      alert("Selecciona una fecha de baja válida");
+      return;
+    }
+    setModalBajaOpen(false);
+    handleGuardar();
+  };
+
+  /* --- Render --- */
   return (
     <div className="prestador-form">
       <div className="form-row">
         <label>Tipo de prestador</label>
-        <Select
-          options={[
-            { value: "Centro Médico", label: "Centro Médico" },
-            {
-              value: "Profesional Independiente",
-              label: "Profesional Independiente",
-            },
-          ]}
-          value={tipoPrestador}
-          onChange={(valor: string) => setTipoPrestador(valor)}
-        />
+        {isEditing ? (
+          <Select
+            options={[
+              { value: "Centro Médico", label: "Centro Médico" },
+              { value: "Profesional Independiente", label: "Profesional Independiente" },
+            ]}
+            value={tipoPrestador}
+            onChange={setTipoPrestador}
+          />
+        ) : (
+          <span>{tipoPrestador}</span>
+        )}
       </div>
 
-      {/* Especialidades */}
+      {isEditing && tipoPrestador === "Profesional Independiente" && (
+        <div className="form-row">
+          <label>Asignar a Centro Médico</label>
+          <Select
+            options={centrosMedicos.map(c => ({ value: c.id, label: c.nombreCompleto }))}
+            value={centroAsignadoId || ""}
+            onChange={(val: number) => setCentroAsignadoId(val)}
+          />
+        </div>
+      )}
+
       <div className="form-row">
         <label>Especialidades</label>
-        <div
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            gap: "0.2rem 0.2rem",
-            color: "#646b72ff",
-          }}
-        >
+        {isEditing ? (
           <CardEspecialidades
             especialidades={especialidades}
             seleccionadas={seleccionadas}
             onChange={setSeleccionadas}
           />
-        </div>
+        ) : (
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.2rem" }}>
+            {seleccionadas.length > 0 ? seleccionadas.map(e => <span key={e.id}>{e.nombre}</span>) : <span>No posee especialidades</span>}
+          </div>
+        )}
       </div>
 
-      {/* CUIL / Nombre */}
       <div className="form-row">
-        <label>Nro de CUIL o CUIT</label>
-        <Input type="text" value={cuil} onChange={setCuil} />
+        <label>CUIL/CUIT</label>
+        {isEditing ? <Input type="text" value={cuil} onChange={setCuil} /> : <span>{cuil}</span>}
       </div>
+
       <div className="form-row">
         <label>Nombre completo</label>
-        <Input type="text" value={nombre} onChange={setNombre} />
+        {isEditing ? <Input type="text" value={nombre} onChange={setNombre} /> : <span>{nombre}</span>}
       </div>
-
-      {/* Teléfonos */}
 
       <div className="form-row">
-        <label>Teléfono</label>
-        <MultipleInput
-          type="tel"
-          name="telefono"
-          onChange={(v) => actualizarTelefono(v)}
-        />
+        <label>Teléfonos</label>
+        {isEditing ? <MultipleInput type="tel" name="telefono" onChange={setTelefonos} values={telefonos} /> : telefonos.map((t, i) => <span key={i}>{t}</span>)}
       </div>
-
-      {/* Emails */}
 
       <div className="form-row">
         <label>Emails</label>
-        <MultipleInput
-          type="email"
-          name="email"
-          onChange={(v) => actualizarEmail(v)}
-        />
+        {isEditing ? <MultipleInput type="email" name="email" onChange={setEmails} values={emails} /> : emails.map((e, i) => <span key={i}>{e}</span>)}
       </div>
 
-      {/* Direcciones y horarios */}
       <div className="schedules">
         <h4>Direcciones y Horarios de atención</h4>
         <div className="schedules-container">
           {listaDirecciones.map((dir, i) => (
-            <div className="schedule-card" key={i}>
+            <div className="schedule-card" key={dir.id || i}>
               <div className="schedule-header">
                 <h4>
-                  Dirección: {dir.calle} {dir.numero}, {dir.localidad} (
-                  {dir.codigoPostal || "—"})
+                  Dirección: {dir.calle} {dir.numero}, {dir.localidad} ({dir.codigoPostal || "—"})
                 </h4>
               </div>
               <div className="schedule-list">
@@ -263,56 +263,69 @@ const PrestadoresFormEdit: React.FC = () => {
                   <div className="schedule-item" key={j}>
                     <strong>{hor.dia}</strong> - {hor.desde} a {hor.hasta}
                     <span className="schedule-badge">
-                      Duración: {hor.duracionTurno} | Turnos:{" "}
-                      {calcularTurnos(hor)}
+                      Duración: {hor.duracionTurno} | Turnos: {calcularTurnos(hor)}
                     </span>
                   </div>
                 ))}
               </div>
-              <div className="schedule-actions">
-                <Button
-                  variant="primary"
-                  size="small"
-                  onClick={() => handleVerMas(dir)}
-                >
-                  Editar
-                </Button>
-                <Button
-                  variant="danger"
-                  size="small"
-                  onClick={() => handleEliminarDireccion(dir)}
-                >
-                  Eliminar
-                </Button>
-              </div>
+              {isEditing && (
+                <div className="schedule-actions">
+                  <Button variant="primary" size="small" onClick={() => handleVerMas(dir)}>Editar</Button>
+                  <Button variant="danger" size="small" onClick={() => handleEliminarDireccion(dir)}>Eliminar</Button>
+                </div>
+              )}
             </div>
           ))}
         </div>
-
-        <div className="fixed-add-button">
-          <Button
-            className="add-schedule"
-            onClick={handleAgregarNuevaDireccion}
-          >
-            + Agregar nueva dirección
-          </Button>
-        </div>
-
-        {direccionSeleccionada && (
-          <ModalDireccion
-            prestadorId={0}
-            direccion={direccionSeleccionada}
-            todasDirecciones={listaDirecciones}
-            onClose={handleCloseModal}
-            onSave={handleSaveDireccion}
-          />
+        {isEditing && (
+          <div className="fixed-add-button">
+            <Button className="add-schedule" onClick={handleAgregarNuevaDireccion}>+ Agregar nueva dirección</Button>
+          </div>
         )}
       </div>
 
-      <Button type="button" variant="cancel" onClick={handleCancelar}>
-        Cancelar
-      </Button>
-      <Button onClick={handleDarDeAlta}>Dar de alta</Button>
+      <div style={{ marginTop: "1rem", display: "flex", gap: "0.5rem" }}>
+        <Button variant="cancel" onClick={() => navigate("/prestadores")}>Cancelar</Button>
+        {isEditing ? (
+          <>
+            <Button variant="primary" onClick={handleGuardar}>{prestador ? "Guardar cambios" : "Dar de alta"}</Button>
+            {prestador && (
+              <Button variant="danger" onClick={() => setModalBajaOpen(true)}>Dar de baja</Button>
+            )}
+          </>
+        ) : (
+          <Button variant="primary" onClick={() => setIsEditing(true)}>Editar</Button>
+        )}
+      </div>
+
+      {direccionSeleccionada && (
+        <ModalDireccion
+          prestadorId={prestador?.id || 0}
+          direccion={direccionSeleccionada}
+          todasDirecciones={listaDirecciones}
+          onClose={handleCloseModal}
+          onSave={handleSaveDireccion}
+        />
+      )}
+
+      {modalBajaOpen && (
+        <Modal
+          isOpen={modalBajaOpen}
+          onClose={() => setModalBajaOpen(false)}
+          titulo="Dar de baja prestador"
+          mensaje="Selecciona la fecha de baja:"
+          contenidoExtra={
+            <input
+              type="date"
+              value={fechaBaja}
+              onChange={(e) => setFechaBaja(e.target.value)}
+            />
+          }
+          tipo="warning"
+          textoBotonConfirmar="Confirmar baja"
+          onConfirmar={handleDarDeBaja}
+        />
+      )}
     </div>
   );
 };
