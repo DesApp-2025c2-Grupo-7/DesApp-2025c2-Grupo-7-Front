@@ -5,8 +5,6 @@ import "./AfiliadoProfile.css";
 import AfiliadosFormEdit from "../components/afiliados/AfiliadosFormEdit";
 
 export function AfiliadoDarDeAlta() {
-  /* const navigate = useNavigate(); */
-  /* const handleVolver = () => navigate("/afiliados"); */
   return (
     <div className="admin-page">
       <Header
@@ -14,7 +12,7 @@ export function AfiliadoDarDeAlta() {
         subtitle="Afiliado - Dar de alta afiliado"
       />
       <div className="admin-content">
-        <SubHeader /* onVolver={handleVolver} */ />
+        <SubHeader title="Dar de alta Afiliado" />
         <AfiliadosFormEdit />
       </div>
     </div>
