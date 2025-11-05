@@ -3,7 +3,7 @@
     position: relative;
     display: inline-flex;
     align-items: center;
-    width: 50%;
+    width: auto;
     max-width: 100%;
 }
 
@@ -44,18 +44,21 @@
 }
 
 /* Size variations */
+.select-small { min-width: 200px; }
 .select-small .select-field {
     min-height: 36px;
     padding: 8px 36px 8px 12px;
     font-size: 14px;
 }
 
+.select-medium { min-width: 280px; }
 .select-medium .select-field {
     min-height: 44px;
     padding: 12px 40px 12px 16px;
     font-size: 16px;
 }
 
+.select-large { min-width: 360px; }
 .select-large .select-field {
     min-height: 52px;
     padding: 16px 44px 16px 20px;

@@ -7,8 +7,7 @@ import { useModal } from "../hooks/useModal";
 import { agendaService } from "../services/agendaService";
 import { useNavigate } from "react-router-dom";
 import SubHeader from "../components/genericos/SubHeader";
-
-// react-big-calendar imports
+ 
 import {
   Calendar as RBCalendar,
   Views,
@@ -37,7 +36,6 @@ const diasSemanaEsp = [
   "Viernes",
   "Sábado",
 ];
-// safer normalization: remove common diacritics using typical range
 const stripDiacritics = (str: string) =>
   (str || "")
     .normalize("NFD")
@@ -57,8 +55,6 @@ const horaAMinutos = (h: string) => {
   const [hh, mm] = h.split(":").map(Number);
   return hh * 60 + (mm || 0);
 };
-
-// small helper to parse duracionTurno values like '15 minutos', '15', '01:30'
 const parseDuracion = (v: any): number => {
   if (v == null) return 30;
   if (typeof v === "number") return v;
@@ -74,8 +70,6 @@ const formatDateLocal = (d: Date) =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
     d.getDate()
   ).padStart(2, "0")}`;
-
-// Generate synthetic turnos from prestadores' direcciones/horarios for the week of `date`
 const generateSyntheticTurnos = (
   prestadoresList: any[],
   date: Date
@@ -126,24 +120,17 @@ const AgendaPage: React.FC = () => {
 
   const [turnos, setTurnos] = useState<Turno[]>([]);
   const [backendTurnos, setBackendTurnos] = useState<Turno[]>([]);
-  const [events, setEvents] = useState<any[]>([]); // calendar events
+  const [events, setEvents] = useState<any[]>([]); 
   const [showDisponibilidad, setShowDisponibilidad] = useState<boolean>(true);
-  const [debugAvailability, setDebugAvailability] = useState<any[]>([]);
-  const [debugAvailabilityByPrestador, setDebugAvailabilityByPrestador] =
-    useState<Record<string, number>>({});
+  
   const modal = useModal();
   const navigate = useNavigate();
-  // Controlled current date: represent the currently-focused date (today by default).
-  // For week rendering we compute the week-start from this date when needed.
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const currentDateRef = useRef<Date>(currentDate);
   useEffect(() => {
     currentDateRef.current = currentDate;
   }, [currentDate]);
-
-  // (removed selectedDateFromMonth) — month click directly sets currentDate and view
-
-  // state used for the create-turn modal
+  
   const [pendingSlot, setPendingSlot] = useState<{
     start: Date;
     prestadorId: number;
@@ -190,7 +177,6 @@ const AgendaPage: React.FC = () => {
     fetchAll();
   }, []);
 
-  // Keep turnos in sync: prefer backend turnos; if none, synthesize from prestadores' horarios
   useEffect(() => {
     if (Array.isArray(backendTurnos) && backendTurnos.length > 0) {
       setTurnos(backendTurnos);
@@ -199,9 +185,7 @@ const AgendaPage: React.FC = () => {
       setTurnos(synth);
     }
   }, [backendTurnos, prestadores, currentDate]);
-
   useEffect(() => {
-    // Build calendar events only from `turnos` (which may be backend or synthetic)
     const turnoEvents = (turnos || []).map((t: any, idx: number) => {
       const start = new Date(`${t.fecha}T${t.hora}:00`);
       const dur = t.duracion || 30;
@@ -219,28 +203,6 @@ const AgendaPage: React.FC = () => {
     });
 
     setEvents(turnoEvents);
-    // For debugging: populate debugAvailability from the current `turnos` when they are synthetic
-    try {
-      const synth = (turnos || []).filter(
-        (t) => !t.id || String(t.id).startsWith("synth") || t.id === undefined
-      );
-      const avail = synth.map((t: any) => ({
-        prestadorId: t.prestadorId,
-        fecha: t.fecha,
-        hora: t.hora,
-        duracion: t.duracion,
-      }));
-      setDebugAvailability(avail.slice(0, 200));
-      const byPrest: Record<string, number> = {};
-      for (const a of avail) {
-        const pid = String(a.prestadorId || "unknown");
-        byPrest[pid] = (byPrest[pid] || 0) + 1;
-      }
-      setDebugAvailabilityByPrestador(byPrest);
-    } catch (e) {
-      setDebugAvailability([]);
-      setDebugAvailabilityByPrestador({});
-    }
   }, [turnos, currentDate]);
 
   const prestadoresFiltrados = useMemo(() => {
@@ -258,29 +220,18 @@ const AgendaPage: React.FC = () => {
     });
   }, [prestadores, filtroEspecialidad, filtroPrestador]);
 
-  // Diagnostics: counts of backend turnos for the week containing currentDate
-  const weekDiagnostics = useMemo(() => {
-    const start = startOfWeek(currentDate, { weekStartsOn: 1 });
-    return Array.from({ length: 7 }).map((_, i) => {
-      const d = new Date(start);
-      d.setDate(start.getDate() + i);
-      const key = formatDateLocal(d);
-      const backend = (backendTurnos || []).filter(
-        (t) =>
-          t.fecha === key &&
-          (!filtroPrestador ||
-            String(t.prestadorId) === String(filtroPrestador))
+  useEffect(() => {
+    if (!filtroPrestador) return;
+    const sel = prestadores.find((p) => String(p.id) === String(filtroPrestador));
+    if (!sel) return;
+    const hasDireccion = Array.isArray(sel.direccion) && sel.direccion.length > 0;
+    if (!hasDireccion) {
+      modal.mostrarAdvertencia(
+        "Prestador sin dirección",
+        `El prestador ${sel.nombreCompleto || sel.nombre} no tiene una dirección configurada. Por ese motivo no tiene horarios de atención ni turnos asociados.`
       );
-      const combined = backend;
-      return {
-        date: d,
-        key,
-        backendCount: backend.length,
-        combinedCount: combined.length,
-        backend,
-      };
-    });
-  }, [backendTurnos, currentDate, filtroPrestador]);
+    }
+  }, [filtroPrestador, prestadores]);
 
   const validarContraHorario = (
     prest: any,
@@ -343,7 +294,7 @@ const AgendaPage: React.FC = () => {
       return;
     }
 
-    // check collision with existing turnos for that prestador
+    
     const collides = (turnos || []).some((t) => {
       if (String(t.prestadorId) !== String(prest.id)) return false;
       const tStart = new Date(`${t.fecha}T${t.hora}:00`);
@@ -364,7 +315,7 @@ const AgendaPage: React.FC = () => {
       return;
     }
 
-    // open modal to collect patient/duration/notes
+    
     setPendingSlot({ start, prestadorId: prest.id });
     setPacienteNombre("");
     setNotasTurno("");
@@ -449,13 +400,11 @@ const AgendaPage: React.FC = () => {
     const minTime = 6; // 6:00
     const maxTime = 22; // 22:00
 
-    // use top-level currentDate/currentDateRef for controlled navigation
-
-    // Custom toolbar: supports navigation for day/week/month
+    
+    
     const CustomToolbar = (toolbarProps: any) => {
-      const { label, view: toolbarView } = toolbarProps;
+      const { label, view: toolbarView, onView } = toolbarProps;
 
-      // compute some derived dates from the currentDate
       const startOfWeekDate = startOfWeek(new Date(currentDate), {
         weekStartsOn: 1,
       });
@@ -471,76 +420,46 @@ const AgendaPage: React.FC = () => {
 
       const goPrev = () => {
         if (toolbarView === "day") {
-          setCurrentDate((prev) => {
-            const next = new Date(prev);
-            next.setDate(next.getDate() - 1);
-            return next;
-          });
+          setCurrentDate((prev) => new Date(prev.getFullYear(), prev.getMonth(), prev.getDate() - 1));
         } else if (toolbarView === "week") {
           setCurrentDate((prev) => {
             const s = startOfWeek(new Date(prev), { weekStartsOn: 1 });
-            const next = new Date(s);
-            next.setDate(next.getDate() - 7);
-            return next;
+            return new Date(s.getFullYear(), s.getMonth(), s.getDate() - 7);
           });
         } else if (toolbarView === "month") {
-          setCurrentDate((prev) => {
-            const next = new Date(prev);
-            next.setMonth(next.getMonth() - 1);
-            return next;
-          });
+          setCurrentDate((prev) => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
         } else {
-          // fallback: week behavior
           setCurrentDate((prev) => {
             const s = startOfWeek(new Date(prev), { weekStartsOn: 1 });
-            const next = new Date(s);
-            next.setDate(next.getDate() - 7);
-            return next;
+            return new Date(s.getFullYear(), s.getMonth(), s.getDate() - 7);
           });
         }
       };
-
       const goNext = () => {
         if (toolbarView === "day") {
-          setCurrentDate((prev) => {
-            const next = new Date(prev);
-            next.setDate(next.getDate() + 1);
-            return next;
-          });
+          setCurrentDate((prev) => new Date(prev.getFullYear(), prev.getMonth(), prev.getDate() + 1));
         } else if (toolbarView === "week") {
           setCurrentDate((prev) => {
             const s = startOfWeek(new Date(prev), { weekStartsOn: 1 });
-            const next = new Date(s);
-            next.setDate(next.getDate() + 7);
-            return next;
+            return new Date(s.getFullYear(), s.getMonth(), s.getDate() + 7);
           });
         } else if (toolbarView === "month") {
-          setCurrentDate((prev) => {
-            const next = new Date(prev);
-            next.setMonth(next.getMonth() + 1);
-            return next;
-          });
+          setCurrentDate((prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1));
         } else {
-          // fallback: week
           setCurrentDate((prev) => {
             const s = startOfWeek(new Date(prev), { weekStartsOn: 1 });
-            const next = new Date(s);
-            next.setDate(next.getDate() + 7);
-            return next;
+            return new Date(s.getFullYear(), s.getMonth(), s.getDate() + 7);
           });
         }
       };
 
       const goToday = () => {
-        if (toolbarView === "week")
-          setCurrentDate(startOfWeek(new Date(), { weekStartsOn: 1 }));
+        if (toolbarView === "week") setCurrentDate(startOfWeek(new Date(), { weekStartsOn: 1 }));
         else setCurrentDate(new Date());
       };
 
-      // build a friendly center label depending on view
       const centerLabel = (() => {
-        if (toolbarView === "week")
-          return formatRange(startOfWeekDate, endOfWeekDate);
+        if (toolbarView === "week") return formatRange(startOfWeekDate, endOfWeekDate);
         if (toolbarView === "day")
           return new Date(currentDate).toLocaleDateString("es-ES", {
             weekday: "long",
@@ -557,58 +476,107 @@ const AgendaPage: React.FC = () => {
 
       return (
         <div className="rbc-custom-toolbar">
-          <div className="rbc-toolbar-left" />
-          <div className="rbc-toolbar-center">
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <button className="rbc-btn" onClick={goPrev}>
-                ‹
-              </button>
-              <div
-                role="button"
-                tabIndex={0}
-                onClick={goToday}
-                onKeyDown={(e: any) => {
-                  if (e.key === "Enter") goToday();
-                }}
-                style={{
-                  minWidth: 180,
-                  textAlign: "center",
-                  fontWeight: 600,
-                  color: "#0b66d1",
-                  cursor: "pointer",
-                }}
-              >
-                {centerLabel}
-              </div>
-              <button className="rbc-btn" onClick={goNext}>
-                ›
-              </button>
+          <div className="rbc-toolbar-center" style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center' }}>
+            <button className="rbc-btn" onClick={goPrev} aria-label="Anterior">
+              ‹
+            </button>
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={goToday}
+              onKeyDown={(e: any) => {
+                if (e.key === "Enter") goToday();
+              }}
+              style={{ minWidth: 180, textAlign: "center", fontWeight: 600, color: "#0b66d1", cursor: "pointer" }}
+            >
+              {centerLabel}
             </div>
+            <button className="rbc-btn" onClick={goNext} aria-label="Siguiente">
+              ›
+            </button>
           </div>
           <div className="rbc-toolbar-right">
-            <button
-              className="rbc-btn small"
-              onClick={() =>
-                toolbarProps.onView && toolbarProps.onView("month")
-              }
-            >
-              Mes
-            </button>
-            <button
-              className="rbc-btn small"
-              onClick={() => toolbarProps.onView && toolbarProps.onView("week")}
-            >
-              Semana
-            </button>
-            <button
-              className="rbc-btn small"
-              onClick={() => toolbarProps.onView && toolbarProps.onView("day")}
-            >
-              Día
-            </button>
+            <button className="rbc-btn small" onClick={() => onView && onView("month")}>Mes</button>
+            <button className="rbc-btn small" onClick={() => onView && onView("week")}>Semana</button>
+            <button className="rbc-btn small" onClick={() => onView && onView("day")}>Día</button>
           </div>
         </div>
       );
+    };
+
+    const showDetalleTurno = (prest?: any, turnoOrArr?: any) => {
+      const arr = Array.isArray(turnoOrArr) ? turnoOrArr : turnoOrArr ? [turnoOrArr] : [];
+      const turno = !Array.isArray(turnoOrArr) && turnoOrArr ? turnoOrArr : undefined;
+      const p = prest || (turno ? prestadores.find((x) => String(x.id) === String(turno.prestadorId)) : undefined);
+
+      const addresses = p && Array.isArray(p.direccion) && p.direccion.length > 0
+        ? p.direccion.map((d: any) => `${d.calle || ''} ${d.numero || ''} ${d.localidad || ''}`.trim()).filter(Boolean).join(' — ')
+        : 'No registrada';
+
+      const specs = p && Array.isArray(p.especialidades)
+        ? p.especialidades.map((s: any) => (s && s.nombre ? s.nombre : s)).filter(Boolean).join(', ')
+        : '-';
+
+      
+      let rangeText = '-';
+      if (arr.length > 0) {
+        let minStart = Infinity;
+        let maxEnd = -Infinity;
+        for (const t of arr) {
+          const s = horaAMinutos(t.hora);
+          const dur = Number(t.duracion || 30);
+          minStart = Math.min(minStart, s);
+          maxEnd = Math.max(maxEnd, s + dur);
+        }
+        const fmt = (m: number) => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+        rangeText = `${fmt(minStart)} - ${fmt(maxEnd)}`;
+      } else if (turno) {
+        const s = horaAMinutos(turno.hora);
+        const dur = Number(turno.duracion || 30);
+        const fmt = (m: number) => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+        rangeText = `${fmt(s)} - ${fmt(s + dur)}`;
+      }
+
+      modal.mostrarModal({
+        titulo: 'Detalle de turno',
+        mensaje: p ? (p.nombreCompleto || `${p.nombre} ${p.apellido || ''}`) : 'Turno',
+        tipo: 'info',
+        contenidoExtra: (
+          <div>
+            {turno && (
+              <>
+                <p><strong>Inicio:</strong> {new Date(`${turno.fecha}T${turno.hora}:00`).toLocaleString()}</p>
+                <p><strong>Duración:</strong> {Math.round((Number(turno.duracion || 30)))} min</p>
+              </>
+            )}
+            <p><strong>Rango:</strong> {rangeText}</p>
+            <p><strong>Turnos:</strong> {arr.length > 0 ? arr.length : (turno ? 1 : 0)}</p>
+            <p><strong>Dirección(es):</strong> {addresses}</p>
+            <p><strong>Especialidades:</strong> {specs}</p>
+          </div>
+        ),
+        soloInformacion: true,
+      });
+    };
+
+    const isCentroPrestador = (p: any) => {
+      if (!p) return false;
+      
+      if (Object.prototype.hasOwnProperty.call(p, 'isProfesionalIndependiente')) {
+        return !Boolean(p.isProfesionalIndependiente);
+      }
+      if (Object.prototype.hasOwnProperty.call(p, 'esProfesionalIndependiente')) {
+        return !Boolean(p.esProfesionalIndependiente);
+      }
+      const tipo = p.tipoPrestacion || p.tipo || "";
+      return /centro/i.test(String(tipo));
+    };
+
+    const getPrestadorTagColors = (p: any) => {
+      if (isCentroPrestador(p)) {
+        return { background: "#e6f7ff", border: "#9ad6ff", text: "#054a6a" };
+      }
+      return { background: "#e9fbe9", border: "#9be79b", text: "#0b5a2b" };
     };
 
     return (
@@ -617,21 +585,12 @@ const AgendaPage: React.FC = () => {
           <div>
             <CustomToolbar onView={(v: any) => setView(v)} view={"day"} />
             <div className="day-cards-view">
-              {/* DayCardsView: one card per prestador with their turns for the selected day; grouped by horariosAtencion */}
-              {
-                // show only prestadores that have turnos this day
-                (() => {
+              {(() => {
                   const dayKey = formatDateLocal(currentDate);
-                  const presConTurnos = prestadoresFiltrados.filter((p: any) =>
-                    (turnos || []).some(
-                      (t: any) =>
-                        String(t.prestadorId) === String(p.id) &&
-                        t.fecha === dayKey
-                    )
-                  );
-                  if (presConTurnos.length === 0)
-                    return <div className="muted">Sin turnos</div>;
-                  return presConTurnos.map((p: any) => {
+                  const presToShow = prestadoresFiltrados;
+                  if (!presToShow || presToShow.length === 0)
+                    return <div className="muted">No hay prestadores</div>;
+                  return presToShow.map((p: any) => {
                     const myTurnos = (turnos || [])
                       .filter(
                         (t: any) =>
@@ -642,7 +601,6 @@ const AgendaPage: React.FC = () => {
                         (a: any, b: any) =>
                           horaAMinutos(a.hora) - horaAMinutos(b.hora)
                       );
-                    // compute min start and max end
                     let minStart = Infinity;
                     let maxEnd = -Infinity;
                     for (const t of myTurnos) {
@@ -659,7 +617,6 @@ const AgendaPage: React.FC = () => {
                       minStart === Infinity
                         ? "-"
                         : `${fmt(minStart)} - ${fmt(maxEnd)}`;
-                    // derive duration: prefer uniform duration from horarios for that prestador/day
                     const todayNameNorm = stripDiacritics(
                       diasSemanaEsp[new Date(currentDate).getDay()]
                     );
@@ -682,10 +639,52 @@ const AgendaPage: React.FC = () => {
                         ? "N/A"
                         : `${durSet.join(", ")} min`;
 
+                    const hasHorarios = horariosForDay.length > 0;
+                    let firstAvailableHora: string | null = null;
+                    for (const h of horariosForDay) {
+                      const startMin = horaAMinutos(h.desde || "00:00");
+                      let endMin = horaAMinutos(h.hasta || "");
+                      if (isNaN(endMin) || endMin <= startMin) endMin = startMin + 8 * 60;
+                      const dur = parseDuracion(h.duracionTurno || 30);
+                      for (let slot = startMin; slot + dur <= endMin; slot += dur) {
+                        const hh = String(Math.floor(slot / 60)).padStart(2, "0");
+                        const mm = String(slot % 60).padStart(2, "0");
+                        const candidate = `${hh}:${mm}`;
+                        const collides = (turnos || []).some((t: any) =>
+                          String(t.prestadorId) === String(p.id) && t.fecha === dayKey && t.hora === candidate
+                        );
+                        if (!collides) {
+                          firstAvailableHora = candidate;
+                          break;
+                        }
+                      }
+                      if (firstAvailableHora) break;
+                    }
+                    const suggestedHora =
+                      firstAvailableHora || (horariosForDay[0] && horariosForDay[0].desde) || "09:00";
+                    const noHorarioReason = !p.direccion || p.direccion.length === 0
+                      ? "Sin direcciones configuradas"
+                      : horariosForDay.length === 0
+                      ? "No tiene horarios para el día seleccionado"
+                      : "";
+
                     return (
                       <div className="prestador-card" key={p.id}>
-                        <h4 style={{ color: "#0b8f4a" }}>
-                          {p.nombreCompleto || p.nombre + " " + p.apellido}
+                        <h4 style={{ color: "#0b8f4a", display: "flex", alignItems: "center", gap: 8 }}>
+                          <span>{p.nombreCompleto || p.nombre + " " + p.apellido}</span>
+                          {!hasHorarios && (
+                            <span title={noHorarioReason} aria-label={noHorarioReason} style={{
+                              background: "#fff0f0",
+                              color: "#a00",
+                              padding: "2px 8px",
+                              borderRadius: 12,
+                              fontSize: 12,
+                              fontWeight: 600,
+                              cursor: noHorarioReason ? "help" : "default",
+                            }}>
+                              Sin horarios
+                            </span>
+                          )}
                         </h4>
                         <div
                           className="single-globo"
@@ -704,35 +703,53 @@ const AgendaPage: React.FC = () => {
                               {myTurnos.length !== 1 ? "s" : ""}
                             </div>
                           </div>
-                          <div>
+                          <div style={{ display: "flex", gap: 8 }}>
                             <button
                               className="rbc-btn"
+                              onClick={() => showDetalleTurno(p, myTurnos)}
+                            >
+                              Detalle
+                            </button>
+                            {/** Crear turno rápido: habilitado sólo si tiene horarios para el día */}
+                            <button
+                              className="rbc-btn"
+                              disabled={!hasHorarios}
                               onClick={() => {
+                                const fecha = dayKey;
+                                const hora = suggestedHora;
                                 modal.mostrarModal({
-                                  titulo: "Detalle de turno",
-                                  mensaje: p
-                                    ? `${
-                                        p.nombreCompleto ||
-                                        p.nombre + " " + p.apellido
-                                      }`
-                                    : "Prestador",
-                                  tipo: "info",
-                                  contenidoExtra: (
-                                    <div>
-                                      <p>
-                                        <strong>Rango:</strong> {rangeText}
-                                      </p>
-                                      <p>
-                                        <strong>Turnos:</strong>{" "}
-                                        {myTurnos.length}
-                                      </p>
-                                    </div>
-                                  ),
-                                  soloInformacion: true,
+                                  titulo: "Crear turno rápido",
+                                  mensaje: `Crear turno para ${
+                                    p.nombreCompleto || p.nombre + " " + p.apellido
+                                  } el ${fecha} ${hora}`,
+                                  tipo: "confirmation",
+                                  textoBotonConfirmar: "Crear",
+                                  textoBotonCancelar: "Cancelar",
+                                  onConfirmar: async () => {
+                                    try {
+                                      await agendaService.createTurno({
+                                        prestadorId: p.id,
+                                        fecha,
+                                        hora,
+                                        duracion: parseDuracion(
+                                          horariosForDay[0]?.duracionTurno || 30
+                                        ),
+                                        paciente: { nombre: "Paciente" },
+                                      });
+                                      modal.mostrarExito(
+                                        "Turno creado",
+                                        "Turno creado correctamente"
+                                      );
+                                      const t = await agendaService.getTurnos();
+                                      setBackendTurnos(Array.isArray(t) ? t : []);
+                                    } catch (e: any) {
+                                      modal.mostrarError("Error", e?.message || String(e));
+                                    }
+                                  },
                                 });
                               }}
                             >
-                              Detalle
+                              Crear turno
                             </button>
                           </div>
                         </div>
@@ -786,7 +803,6 @@ const AgendaPage: React.FC = () => {
                           <div className="muted small">Sin turnos</div>
                         ) : (
                           (() => {
-                            // group by prestadorId and compute min start and max end
                             const groups: { [k: string]: any[] } = {};
                             for (const dt of dayTurnos) {
                               const key = String(dt.prestadorId);
@@ -797,7 +813,6 @@ const AgendaPage: React.FC = () => {
                               const prest = prestadores.find(
                                 (p) => String(p.id) === String(pid)
                               );
-                              // compute earliest start and latest end in minutes
                               let minStart = Infinity;
                               let maxEnd = -Infinity;
                               for (const t of arr) {
@@ -814,12 +829,9 @@ const AgendaPage: React.FC = () => {
                               const rangeText = `${fmt(minStart)} - ${fmt(
                                 maxEnd
                               )}`;
-                              const bg = prest
-                                ? `hsl(${(prest.id * 53) % 360} 70% 85%)`
-                                : "#e6f7ff";
-                              const border = prest
-                                ? `hsl(${(prest.id * 53) % 360} 60% 55%)`
-                                : "#9ad6ff";
+                              const colors = getPrestadorTagColors(prest);
+                              const bg = colors.background;
+                              const border = colors.border;
                               return (
                                 <div
                                   className="chip"
@@ -828,30 +840,7 @@ const AgendaPage: React.FC = () => {
                                     background: bg,
                                     borderColor: border,
                                   }}
-                                  onClick={() => {
-                                    modal.mostrarModal({
-                                      titulo: "Detalle de turno",
-                                      mensaje: prest
-                                        ? `${
-                                            prest.nombreCompleto ||
-                                            prest.nombre + " " + prest.apellido
-                                          }`
-                                        : "Turno",
-                                      tipo: "info",
-                                      contenidoExtra: (
-                                        <div>
-                                          <p>
-                                            <strong>Rango:</strong> {rangeText}
-                                          </p>
-                                          <p>
-                                            <strong>Turnos:</strong>{" "}
-                                            {arr.length}
-                                          </p>
-                                        </div>
-                                      ),
-                                      soloInformacion: true,
-                                    });
-                                  }}
+                                    onClick={() => showDetalleTurno(prest, arr)}
                                 >
                                   <div className="chip-time">{rangeText}</div>
                                   <div className="chip-title">
@@ -889,15 +878,12 @@ const AgendaPage: React.FC = () => {
                   currentDate.getMonth() + 1,
                   0
                 );
-                // compute number of days to show until end of last week
                 const days: Date[] = [];
                 let cursor = new Date(start);
                 while (cursor <= end || getDay(cursor) !== 1) {
-                  // continue until we've completed the last week
                   days.push(new Date(cursor));
                   cursor.setDate(cursor.getDate() + 1);
                 }
-                // chunk into weeks
                 const weeks: Date[][] = [];
                 for (let i = 0; i < days.length; i += 7)
                   weeks.push(days.slice(i, i + 7));
@@ -931,7 +917,6 @@ const AgendaPage: React.FC = () => {
                             (isToday ? " today" : "")
                           }
                           key={dayKey}
-                          // clicking the day header/body in month view should open that day
                           onClick={() => {
                             const dt = new Date(dayKey);
                             setCurrentDate(dt);
@@ -946,7 +931,6 @@ const AgendaPage: React.FC = () => {
                           </div>
                           <div className="day-body small">
                             {(() => {
-                              // group by prestadorId and compute min start and max end
                               const groups: { [k: string]: any[] } = {};
                               for (const dt of dayTurnos) {
                                 const key = String(dt.prestadorId);
@@ -954,7 +938,6 @@ const AgendaPage: React.FC = () => {
                                 groups[key].push(dt);
                               }
                               const entries = Object.entries(groups);
-                              // render up to 2 groups, show +N more if needed
                               const visible = entries.slice(0, 2);
                               return (
                                 <>
@@ -978,12 +961,9 @@ const AgendaPage: React.FC = () => {
                                     const rangeText = `${fmt(minStart)} - ${fmt(
                                       maxEnd
                                     )}`;
-                                    const bg = prest
-                                      ? `hsl(${(prest.id * 53) % 360} 70% 95%)`
-                                      : "#eef6ff";
-                                    const border = prest
-                                      ? `hsl(${(prest.id * 53) % 360} 60% 65%)`
-                                      : "#cfe6ff";
+                                    const colors = getPrestadorTagColors(prest);
+                                    const bg = colors.background;
+                                    const border = colors.border;
                                     return (
                                       <div
                                         className="chip"
@@ -992,33 +972,7 @@ const AgendaPage: React.FC = () => {
                                           background: bg,
                                           borderColor: border,
                                         }}
-                                        onClick={() => {
-                                          modal.mostrarModal({
-                                            titulo: "Detalle de turno",
-                                            mensaje: prest
-                                              ? `${
-                                                  prest.nombreCompleto ||
-                                                  prest.nombre +
-                                                    " " +
-                                                    prest.apellido
-                                                }`
-                                              : rangeText,
-                                            tipo: "info",
-                                            contenidoExtra: (
-                                              <div>
-                                                <p>
-                                                  <strong>Rango:</strong>{" "}
-                                                  {rangeText}
-                                                </p>
-                                                <p>
-                                                  <strong>Turnos:</strong>{" "}
-                                                  {arr.length}
-                                                </p>
-                                              </div>
-                                            ),
-                                            soloInformacion: true,
-                                          });
-                                        }}
+                                        onClick={() => showDetalleTurno(prest, arr)}
                                       >
                                         {rangeText} -{" "}
                                         {prest
@@ -1065,23 +1019,21 @@ const AgendaPage: React.FC = () => {
             selectable
             onSelectSlot={handleSelectSlot}
             onSelectEvent={(evt: any) => {
-              modal.mostrarModal({
-                titulo: "Detalle de turno",
-                mensaje: evt.title,
-                tipo: "info",
-                contenidoExtra: (
-                  <div>
-                    <p>
-                      <strong>Inicio:</strong> {evt.start.toLocaleString()}
-                    </p>
-                    <p>
-                      <strong>Duración:</strong>{" "}
-                      {Math.round((evt.end - evt.start) / 60000)} min
-                    </p>
-                  </div>
-                ),
-                soloInformacion: true,
-              });
+              showDetalleTurno(undefined, evt.extendedProps);
+            }}
+            eventPropGetter={(event: any) => {
+              const pid = event.extendedProps?.prestadorId ?? (event.resourceId && String(event.resourceId).startsWith('p-') ? String(event.resourceId).slice(2) : undefined);
+              const prest = prestadores.find((p) => String(p.id) === String(pid));
+              const colors = getPrestadorTagColors(prest);
+              return {
+                style: {
+                  backgroundColor: colors.background,
+                  border: `1px solid ${colors.border}`,
+                  color: colors.text,
+                  borderRadius: 12,
+                  padding: '2px 8px'
+                }
+              };
             }}
             min={new Date(1970, 1, 1, minTime, 0, 0)}
             max={new Date(1970, 1, 1, maxTime, 0, 0)}
@@ -1096,7 +1048,6 @@ const AgendaPage: React.FC = () => {
     );
   };
 
-  // Global modal instance used by this page
   return (
     <>
       <div className="admin-page">
@@ -1110,7 +1061,6 @@ const AgendaPage: React.FC = () => {
             subtitle="Calendario y asignación de turnos"
             onVolver={() => navigate("/")}
             onAlta={async () => {
-              // Quick add: create a simple turno for today at 09:00 for selected prestador (or first)
               const prest = filtroPrestador
                 ? prestadores.find(
                     (p) => String(p.id) === String(filtroPrestador)
@@ -1175,14 +1125,15 @@ const AgendaPage: React.FC = () => {
             >
               <label>Especialidad:</label>
               <Select
-                value={filtroEspecialidad}
-                onChange={(value) => setFiltroEspecialidad(value)}
-                options={especialidades.map((especialidad) => {
-                  return {
-                    value: especialidad,
-                    label: especialidad,
-                  };
-                })}
+                        value={filtroEspecialidad}
+                        onChange={(value) => setFiltroEspecialidad(value)}
+                        options={[
+                          { value: "", label: "Todos" },
+                          ...especialidades.map((especialidad) => ({
+                            value: especialidad,
+                            label: especialidad,
+                          })),
+                        ]}
               ></Select>
             </div>
             <div
@@ -1194,18 +1145,30 @@ const AgendaPage: React.FC = () => {
             >
               <label>Prestador:</label>
               <Select
-                value={filtroPrestador}
-                onChange={(value) => setFiltroPrestador(value)}
-                options={prestadores.map((prestador) => {
-                  return {
-                    value: prestador.id,
-                    label:
-                      prestador.nombreCompleto ||
-                      prestador.nombre + " " + prestador.apellido,
-                  };
-                })}
+                        value={filtroPrestador}
+                        onChange={(value) => setFiltroPrestador(value)}
+                        options={[
+                          { value: "", label: "Todos" },
+                          ...prestadores.map((prestador) => ({
+                            value: prestador.id,
+                            label:
+                              prestador.nombreCompleto ||
+                              prestador.nombre + " " + (prestador.apellido || ""),
+                          })),
+                        ]}
               ></Select>
             </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <button
+                        className="rbc-btn small"
+                        onClick={() => {
+                          setFiltroEspecialidad("");
+                          setFiltroPrestador("");
+                        }}
+                      >
+                        Eliminar filtros
+                      </button>
+                    </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <input
                 type="checkbox"
@@ -1221,141 +1184,6 @@ const AgendaPage: React.FC = () => {
 
           <div>
             {renderCalendar()}
-            <div
-              style={{
-                marginTop: 12,
-                background: "#fff",
-                padding: 8,
-                borderRadius: 6,
-                boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
-              }}
-            >
-              <strong>
-                Diagnóstico (semana centrada en{" "}
-                {new Date(currentDate).toLocaleDateString("es-ES")}):
-              </strong>
-              <div style={{ display: "flex", gap: 12, marginTop: 8 }}>
-                {weekDiagnostics.map((wd) => (
-                  <div
-                    key={wd.key}
-                    style={{
-                      minWidth: 110,
-                      padding: 6,
-                      border: "1px solid #eee",
-                      borderRadius: 4,
-                    }}
-                  >
-                    <div style={{ fontSize: 12, color: "#555" }}>
-                      {wd.date.toLocaleDateString("es-ES", {
-                        weekday: "short",
-                        day: "numeric",
-                      })}
-                    </div>
-                    <div style={{ fontSize: 13, fontWeight: 600 }}>
-                      {wd.combinedCount} total
-                    </div>
-                    <div style={{ fontSize: 12, color: "#0b66d1" }}>
-                      {wd.backendCount} reales
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div style={{ marginTop: 12 }}>
-              <h4>Prestadores visibles</h4>
-              <ul>
-                {prestadoresFiltrados.map((p) => (
-                  <li key={p.id}>
-                    {p.nombreCompleto || p.nombre + " " + p.apellido} -{" "}
-                    {Array.isArray(p.especialidades)
-                      ? p.especialidades.map((s: any) => s.nombre).join(", ")
-                      : ""}
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div
-              style={{
-                marginTop: 12,
-                background: "#fff",
-                padding: 8,
-                borderRadius: 6,
-                boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
-              }}
-            >
-              <strong>DEBUG: datos recibidos</strong>
-              <div style={{ marginTop: 8 }}>
-                <div>
-                  <strong>Prestadores recibidos:</strong> {prestadores.length}
-                </div>
-                <div
-                  style={{
-                    maxHeight: 180,
-                    overflow: "auto",
-                    marginTop: 6,
-                    background: "#fafafa",
-                    padding: 8,
-                  }}
-                >
-                  <pre
-                    style={{
-                      whiteSpace: "pre-wrap",
-                      wordBreak: "break-word",
-                      fontSize: 12,
-                    }}
-                  >
-                    {JSON.stringify(prestadores, null, 2)}
-                  </pre>
-                </div>
-              </div>
-              <div style={{ marginTop: 8 }}>
-                <div style={{ display: "flex", gap: 12 }}>
-                  <div>
-                    <strong>Disponibilidad generada:</strong>{" "}
-                    {debugAvailability.length}
-                  </div>
-                  <div>
-                    <strong>Por prestador:</strong>
-                  </div>
-                  <div style={{ display: "flex", gap: 8 }}>
-                    {Object.keys(debugAvailabilityByPrestador || {}).map(
-                      (k) => (
-                        <div
-                          key={k}
-                          style={{
-                            padding: 4,
-                            borderRadius: 4,
-                            background: "#f0f8ff",
-                          }}
-                        >
-                          {k}: {debugAvailabilityByPrestador[k]}
-                        </div>
-                      )
-                    )}
-                  </div>
-                </div>
-                <div
-                  style={{
-                    maxHeight: 180,
-                    overflow: "auto",
-                    marginTop: 6,
-                    background: "#fafafa",
-                    padding: 8,
-                  }}
-                >
-                  <pre
-                    style={{
-                      whiteSpace: "pre-wrap",
-                      wordBreak: "break-word",
-                      fontSize: 12,
-                    }}
-                  >
-                    {JSON.stringify(debugAvailability.slice(0, 50), null, 2)}
-                  </pre>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </div>

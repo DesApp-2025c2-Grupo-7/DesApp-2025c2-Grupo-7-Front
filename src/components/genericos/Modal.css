@@ -1,24 +1,39 @@
-/* Base del modal universal */
+/* Overlay similar to confirmation modal */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    backdrop-filter: blur(2px);
+}
+
+/* Base del modal universal (visually aligned with ModalConfirmacion) */
 .modal-universal {
-    background: white;
-    border-radius: 12px;
-    max-width: 600px;
-    width: 90%;
-    max-height: 80vh;
-    overflow-y: auto;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-    position: relative;
-    animation: modalSlideIn 0.3s ease-out;
+        background: white;
+        border-radius: 12px;
+        max-width: 500px;
+        width: 90%;
+        max-height: 90vh;
+        overflow: hidden;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        position: relative;
+        animation: modalSlideIn 0.3s ease-out;
 }
 
 @keyframes modalSlideIn {
     from {
         opacity: 0;
-        transform: scale(0.95) translateY(-20px);
+        transform: translateY(-20px) scale(0.95);
     }
     to {
         opacity: 1;
-        transform: scale(1) translateY(0);
+        transform: translateY(0) scale(1);
     }
 }
 
@@ -54,27 +69,30 @@
 }
 
 .modal-universal .modal-header {
-    padding: 20px 24px;
-    border-radius: 12px 12px 0 0;
+    padding: 24px 24px 16px 24px;
     display: flex;
     align-items: center;
     gap: 12px;
+    border-bottom: 1px solid #e5e7eb;
 }
 
 .modal-universal .modal-icon {
-    flex-shrink: 0;
-    width: 28px;
-    height: 28px;
     display: flex;
     align-items: center;
     justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .modal-universal .modal-titulo {
-    font-size: 18px;
-    font-weight: 600;
     margin: 0;
-    line-height: 1.2;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1f2937;
+    flex: 1;
 }
 
 .modal-universal .modal-body {
@@ -82,25 +100,25 @@
 }
 
 .modal-universal .modal-mensaje {
-    font-size: 16px;
-    color: #374151;
     margin: 0 0 16px 0;
-    line-height: 1.5;
+    font-size: 1rem;
+    line-height: 1.6;
+    color: #374151;
 }
 
 .modal-universal .modal-submensaje {
     background: #f9fafb;
     border: 1px solid #e5e7eb;
     border-radius: 8px;
-    padding: 12px;
-    margin-bottom: 16px;
+    padding: 16px;
+    margin-top: 16px;
 }
 
 .modal-universal .modal-submensaje p {
     margin: 0;
-    font-size: 14px;
+    font-size: 0.875rem;
+    line-height: 1.5;
     color: #6b7280;
-    line-height: 1.4;
 }
 
 /* Lista de errores para validaciones */
@@ -137,10 +155,12 @@
 }
 
 .modal-universal .modal-footer {
-    padding: 16px 24px 24px;
+    padding: 16px 24px 24px 24px;
     display: flex;
-    gap: 12px;
     justify-content: flex-end;
+    gap: 12px;
+    background: #f9fafb;
+    border-top: 1px solid #e5e7eb;
 }
 
 /* Variantes específicas del modal */

@@ -23,7 +23,7 @@ const Select: React.FC<SelectProps> = ({
     options,
     value,
     onChange,
-    placeholder = "Selecciona una opción",
+    placeholder = "Todos",
     disabled = false,
     size = "medium",
     className = "",
@@ -48,7 +48,8 @@ const Select: React.FC<SelectProps> = ({
                 id={id}
                 className="select-field"
             >
-                <option value="" disabled>
+                {/* placeholder shown when value is empty but hidden from dropdown */}
+                <option value="" hidden>
                     {placeholder}
                 </option>
                 {options.map((option) => (

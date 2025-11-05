@@ -88,7 +88,7 @@ const ListaPrestadores: React.FC<ListaPrestadoresProps> = () => {
             </div>
             <div className="card-actions">
               <Button
-                variant="secondary"
+                variant="primary"
                 size="small"
                 onClick={() => handleVerMas(prestador.id)}
               >
