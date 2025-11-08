@@ -23,7 +23,7 @@ const Select: React.FC<SelectProps> = ({
     options,
     value,
     onChange,
-    placeholder = "Todos",
+    placeholder = "Seleccione una opción",
     disabled = false,
     size = "medium",
     className = "",

@@ -224,42 +224,44 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
 
     const validarFormularioIntegrante = (): { esValido: boolean; errores: string[] } => {
         const errores: string[] = [];
-        
+
         // Obtener valores directamente de los inputs
         const getInputValue = (name: string): string => {
             const input = document.querySelector(`[name="${name}"]`) as HTMLInputElement | HTMLSelectElement;
             return input?.value || '';
         };
-        
-        // Validar campos obligatorios básicos
+
+        // Validar campos obligatorios básicos (lista fija)
         if (!getInputValue('parentesco')) errores.push('Parentesco es obligatorio');
         if (!getInputValue('nombre')) errores.push('Nombre es obligatorio');
         if (!getInputValue('apellido')) errores.push('Apellido es obligatorio');
         if (!getInputValue('tipoDocumento')) errores.push('Tipo de documento es obligatorio');
         if (!getInputValue('numeroDocumento')) errores.push('Número de documento es obligatorio');
         if (!getInputValue('fechaNacimiento')) errores.push('Fecha de nacimiento es obligatoria');
-    // Validar al menos una dirección válida (desde modalDirecciones)
-    const direccionesValidas = modalDirecciones.filter(d => (d.calle || '').trim() !== '' || (d.numero || '').trim() !== '' || (d.localidad || '').trim() !== '');
-    if (direccionesValidas.length === 0) {
-      errores.push('Debe ingresar al menos una dirección con calle, número y localidad');
-    } else {
-      const dir = direccionesValidas[0];
-      if (!(dir.calle || '').trim()) errores.push('Calle es obligatoria');
-      if (!(dir.numero || '').trim()) errores.push('Número de dirección es obligatorio');
-      if (!String(dir.codigoPostal || '').trim()) errores.push('Código postal es obligatorio');
-      if (!(dir.localidad || '').trim()) errores.push('Localidad es obligatoria');
-    }
+
+        // Validar al menos una dirección válida (desde modalDirecciones)
+        const direccionesValidas = modalDirecciones.filter(d => (d.calle || '').trim() !== '' || (d.numero || '').trim() !== '' || (d.localidad || '').trim() !== '');
+        if (direccionesValidas.length === 0) {
+          errores.push('Debe ingresar al menos una dirección con calle, número y localidad');
+        } else {
+          const dir = direccionesValidas[0];
+          if (!(dir.calle || '').trim()) errores.push('Calle es obligatoria');
+          if (!(dir.numero || '').trim()) errores.push('Número de dirección es obligatorio');
+          if (!String(dir.codigoPostal || '').trim()) errores.push('Código postal es obligatorio');
+          if (!(dir.localidad || '').trim()) errores.push('Localidad es obligatoria');
+        }
+
         if (!getInputValue('fechaAlta')) errores.push('Fecha de alta es obligatoria');
-        
+
         // Validar fechas del sistema
         const fechaAlta = getInputValue('fechaAlta');
         const fechaBaja = getInputValue('fechaBaja');
         const fechaNacimiento = getInputValue('fechaNacimiento');
-        
+
         if (fechaNacimiento && fechaAlta && fechaNacimiento > fechaAlta) {
             errores.push('Fecha de alta no puede ser anterior a la fecha de nacimiento');
         }
-        
+
         if (fechaBaja && fechaAlta && fechaBaja < fechaAlta) {
             errores.push('Fecha de baja no puede ser anterior a la fecha de alta');
         }
@@ -276,10 +278,46 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
             if (situacion.fechaFin && situacion.fechaInicio && situacion.fechaFin < situacion.fechaInicio) {
                 errores.push(`Fecha de fin no puede ser anterior a fecha de inicio en situación ${index + 1}`);
             }
-      // Permitimos que la fecha de inicio de una situación terapéutica sea anterior a la fecha de alta
-      // (caso de condiciones preexistentes). No se agrega validación adicional aquí.
         });
-        
+
+        // Validación dinámica: si en el modal hay labels con '*' considerar esos campos obligatorios
+        try {
+          const dynamicErrors: string[] = [];
+          const labels = Array.from(document.querySelectorAll('.modal-agregar-integrante label')) as HTMLLabelElement[];
+          labels.forEach((label) => {
+            if (!label || !label.textContent) return;
+            if (label.textContent.includes('*')) {
+              // buscar input/select/textarea asociado dentro del mismo contenedor
+              let inputEl: any = null;
+              const container = label.parentElement;
+              if (container) {
+                inputEl = container.querySelector('input[name], select[name], textarea[name]') as (HTMLInputElement|HTMLSelectElement|HTMLTextAreaElement)|null;
+              }
+              if (!inputEl) {
+                const next = label.nextElementSibling as HTMLElement | null;
+                if (next) {
+                  inputEl = next.querySelector('input[name], select[name], textarea[name]') as (HTMLInputElement|HTMLSelectElement|HTMLTextAreaElement)|null;
+                  if (!inputEl && (next as HTMLInputElement).tagName && ((next as HTMLInputElement).tagName.toLowerCase() === 'input' || (next as HTMLSelectElement).tagName.toLowerCase() === 'select')) {
+                    inputEl = next as any;
+                  }
+                }
+              }
+
+              const val = inputEl ? String((inputEl).value || '').trim() : '';
+              if (!val) {
+                const labelText = label.textContent.replace('*', '').trim();
+                dynamicErrors.push(`${labelText} es obligatorio`);
+              }
+            }
+          });
+          // merge unique
+          for (const de of dynamicErrors) {
+            if (!errores.includes(de)) errores.push(de);
+          }
+        } catch (e) {
+          // ignore DOM-related errors in non-browser environments
+        }
+
         return { esValido: errores.length === 0, errores };
     };
 
@@ -309,37 +347,41 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
         
         // Calcular el próximo sufijo para mostrarlo en la confirmación
         const proximoSufijo = calcularProximoSufijo(miembrosGrupo);
-        
-        // Crear contenido extra con los datos del integrante
-        const datosIntegrante = (
-            <div className="datos-confirmacion">
-                <h4>DATOS DEL NUEVO INTEGRANTE:</h4>
-                <div className="dato-confirmacion">
-                    <strong>• Nombre:</strong> {nombre} {apellido}
-                </div>
-                <div className="dato-confirmacion">
-                    <strong>• DNI:</strong> {numeroDocumento}
-                </div>
-                <div className="dato-confirmacion">
-                    <strong>• Credencial:</strong> {afiliado?.credencial}-{proximoSufijo}
-                </div>
-                <div className="dato-confirmacion">
-                    <strong>• Fecha de Alta:</strong> {fechaAlta}
-                </div>
-                <div className="dato-confirmacion">
-                    <strong>• Situaciones Terapéuticas:</strong> {situacionesTerapeuticas.length}
-                </div>
-                <div className="advertencia-confirmacion">
-                    <AlertTriangle size={16} />
-                    <p>Esta acción agregará permanentemente al integrante al grupo familiar.</p>
-                </div>
-            </div>
-        );
+      // Determinar titular real (si se pasó por props) y crear contenido extra con los datos del integrante
+      const titular = afiliadoTitular || afiliado;
+
+      const datosIntegrante = (
+        <div className="datos-confirmacion">
+          <div style={{ marginBottom: 8 }}>
+            <strong>Titular:</strong>
+            <div>{titular ? `${titular.nombre} ${titular.apellido}` : 'Titular no disponible'}</div>
+            {titular?.credencial && (
+            <div style={{ fontSize: 12, color: '#666' }}>{`Credencial titular: ${titular.credencial}${titular.sufijo ? '-' + titular.sufijo : ''}`}</div>
+            )}
+          </div>
+
+          <div style={{ marginBottom: 8 }}>
+            <strong>Nuevo integrante:</strong>
+            <div>{`${getInputValue('nombre')} ${getInputValue('apellido')}`}</div>
+            <div style={{ fontSize: 12, color: '#666' }}>{`Documento: ${getInputValue('tipoDocumento')} ${getInputValue('numeroDocumento')}`}</div>
+          </div>
+
+          <div style={{ marginBottom: 8 }}>
+            <strong>Fecha de alta (propuesta):</strong>
+            <div>{getInputValue('fechaAlta') || '—'}</div>
+          </div>
+
+          <div>
+            <strong>Sufijo asignado:</strong>
+            <div>{proximoSufijo}</div>
+          </div>
+        </div>
+      );
 
         // Mostrar modal de confirmación usando el modal universal
-        modal.mostrarModal({
-            titulo: 'Confirmar Agregado de Integrante',
-            mensaje: `¿Confirma que desea agregar este integrante al grupo familiar de ${afiliado?.nombre} ${afiliado?.apellido}?`,
+    modal.mostrarModal({
+      titulo: 'Confirmar Agregado de Integrante',
+      mensaje: `¿Confirma que desea agregar este integrante al grupo familiar del titular ${titular ? `${titular.nombre} ${titular.apellido}` : ''}?`,
             tipo: 'confirmation',
             textoBotonConfirmar: 'Confirmar y Agregar',
             textoBotonCancelar: 'Cancelar',
@@ -654,8 +696,11 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
         return 'Inactivo';
     };
 
-    return (
-        <>
+  // Use the real titular (passed via props) when showing modal info; fallback to current afiliado
+  const titularParaModal = afiliadoTitular || afiliado;
+
+  return (
+    <>
           <div className="afiliado-header">
             <div className="afiliado-info">
               {!esTitular() && afiliadoTitular && (
@@ -997,7 +1042,7 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
               <div className="modal-content modal-agregar-integrante" onClick={(e) => e.stopPropagation()}>
                 <div className="modal-header">
                   <h3><UserPlus size={20} /> Agregar Integrante al Grupo Familiar</h3>
-                  <p>Completar los datos del nuevo integrante para el grupo familiar de <strong>{afiliado?.nombre} {afiliado?.apellido}</strong></p>
+                  <p>Completar los datos del nuevo integrante para el grupo familiar del titular <strong>{titularParaModal ? `${titularParaModal.nombre} ${titularParaModal.apellido}` : `${afiliado?.nombre} ${afiliado?.apellido}`}</strong></p>
                 </div>
                 
                 <div className="modal-form">
@@ -1007,10 +1052,13 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
                     
                     <div className="form-row-double">
                       <div className="form-row-double-item-left">
-                        <label>Credencial del Titular</label>
+                        <label>Titular</label>
                         <div className="credencial-info">
-                          {afiliado?.credencial}-{afiliado?.sufijo}
+                          {titularParaModal ? `${titularParaModal.nombre} ${titularParaModal.apellido}` : `${afiliado?.credencial}-${afiliado?.sufijo}`}
                         </div>
+                        {titularParaModal?.credencial && (
+                          <div style={{ fontSize: 12, color: '#666', marginTop: 4 }}>{`Credencial: ${titularParaModal.credencial}${titularParaModal.sufijo ? '-' + titularParaModal.sufijo : ''}`}</div>
+                        )}
                       </div>
                       <div className="form-row-double-item-right">
                         <label>Parentesco *</label>

@@ -320,7 +320,7 @@ export default function AfiliadosFormEdit() {
 
         {/* Plan Médico */}
         <div className="form-row-double-item-left">
-          <label>Plan médico</label>
+          <label>Plan médico *</label>
           <Select
             className="input-valor"
             name="planMedico"
@@ -338,7 +338,7 @@ export default function AfiliadosFormEdit() {
 
         {/* Nombre */}
         <div className="form-row">
-          <label>Nombre</label>
+          <label>Nombre *</label>
           <Input
             type="text"
             className="input-valor"
@@ -350,7 +350,7 @@ export default function AfiliadosFormEdit() {
 
         {/* Apellido */}
         <div className="form-row">
-          <label>Apellido</label>
+          <label>Apellido *</label>
           <Input
             type="text"
             className="input-valor"
@@ -363,7 +363,7 @@ export default function AfiliadosFormEdit() {
         {/* Tipo y número de documento */}
         <div className="form-row-double">
           <div className="form-row-double-item-left">
-            <label>Tipo de documento</label>
+            <label>Tipo de documento *</label>
             <Select
               className="input-valor"
               name="tipoDocumento"
@@ -377,7 +377,7 @@ export default function AfiliadosFormEdit() {
             />
           </div>
           <div className="form-row-double-item-right">
-            <label>Documento</label>
+            <label>Documento *</label>
             <Input
               type="text"
               className="input-valor"
@@ -423,7 +423,7 @@ export default function AfiliadosFormEdit() {
 
         {/* Dirección */}
         <div className="form-row">
-          <label>Direcciones</label>
+          <label>Direcciones *</label>
           {formData.direccion.map((direccion, index) => (
             <div key={index} style={{ marginBottom: "10px" }}>
               <DireccionInput
@@ -455,7 +455,7 @@ export default function AfiliadosFormEdit() {
 
         {/* Teléfono */}
         <div className="form-row">
-          <label>Teléfono</label>
+          <label>Teléfono *</label>
           <MultipleInput
             type="tel"
             name="telefono"
@@ -467,7 +467,7 @@ export default function AfiliadosFormEdit() {
 
         {/* Emails */}
         <div className="form-row">
-          <label>Emails</label>
+          <label>Email *</label>
           <MultipleInput
             name="email"
             type="email"
@@ -478,7 +478,7 @@ export default function AfiliadosFormEdit() {
         {/* Situaciones Terapéuticas */}
         <>
           <div className="form-row" style={{ display: "flex", gap: "5px" }}>
-            <label>Situaciones Terapéuticas</label>
+            <label>Situaciones Terapéuticas (opcional)</label>
             {formData.situacionesTerapeuticas.map((situacion, index) => (
               <SituacionesTerapeuticasInput
                 key={index}
