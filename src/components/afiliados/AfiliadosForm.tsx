@@ -339,12 +339,6 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
             return input?.value || '';
         };
         
-        // Obtener datos del formulario para la confirmación
-        const nombre = getInputValue('nombre');
-        const apellido = getInputValue('apellido');
-        const numeroDocumento = getInputValue('numeroDocumento');
-        const fechaAlta = getInputValue('fechaAlta');
-        
         // Calcular el próximo sufijo para mostrarlo en la confirmación
         const proximoSufijo = calcularProximoSufijo(miembrosGrupo);
       // Determinar titular real (si se pasó por props) y crear contenido extra con los datos del integrante
@@ -431,20 +425,12 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
                 throw new Error('ID del titular no disponible');
             }
 
-            const nuevoIntegrante = await personasService.createIntegrante(idTitular, integranteData);
-            console.log('Integrante creado exitosamente:', nuevoIntegrante);
-            
-            const titular = afiliadoTitular || afiliado;
-            modal.mostrarExito(
-                '¡Integrante agregado exitosamente!',
-                `Se agregó un nuevo integrante al grupo familiar de ${titular?.nombre} ${titular?.apellido}.`,
-                'La página se actualizará automáticamente para mostrar los cambios.'
-            );
+        const nuevoIntegrante = await personasService.createIntegrante(idTitular, integranteData);
+        console.log('Integrante creado exitosamente:', nuevoIntegrante);
 
-            // Llamar al callback para manejar la navegación
-            if (onIntegranteCreado) {
-                onIntegranteCreado(nuevoIntegrante);
-            }
+        if (onIntegranteCreado) {
+          onIntegranteCreado(nuevoIntegrante);
+        }
         } catch (error) {
             console.error('Error al crear el integrante:', error);
             modal.mostrarError(

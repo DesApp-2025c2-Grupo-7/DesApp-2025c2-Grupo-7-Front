@@ -900,17 +900,7 @@ const AgendaPage: React.FC = () => {
                         ]}
               ></Select>
             </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <button
-                        className="rbc-btn small"
-                        onClick={() => {
-                          setFiltroEspecialidad("");
-                          setFiltroPrestador("");
-                        }}
-                      >
-                        Eliminar filtros
-                      </button>
-                    </div>
+
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
               <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
                 <input
@@ -929,7 +919,19 @@ const AgendaPage: React.FC = () => {
                 Solo profesionales independientes
               </label>
 
-             
+            </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <button
+                  className="rbc-btn small"
+                  onClick={() => {
+                    setFiltroEspecialidad("");
+                    setFiltroPrestador("");
+                    setOnlyCentros(false);
+                    setOnlyIndependientes(false);
+                  }}
+                >
+                Eliminar filtros
+              </button>
             </div>
           </div>
 

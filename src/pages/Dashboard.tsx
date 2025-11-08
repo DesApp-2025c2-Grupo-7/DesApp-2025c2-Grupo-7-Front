@@ -22,17 +22,29 @@ const Dashboard: React.FC = () => {
   // Función para calcular el total de personas (titulares + integrantes) evitando duplicados
   const calcularTotalPersonas = () => {
     const personasUnicas = new Set<string>();
-    
+    const today = new Date().toISOString().split("T")[0];
+
+    const esActivo = (persona: any) => {
+      // Considerar activo si no tiene fechaBaja o su fechaBaja es posterior a hoy
+      if (!persona) return false;
+      if (!persona.fechaBaja) return true;
+      return persona.fechaBaja > today;
+    };
+
     afiliados.forEach(afiliado => {
-      // Agregar el titular
-      const titularKey = `${afiliado.credencial}-${afiliado.sufijo}`;
-      personasUnicas.add(titularKey);
-      
-      // Agregar los integrantes del grupo familiar
+      // Agregar el titular solo si está activo
+      if (esActivo(afiliado)) {
+        const titularKey = `${afiliado.credencial}-${afiliado.sufijo}`;
+        personasUnicas.add(titularKey);
+      }
+
+      // Agregar los integrantes del grupo familiar solo si están activos
       if (afiliado.grupoFamiliar && afiliado.grupoFamiliar.length > 0) {
-        afiliado.grupoFamiliar.forEach((integrante: { credencial: any; sufijo: any; }) => {
-          const integranteKey = `${integrante.credencial}-${integrante.sufijo}`;
-          personasUnicas.add(integranteKey);
+        afiliado.grupoFamiliar.forEach((integrante: any) => {
+          if (esActivo(integrante)) {
+            const integranteKey = `${integrante.credencial}-${integrante.sufijo}`;
+            personasUnicas.add(integranteKey);
+          }
         });
       }
     });
@@ -126,6 +138,18 @@ const Dashboard: React.FC = () => {
     fetchData();
   }, []);
 
+  // Calcular total de horarios de atención de todos los prestadores
+  const calcularTotalHorarios = () => {
+    try {
+      const todosHorarios = prestadores.flatMap((p: any) =>
+        (p.direccion || []).flatMap((d: any) => d.horariosAtencion || [])
+      );
+      return todosHorarios.length;
+    } catch (e) {
+      return 0;
+    }
+  };
+
   return (
     <div className="admin-page">
       {/* Header superior */}
@@ -157,7 +181,7 @@ const Dashboard: React.FC = () => {
           <CardDashboard
             title="Agenda de Turnos"
             buttonText="+ Ver Agenda de Turnos"
-            number={50}
+            number={loading ? 0 : calcularTotalHorarios()}
             onButtonClick={() => navigate('/agenda')}
             icon={Clock}
             />
