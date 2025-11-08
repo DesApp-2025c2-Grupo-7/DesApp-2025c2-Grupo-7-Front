@@ -70,7 +70,7 @@ const formatDateLocal = (d: Date) =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
     d.getDate()
   ).padStart(2, "0")}`;
-const generateSyntheticTurnos = (
+const generateTurnos = (
   prestadoresList: any[],
   date: Date
 ): Turno[] => {
@@ -116,12 +116,12 @@ const AgendaPage: React.FC = () => {
   const [especialidades, setEspecialidades] = useState<string[]>([]);
   const [filtroEspecialidad, setFiltroEspecialidad] = useState<string>("");
   const [filtroPrestador, setFiltroPrestador] = useState<string>("");
+  const [onlyCentros, setOnlyCentros] = useState<boolean>(false);
+  const [onlyIndependientes, setOnlyIndependientes] = useState<boolean>(false);
   const [view, setView] = useState<"month" | "week" | "day">("week");
 
   const [turnos, setTurnos] = useState<Turno[]>([]);
-  const [backendTurnos, setBackendTurnos] = useState<Turno[]>([]);
-  const [events, setEvents] = useState<any[]>([]); 
-  const [showDisponibilidad, setShowDisponibilidad] = useState<boolean>(true);
+  const [events, setEvents] = useState<any[]>([]);
   
   const modal = useModal();
   const navigate = useNavigate();
@@ -131,14 +131,6 @@ const AgendaPage: React.FC = () => {
     currentDateRef.current = currentDate;
   }, [currentDate]);
   
-  const [pendingSlot, setPendingSlot] = useState<{
-    start: Date;
-    prestadorId: number;
-  } | null>(null);
-  const [pacienteNombre, setPacienteNombre] = useState<string>("");
-  const [duracionSeleccionada, setDuracionSeleccionada] = useState<number>(30);
-  const [notasTurno, setNotasTurno] = useState<string>("");
-  const [isCreating, setIsCreating] = useState<boolean>(false);
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -168,8 +160,7 @@ const AgendaPage: React.FC = () => {
         );
         setEspecialidades(specs as string[]);
 
-        const t = await agendaService.getTurnos();
-        setBackendTurnos(Array.isArray(t) ? t : []);
+       
       } catch (e) {
         console.error("Error cargando datos de agenda", e);
       }
@@ -178,13 +169,9 @@ const AgendaPage: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (Array.isArray(backendTurnos) && backendTurnos.length > 0) {
-      setTurnos(backendTurnos);
-    } else {
-      const synth = generateSyntheticTurnos(prestadores, currentDate);
-      setTurnos(synth);
-    }
-  }, [backendTurnos, prestadores, currentDate]);
+    const turnosAux = generateTurnos(prestadores, currentDate);
+    setTurnos(turnosAux);
+  }, [prestadores, currentDate]);
   useEffect(() => {
     const turnoEvents = (turnos || []).map((t: any, idx: number) => {
       const start = new Date(`${t.fecha}T${t.hora}:00`);
@@ -206,188 +193,68 @@ const AgendaPage: React.FC = () => {
   }, [turnos, currentDate]);
 
   const prestadoresFiltrados = useMemo(() => {
+    const isCentro = (p: any) => {
+      if (!p) return false;
+      if (Object.prototype.hasOwnProperty.call(p, 'isProfesionalIndependiente')) return !Boolean(p.isProfesionalIndependiente);
+      if (Object.prototype.hasOwnProperty.call(p, 'esProfesionalIndependiente')) return !Boolean(p.esProfesionalIndependiente);
+      const tipo = p.tipoPrestacion || p.tipo || "";
+      return /centro/i.test(String(tipo));
+    };
+
     return prestadores.filter((p) => {
       if (
         filtroEspecialidad &&
         !(p.especialidades || [])
-          .map((s: any) => s.nombre)
+          .map((s: any) => (s && s.nombre ? s.nombre : s))
           .includes(filtroEspecialidad)
       )
         return false;
-      if (filtroPrestador && String(p.id) !== String(filtroPrestador))
-        return false;
+      if (filtroPrestador && String(p.id) !== String(filtroPrestador)) return false;
+
+      // apply centro/independiente filters
+      if (onlyCentros && !onlyIndependientes) {
+        if (!isCentro(p)) return false;
+      } else if (onlyIndependientes && !onlyCentros) {
+        if (isCentro(p)) return false;
+      }
+
       return true;
     });
-  }, [prestadores, filtroEspecialidad, filtroPrestador]);
+  }, [prestadores, filtroEspecialidad, filtroPrestador, onlyCentros, onlyIndependientes]);
+
+  const allowedPrestadorIds = useMemo(() => new Set((prestadoresFiltrados || []).map((p: any) => String(p.id))), [prestadoresFiltrados]);
 
   useEffect(() => {
     if (!filtroPrestador) return;
     const sel = prestadores.find((p) => String(p.id) === String(filtroPrestador));
     if (!sel) return;
     const hasDireccion = Array.isArray(sel.direccion) && sel.direccion.length > 0;
+    const hasHorarios = hasDireccion && sel.direccion.some((d: any) => Array.isArray(d.horariosAtencion) && d.horariosAtencion.length > 0);
+
+    // check whether there are any turnos for this prestador in the current period/day
+    const anyTurnos = (turnos || []).some((t) => String(t.prestadorId) === String(sel.id) && t.fecha === formatDateLocal(currentDate));
+
     if (!hasDireccion) {
       modal.mostrarAdvertencia(
         "Prestador sin dirección",
         `El prestador ${sel.nombreCompleto || sel.nombre} no tiene una dirección configurada. Por ese motivo no tiene horarios de atención ni turnos asociados.`
       );
-    }
-  }, [filtroPrestador, prestadores]);
-
-  const validarContraHorario = (
-    prest: any,
-    fechaISO: string,
-    duracionMinutos = 30
-  ) => {
-    const fechaObj = new Date(fechaISO);
-    const dia = diasSemanaEsp[fechaObj.getDay()];
-    const diaNorm = stripDiacritics(dia);
-    const hora = `${String(fechaObj.getHours()).padStart(2, "0")}:${String(
-      fechaObj.getMinutes()
-    ).padStart(2, "0")}`;
-
-    for (const dir of prest.direccion || []) {
-      for (const h of dir.horariosAtencion || []) {
-        if (stripDiacritics(h.dia) !== diaNorm) continue;
-        const inicio = horaAMinutos(h.desde);
-        const fin = horaAMinutos(h.hasta);
-        const sel = horaAMinutos(hora);
-        const dur =
-          typeof h.duracionTurno === "string" && h.duracionTurno.includes(":")
-            ? horaAMinutos(h.duracionTurno)
-            : Number(h.duracionTurno || 0);
-        const durToCheck = dur || duracionMinutos;
-        if (sel >= inicio && sel + durToCheck <= fin)
-          return { ok: true, horario: h };
-      }
-    }
-    return { ok: false };
-  };
-
-  const handleSelectSlot = async (slotInfo: any) => {
-    const start: Date = new Date(slotInfo.start);
-
-    if (!filtroPrestador) {
+    } else if (!hasHorarios) {
       modal.mostrarAdvertencia(
-        "Seleccione prestador",
-        "Seleccione un prestador antes de elegir un slot en el calendario"
+        "Sin horarios de atención",
+        `El prestador ${sel.nombreCompleto || sel.nombre} tiene direcciones registradas pero no dispone de horarios de atención. Por ese motivo no tiene turnos asociados.`
       );
-      return;
-    }
-    const prest = prestadores.find(
-      (p) => String(p.id) === String(filtroPrestador)
-    );
-    if (!prest) {
-      modal.mostrarError(
-        "Prestador no encontrado",
-        "No se encontró el prestador seleccionado"
-      );
-      return;
-    }
-
-    const startISO = start.toISOString();
-    const valid = validarContraHorario(prest, startISO);
-    if (!valid.ok) {
+    } else if (!anyTurnos) {
       modal.mostrarAdvertencia(
-        "Horario inválido",
-        "La hora seleccionada está fuera del horario de atención del prestador"
+        "Sin turnos en el periodo",
+        `El prestador ${sel.nombreCompleto || sel.nombre} no tiene turnos para la fecha seleccionada.`
       );
-      return;
     }
+  }, [filtroPrestador, prestadores, turnos, currentDate]);
 
-    
-    const collides = (turnos || []).some((t) => {
-      if (String(t.prestadorId) !== String(prest.id)) return false;
-      const tStart = new Date(`${t.fecha}T${t.hora}:00`);
-      const tEnd = new Date(tStart.getTime() + (t.duracion || 30) * 60000);
-      const selStart = start;
-      const durMin = valid.horario
-        ? parseDuracion(valid.horario.duracionTurno || 30)
-        : 30;
-      const selEnd = new Date(selStart.getTime() + durMin * 60000);
-      return selStart < tEnd && selEnd > tStart;
-    });
-
-    if (collides) {
-      modal.mostrarError(
-        "Horario ocupado",
-        "Ya existe un turno en ese horario para el prestador seleccionado"
-      );
-      return;
-    }
-
-    
-    setPendingSlot({ start, prestadorId: prest.id });
-    setPacienteNombre("");
-    setNotasTurno("");
-    setDuracionSeleccionada(
-      valid.horario ? parseDuracion(valid.horario.duracionTurno || 30) : 30
-    );
-
-    const createTurnoFlow = async () => {
-      if (!pendingSlot) return;
-      const start = pendingSlot.start;
-      setIsCreating(true);
-      try {
-        const turnoPayload = {
-          prestadorId: pendingSlot.prestadorId,
-          fecha: start.toISOString().split("T")[0],
-          hora: start.toISOString().split("T")[1].slice(0, 5),
-          duracion: duracionSeleccionada,
-          paciente: { nombre: pacienteNombre },
-          notas: notasTurno,
-        };
-        await agendaService.createTurno(turnoPayload);
-        modal.mostrarExito("Turno creado", "El turno fue creado correctamente");
-        const t = await agendaService.getTurnos();
-        setBackendTurnos(Array.isArray(t) ? t : []);
-        setPendingSlot(null);
-      } catch (e: any) {
-        console.error(e);
-        modal.mostrarError("Error creando turno", e.message || String(e));
-      } finally {
-        setIsCreating(false);
-      }
-    };
-
-    modal.mostrarModal({
-      titulo: "Crear turno",
-      mensaje: `Crear turno para ${
-        prest.nombreCompleto || prest.nombre + " " + prest.apellido
-      } el ${start.toLocaleString()}`,
-      tipo: "confirmation",
-      textoBotonConfirmar: "Crear",
-      textoBotonCancelar: "Cancelar",
-      contenidoExtra: (
-        <div style={{ display: "grid", gap: 8 }}>
-          <label>Paciente</label>
-          <input
-            value={pacienteNombre}
-            onChange={(e) => setPacienteNombre(e.target.value)}
-          />
-          <label>Duración (min)</label>
-          <select
-            value={String(duracionSeleccionada)}
-            onChange={(e) => setDuracionSeleccionada(Number(e.target.value))}
-          >
-            <option value="15">15</option>
-            <option value="20">20</option>
-            <option value="30">30</option>
-            <option value="45">45</option>
-            <option value="60">60</option>
-          </select>
-          <label>Notas</label>
-          <textarea
-            value={notasTurno}
-            onChange={(e) => setNotasTurno(e.target.value)}
-          />
-        </div>
-      ),
-      onConfirmar: createTurnoFlow,
-    });
-  };
 
   const renderCalendar = () => {
-    const resources = prestadores.map((p) => ({
+    const resources = (prestadoresFiltrados || prestadores).map((p) => ({
       resourceId: `p-${p.id}`,
       resourceTitle: p.nombreCompleto || p.nombre + " " + (p.apellido || ""),
       horariosAtencion:
@@ -421,14 +288,8 @@ const AgendaPage: React.FC = () => {
       const goPrev = () => {
         if (toolbarView === "day") {
           setCurrentDate((prev) => new Date(prev.getFullYear(), prev.getMonth(), prev.getDate() - 1));
-        } else if (toolbarView === "week") {
-          setCurrentDate((prev) => {
-            const s = startOfWeek(new Date(prev), { weekStartsOn: 1 });
-            return new Date(s.getFullYear(), s.getMonth(), s.getDate() - 7);
-          });
-        } else if (toolbarView === "month") {
-          setCurrentDate((prev) => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
         } else {
+          // week
           setCurrentDate((prev) => {
             const s = startOfWeek(new Date(prev), { weekStartsOn: 1 });
             return new Date(s.getFullYear(), s.getMonth(), s.getDate() - 7);
@@ -438,14 +299,8 @@ const AgendaPage: React.FC = () => {
       const goNext = () => {
         if (toolbarView === "day") {
           setCurrentDate((prev) => new Date(prev.getFullYear(), prev.getMonth(), prev.getDate() + 1));
-        } else if (toolbarView === "week") {
-          setCurrentDate((prev) => {
-            const s = startOfWeek(new Date(prev), { weekStartsOn: 1 });
-            return new Date(s.getFullYear(), s.getMonth(), s.getDate() + 7);
-          });
-        } else if (toolbarView === "month") {
-          setCurrentDate((prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1));
         } else {
+          // week
           setCurrentDate((prev) => {
             const s = startOfWeek(new Date(prev), { weekStartsOn: 1 });
             return new Date(s.getFullYear(), s.getMonth(), s.getDate() + 7);
@@ -466,16 +321,16 @@ const AgendaPage: React.FC = () => {
             day: "numeric",
             month: "short",
           });
-        if (toolbarView === "month")
-          return new Date(currentDate).toLocaleDateString("es-ES", {
-            month: "long",
-            year: "numeric",
-          });
         return label || "";
       })();
 
       return (
         <div className="rbc-custom-toolbar">
+          <div className="rbc-toolbar-left" style={{ display: "flex" }}>
+           <button className="rbc-btn small" onClick={() => onView && onView("week")}>Semana</button>
+            <button className="rbc-btn small" onClick={() => onView && onView("day")}>Día</button>
+
+          </div>
           <div className="rbc-toolbar-center" style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center' }}>
             <button className="rbc-btn" onClick={goPrev} aria-label="Anterior">
               ‹
@@ -496,11 +351,20 @@ const AgendaPage: React.FC = () => {
             </button>
           </div>
           <div className="rbc-toolbar-right">
-            <button className="rbc-btn small" onClick={() => onView && onView("month")}>Mes</button>
-            <button className="rbc-btn small" onClick={() => onView && onView("week")}>Semana</button>
-            <button className="rbc-btn small" onClick={() => onView && onView("day")}>Día</button>
-          </div>
+              {/* Legend */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginLeft: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ width: 14, height: 14, background: '#e9fbe9', border: '1px solid #9be79b', borderRadius: 3, display: 'inline-block' }} />
+                  <small>Profesionales independientes</small>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ width: 14, height: 14, background: '#e6f7ff', border: '1px solid #9ad6ff', borderRadius: 3, display: 'inline-block' }} />
+                  <small>Centros</small>
+                </div>
+              </div>
+            </div>
         </div>
+        
       );
     };
 
@@ -640,28 +504,6 @@ const AgendaPage: React.FC = () => {
                         : `${durSet.join(", ")} min`;
 
                     const hasHorarios = horariosForDay.length > 0;
-                    let firstAvailableHora: string | null = null;
-                    for (const h of horariosForDay) {
-                      const startMin = horaAMinutos(h.desde || "00:00");
-                      let endMin = horaAMinutos(h.hasta || "");
-                      if (isNaN(endMin) || endMin <= startMin) endMin = startMin + 8 * 60;
-                      const dur = parseDuracion(h.duracionTurno || 30);
-                      for (let slot = startMin; slot + dur <= endMin; slot += dur) {
-                        const hh = String(Math.floor(slot / 60)).padStart(2, "0");
-                        const mm = String(slot % 60).padStart(2, "0");
-                        const candidate = `${hh}:${mm}`;
-                        const collides = (turnos || []).some((t: any) =>
-                          String(t.prestadorId) === String(p.id) && t.fecha === dayKey && t.hora === candidate
-                        );
-                        if (!collides) {
-                          firstAvailableHora = candidate;
-                          break;
-                        }
-                      }
-                      if (firstAvailableHora) break;
-                    }
-                    const suggestedHora =
-                      firstAvailableHora || (horariosForDay[0] && horariosForDay[0].desde) || "09:00";
                     const noHorarioReason = !p.direccion || p.direccion.length === 0
                       ? "Sin direcciones configuradas"
                       : horariosForDay.length === 0
@@ -710,47 +552,6 @@ const AgendaPage: React.FC = () => {
                             >
                               Detalle
                             </button>
-                            {/** Crear turno rápido: habilitado sólo si tiene horarios para el día */}
-                            <button
-                              className="rbc-btn"
-                              disabled={!hasHorarios}
-                              onClick={() => {
-                                const fecha = dayKey;
-                                const hora = suggestedHora;
-                                modal.mostrarModal({
-                                  titulo: "Crear turno rápido",
-                                  mensaje: `Crear turno para ${
-                                    p.nombreCompleto || p.nombre + " " + p.apellido
-                                  } el ${fecha} ${hora}`,
-                                  tipo: "confirmation",
-                                  textoBotonConfirmar: "Crear",
-                                  textoBotonCancelar: "Cancelar",
-                                  onConfirmar: async () => {
-                                    try {
-                                      await agendaService.createTurno({
-                                        prestadorId: p.id,
-                                        fecha,
-                                        hora,
-                                        duracion: parseDuracion(
-                                          horariosForDay[0]?.duracionTurno || 30
-                                        ),
-                                        paciente: { nombre: "Paciente" },
-                                      });
-                                      modal.mostrarExito(
-                                        "Turno creado",
-                                        "Turno creado correctamente"
-                                      );
-                                      const t = await agendaService.getTurnos();
-                                      setBackendTurnos(Array.isArray(t) ? t : []);
-                                    } catch (e: any) {
-                                      modal.mostrarError("Error", e?.message || String(e));
-                                    }
-                                  },
-                                });
-                              }}
-                            >
-                              Crear turno
-                            </button>
                           </div>
                         </div>
                       </div>
@@ -777,16 +578,12 @@ const AgendaPage: React.FC = () => {
                   const dayTurnos = turnos.filter(
                     (t) =>
                       t.fecha === dayKey &&
-                      (!filtroPrestador ||
-                        String(t.prestadorId) === String(filtroPrestador)) &&
-                      (!filtroEspecialidad ||
-                        (
-                          prestadores.find(
-                            (p) => String(p.id) === String(t.prestadorId)
-                          )?.especialidades || []
-                        )
-                          .map((s: any) => s.nombre)
-                          .includes(filtroEspecialidad))
+                      (!filtroPrestador || String(t.prestadorId) === String(filtroPrestador)) &&
+                      (!filtroEspecialidad || (
+                        prestadores.find((p) => String(p.id) === String(t.prestadorId))?.especialidades || []
+                      ).map((s: any) => s.nombre).includes(filtroEspecialidad)) &&
+                      // respect centro/independiente filters
+                      (allowedPrestadorIds.size === 0 || allowedPrestadorIds.has(String(t.prestadorId)))
                   );
                   const isToday = dayKey === todayKey;
                   return (
@@ -894,17 +691,11 @@ const AgendaPage: React.FC = () => {
                       const dayTurnos = turnos.filter(
                         (t) =>
                           t.fecha === dayKey &&
-                          (!filtroPrestador ||
-                            String(t.prestadorId) ===
-                              String(filtroPrestador)) &&
-                          (!filtroEspecialidad ||
-                            (
-                              prestadores.find(
-                                (p) => String(p.id) === String(t.prestadorId)
-                              )?.especialidades || []
-                            )
-                              .map((s: any) => s.nombre)
-                              .includes(filtroEspecialidad))
+                          (!filtroPrestador || String(t.prestadorId) === String(filtroPrestador)) &&
+                          (!filtroEspecialidad || (
+                            prestadores.find((p) => String(p.id) === String(t.prestadorId))?.especialidades || []
+                          ).map((s: any) => s.nombre).includes(filtroEspecialidad)) &&
+                          (allowedPrestadorIds.size === 0 || allowedPrestadorIds.has(String(t.prestadorId)))
                       );
                       const isToday = dayKey === formatDateLocal(new Date());
                       return (
@@ -1004,7 +795,7 @@ const AgendaPage: React.FC = () => {
             </div>
           </div>
         ) : (
-          <RBCalendar
+            <RBCalendar
             localizer={localizer}
             events={events}
             resources={resources}
@@ -1016,8 +807,6 @@ const AgendaPage: React.FC = () => {
             onView={(v: any) => setView(v)}
             views={[Views.MONTH, Views.WEEK, Views.DAY]}
             step={30}
-            selectable
-            onSelectSlot={handleSelectSlot}
             onSelectEvent={(evt: any) => {
               showDetalleTurno(undefined, evt.extendedProps);
             }}
@@ -1039,7 +828,6 @@ const AgendaPage: React.FC = () => {
             max={new Date(1970, 1, 1, maxTime, 0, 0)}
             components={{ toolbar: CustomToolbar }}
             onRangeChange={() => {
-              /* keep default */
             }}
             toolbar={true}
           />
@@ -1051,61 +839,15 @@ const AgendaPage: React.FC = () => {
   return (
     <>
       <div className="admin-page">
-        <Header
-          title="Agenda de Turnos"
-          subtitle="Asignación de turnos a prestadores"
-        />
+         <Header
+           title="Panel de Administración" 
+           subtitle="Medicina Prepaga - Administración de agenda de turnos"
+          />
         <div className="admin-content">
           <SubHeader
             title="Agenda"
             subtitle="Calendario y asignación de turnos"
             onVolver={() => navigate("/")}
-            onAlta={async () => {
-              const prest = filtroPrestador
-                ? prestadores.find(
-                    (p) => String(p.id) === String(filtroPrestador)
-                  )
-                : prestadores[0] || null;
-              if (!prest) {
-                modal.mostrarAdvertencia(
-                  "Sin prestador",
-                  "No hay prestador disponible para dar de alta un turno"
-                );
-                return;
-              }
-              const hoy = new Date();
-              const fecha = formatDateLocal(hoy);
-              const hora = "09:00";
-              modal.mostrarModal({
-                titulo: "Crear turno rápido",
-                mensaje: `Crear turno para ${
-                  prest.nombreCompleto || prest.nombre + " " + prest.apellido
-                } el ${fecha} ${hora}`,
-                tipo: "confirmation",
-                textoBotonConfirmar: "Crear",
-                textoBotonCancelar: "Cancelar",
-                onConfirmar: async () => {
-                  try {
-                    await agendaService.createTurno({
-                      prestadorId: prest.id,
-                      fecha,
-                      hora,
-                      duracion: 30,
-                      paciente: { nombre: "Paciente" },
-                    });
-                    modal.mostrarExito(
-                      "Turno creado",
-                      "Turno creado correctamente"
-                    );
-                    const t = await agendaService.getTurnos();
-                    setBackendTurnos(Array.isArray(t) ? t : []);
-                  } catch (e: any) {
-                    modal.mostrarError("Error", e?.message || String(e));
-                  }
-                },
-              });
-            }}
-            buttonText="Nuevo turno"
           />
 
           <div
@@ -1169,16 +911,25 @@ const AgendaPage: React.FC = () => {
                         Eliminar filtros
                       </button>
                     </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <input
-                type="checkbox"
-                id="showDisp"
-                checked={showDisponibilidad}
-                onChange={(e) => setShowDisponibilidad(e.target.checked)}
-              />
-              <label htmlFor="showDisp">
-                Mostrar disponibilidad (horarios)
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
+                <input
+                  type="checkbox"
+                  checked={onlyCentros}
+                  onChange={(e) => setOnlyCentros(e.target.checked)}
+                />
+                Solo centros médicos
               </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
+                <input
+                  type="checkbox"
+                  checked={onlyIndependientes}
+                  onChange={(e) => setOnlyIndependientes(e.target.checked)}
+                />
+                Solo profesionales independientes
+              </label>
+
+             
             </div>
           </div>
 
@@ -1203,11 +954,6 @@ const AgendaPage: React.FC = () => {
         soloInformacion={modal.config?.soloInformacion}
         listaErrores={modal.config?.listaErrores}
       />
-      {isCreating && (
-        <div className="creating-overlay">
-          <div className="creating-box">Creando turno...</div>
-        </div>
-      )}
     </>
   );
 };
