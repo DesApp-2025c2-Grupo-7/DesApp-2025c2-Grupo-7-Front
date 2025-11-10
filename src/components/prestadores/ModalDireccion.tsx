@@ -167,13 +167,14 @@ const ModalDireccion: React.FC<ModalDireccionProps> = ({
     }
 
     try {
-      const method = form.id === 0 ? "POST" : "PUT";
-      const url =
-        form.id === 0
-          ? `${getApiUrl(`/prestadores/${prestadorId}/direcciones`)}`
-          : `${getApiUrl(
-              `/prestadores/${prestadorId}/direcciones/${form.id}`
-            )}`;
+      // 🔧 FIX: Detectar si el ID es temporal (timestamp) o si es nueva dirección
+      const esIdTemporal = form.id > 1000000; // Los timestamps son números muy grandes
+      const esNuevaDireccion = form.id === 0 || esIdTemporal || form.esTemporal === true;
+      
+      const method = esNuevaDireccion ? "POST" : "PUT";
+      const url = esNuevaDireccion
+        ? `${getApiUrl(`/prestadores/${prestadorId}/direcciones`)}`
+        : `${getApiUrl(`/prestadores/${prestadorId}/direcciones/${form.id}`)}`;
 
       const resDir = await fetch(url, {
         method,
@@ -199,8 +200,12 @@ const ModalDireccion: React.FC<ModalDireccionProps> = ({
             : hor.duracionTurno + " minutos",
         };
 
+        // 🔧 FIX: También validar IDs temporales en horarios
+        const esHorarioTemporal = !hor.id || hor.id === 0 || hor.id > 1000000;
+        
         let resHor;
-        if (hor.id && hor.id !== 0) {
+        if (!esHorarioTemporal) {
+          // Actualizar horario existente
           resHor = await fetch(
             `${getApiUrl(
               `/prestadores/${prestadorId}/direcciones/${dirGuardada.id}/horarios/${hor.id}`
@@ -212,6 +217,7 @@ const ModalDireccion: React.FC<ModalDireccionProps> = ({
             }
           );
         } else {
+          // Crear nuevo horario
           resHor = await fetch(
             `${getApiUrl(
               `/prestadores/${prestadorId}/direcciones/${dirGuardada.id}/horarios`
