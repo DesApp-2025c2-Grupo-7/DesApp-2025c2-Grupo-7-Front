@@ -49,7 +49,6 @@ const PrestadoresFormEdit: React.FC<PrestadoresFormEditProps> = ({ prestador }) 
   const [listaDirecciones, setListaDirecciones] = useState<Direccion[]>(prestador?.direccion || []);
   const [direccionSeleccionada, setDireccionSeleccionada] = useState<Direccion | null>(null);
 
-  // 🔹 Para profesionales independientes
   const [centrosMedicos, setCentrosMedicos] = useState<Prestador[]>([]);
   const [centroAsignadoId, setCentroAsignadoId] = useState<number | null>(prestador?.centroAsignadoId || null);
 
@@ -61,7 +60,7 @@ const PrestadoresFormEdit: React.FC<PrestadoresFormEditProps> = ({ prestador }) 
       .catch((err) => console.error("Error al cargar especialidades:", err));
   }, []);
 
-  /* --- Cargar Centros Médicos (modo local) --- */
+  /* --- Cargar Centros Médicos --- */
   useEffect(() => {
     fetch(getApiUrl("/prestadores"))
       .then(res => res.json())
@@ -72,15 +71,54 @@ const PrestadoresFormEdit: React.FC<PrestadoresFormEditProps> = ({ prestador }) 
       .catch(err => console.error("Error cargando centros médicos:", err));
   }, []);
 
+  /* --- Sincronizar especialidades desde horarios --- */
+  useEffect(() => {
+    // Extraer todas las especialidades únicas de los horarios
+    const especialidadesEnHorarios = new Set<number>();
+    listaDirecciones.forEach(dir => {
+      dir.horariosAtencion?.forEach(hor => {
+        if (hor.especialidadId) {
+          especialidadesEnHorarios.add(hor.especialidadId);
+        }
+        if (hor.especialidad?.id) {
+          especialidadesEnHorarios.add(hor.especialidad.id);
+        }
+      });
+    });
+
+    // Agregar especialidades que están en horarios pero no en seleccionadas
+    const especialidadesAAgregar = especialidades.filter(esp => 
+      especialidadesEnHorarios.has(esp.id) && 
+      !seleccionadas.some(sel => sel.id === esp.id)
+    );
+
+    if (especialidadesAAgregar.length > 0) {
+      setSeleccionadas(prev => [...prev, ...especialidadesAAgregar]);
+    }
+  }, [listaDirecciones, especialidades]);
+
   /* --- Funciones direcciones --- */
   const handleVerMas = (dir: Direccion) => setDireccionSeleccionada(dir);
   const handleCloseModal = () => setDireccionSeleccionada(null);
 
   const handleSaveDireccion = (dirActualizada: Direccion) => {
+    // Enriquece los horarios con el objeto especialidad completo
+    const dirConEspecialidades = {
+      ...dirActualizada,
+      horariosAtencion: dirActualizada.horariosAtencion.map(hor => ({
+        ...hor,
+        especialidad: hor.especialidadId 
+          ? especialidades.find(esp => esp.id === hor.especialidadId) 
+          : hor.especialidad
+      }))
+    };
+
     setListaDirecciones(prev => {
-      const existe = prev.find(d => d.id === dirActualizada.id);
-      if (existe) return prev.map(d => d.id === dirActualizada.id ? dirActualizada : d);
-      return [...prev, dirActualizada];
+      const existe = prev.find(d => d.id === dirConEspecialidades.id);
+      const nuevaLista = existe
+        ? prev.map(d => (d.id === dirConEspecialidades.id ? dirConEspecialidades : d))
+        : [...prev, dirConEspecialidades];
+      return [...nuevaLista]; // Fuerza re-render inmediato
     });
     setDireccionSeleccionada(null);
   };
@@ -100,7 +138,7 @@ const PrestadoresFormEdit: React.FC<PrestadoresFormEditProps> = ({ prestador }) 
 
   const handleEliminarDireccion = (direccion: Direccion) => {
     if (!window.confirm("¿Deseas eliminar esta dirección y todos sus horarios?")) return;
-    setListaDirecciones(prev => prev.filter(d => d.id !== direccion.id));
+    setListaDirecciones(prev => [...prev.filter(d => d.id !== direccion.id)]);
   };
 
   /* --- Guardar cambios --- */
@@ -132,9 +170,7 @@ const PrestadoresFormEdit: React.FC<PrestadoresFormEditProps> = ({ prestador }) 
 
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
-      console.log("✅ Prestador guardado:", data);
 
-      // Guardar direcciones y horarios
       for (const dir of listaDirecciones) {
         const { id, esTemporal, ...dirParaBackend } = dir;
         const dirUrl = prestador
@@ -166,7 +202,8 @@ const PrestadoresFormEdit: React.FC<PrestadoresFormEditProps> = ({ prestador }) 
       }
 
       alert(`Prestador ${prestador ? "actualizado" : "creado"} correctamente`);
-      setIsEditing(false); // 🔹 volver a modo lectura
+      setIsEditing(false);
+      setListaDirecciones([...listaDirecciones]); // Fuerza refresco visual
       if (!prestador) navigate(`/prestadores/${data.id}`);
     } catch (err) {
       console.error("🔥 Error guardando prestador:", err);
@@ -206,9 +243,9 @@ const PrestadoresFormEdit: React.FC<PrestadoresFormEditProps> = ({ prestador }) 
         <div className="form-row">
           <label>Asignar a Centro Médico</label>
           <Select
-            options={centrosMedicos.map(c => ({ value: c.id, label: c.nombreCompleto }))}
-            value={centroAsignadoId || ""}
-            onChange={(val: number) => setCentroAsignadoId(val)}
+            options={centrosMedicos.map(c => ({ value: String(c.id), label: c.nombreCompleto }))}
+            value={centroAsignadoId ? String(centroAsignadoId) : ""}
+            onChange={(val: string) => setCentroAsignadoId(val ? Number(val) : null)}
           />
         </div>
       )}
@@ -219,7 +256,10 @@ const PrestadoresFormEdit: React.FC<PrestadoresFormEditProps> = ({ prestador }) 
           <CardEspecialidades
             especialidades={especialidades}
             seleccionadas={seleccionadas}
-            onChange={setSeleccionadas}
+            onChange={(nuevas) => {
+              setSeleccionadas(nuevas);
+              setListaDirecciones([...listaDirecciones]); // refresca al instante
+            }}
           />
         ) : (
           <div style={{ display: "flex", flexWrap: "wrap", gap: "0.2rem" }}>
@@ -255,7 +295,7 @@ const PrestadoresFormEdit: React.FC<PrestadoresFormEditProps> = ({ prestador }) 
             <div className="schedule-card" key={dir.id || i}>
               <div className="schedule-header">
                 <h4>
-                  Dirección: {dir.calle} {dir.numero}, {dir.localidad} ({dir.codigoPostal || "—"})
+                {dir.calle} {dir.numero}, {dir.localidad} ({dir.codigoPostal || "—"})
                 </h4>
               </div>
               <div className="schedule-list">
@@ -265,6 +305,18 @@ const PrestadoresFormEdit: React.FC<PrestadoresFormEditProps> = ({ prestador }) 
                     <span className="schedule-badge">
                       Duración: {hor.duracionTurno} | Turnos: {calcularTurnos(hor)}
                     </span>
+                    {hor.especialidad?.nombre && (
+                      <div
+                        style={{
+                          fontSize: "0.85rem",
+                          color: "#646b72ff",
+                          fontStyle: "italic",
+                          paddingLeft: "0.25rem",
+                        }}
+                      >
+                        Especialidad: {hor.especialidad.nombre}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -303,6 +355,7 @@ const PrestadoresFormEdit: React.FC<PrestadoresFormEditProps> = ({ prestador }) 
           prestadorId={prestador?.id || 0}
           direccion={direccionSeleccionada}
           todasDirecciones={listaDirecciones}
+          especialidadesPrestador={seleccionadas}
           onClose={handleCloseModal}
           onSave={handleSaveDireccion}
         />
@@ -323,7 +376,7 @@ const PrestadoresFormEdit: React.FC<PrestadoresFormEditProps> = ({ prestador }) 
           }
           tipo="warning"
           textoBotonConfirmar="Confirmar baja"
-          onConfirmar={handleDarDeBaja}
+          onConfirm={handleDarDeBaja}
         />
       )}
     </div>

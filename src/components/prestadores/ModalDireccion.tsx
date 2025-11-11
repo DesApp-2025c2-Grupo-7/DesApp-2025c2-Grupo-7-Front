@@ -6,12 +6,18 @@ import { getApiUrl } from "../../config/env";
 import Input from "../genericos/Input";
 import Select from "../genericos/Select";
 
+interface Especialidad {
+  id: number;
+  nombre: string;
+}
+
 interface ModalDireccionProps {
   prestadorId: number;
   direccion: Direccion | null;
   onClose: () => void;
   onSave: (direccion: Direccion) => void;
   todasDirecciones?: Direccion[];
+  especialidadesPrestador?: Especialidad[];
 }
 
 const ModalDireccion: React.FC<ModalDireccionProps> = ({
@@ -20,6 +26,7 @@ const ModalDireccion: React.FC<ModalDireccionProps> = ({
   onClose,
   onSave,
   todasDirecciones = [],
+  especialidadesPrestador = [],
 }) => {
   const [form, setForm] = useState<Direccion>(
     direccion || {
@@ -34,17 +41,36 @@ const ModalDireccion: React.FC<ModalDireccionProps> = ({
   );
   const [errores, setErrores] = useState<{ [key: number]: string[] }>({});
 
+  const normalizarHora = (valor: string) => {
+    if (!valor) return "";
+    const partes = valor.split(":");
+    if (partes.length === 2) return valor;
+    if (partes.length === 3) return partes.slice(0, 2).join(":");
+    return "";
+  };
+
   useEffect(() => {
     setForm(
-      direccion || {
-        id: 0,
-        calle: "",
-        numero: "",
-        localidad: "",
-        codigoPostal: "",
-        horariosAtencion: [],
-        esTemporal: true,
-      }
+      direccion
+        ? {
+            ...direccion,
+            horariosAtencion: direccion.horariosAtencion.map((h) => ({
+              ...h,
+              especialidadId: h.especialidad ? h.especialidad.id : undefined,
+              desde: normalizarHora(h.desde),
+              hasta: normalizarHora(h.hasta),
+              duracionTurno: normalizarHora(h.duracionTurno),
+            })),
+          }
+        : {
+            id: 0,
+            calle: "",
+            numero: "",
+            localidad: "",
+            codigoPostal: "",
+            horariosAtencion: [],
+            esTemporal: true,
+          }
     );
     setErrores({});
   }, [direccion]);
@@ -64,35 +90,42 @@ const ModalDireccion: React.FC<ModalDireccionProps> = ({
     if (inicio >= fin)
       nuevosErrores.push("Hora inicio es mayor o igual a hora fin");
 
-    let duracion = horario.duracionTurno.includes(":")
-      ? horaAMinutos(horario.duracionTurno)
-      : Number(horario.duracionTurno);
+    let duracion = Number(horario.duracionTurno.split(":")[1]) || 0;
     if (duracion <= 0) nuevosErrores.push("Duración inválida");
 
-    // Solapamiento con otras direcciones
+    // ❗ Verifica superposición en otras direcciones con misma especialidad
     for (const dir of todasDirecciones || []) {
       if (dir.id === form.id) continue;
       for (const hO of dir.horariosAtencion) {
-        if (hO.dia === horario.dia) {
+        if (
+          hO.dia === horario.dia &&
+          (hO.especialidad?.id || hO.especialidadId) ===
+            horario.especialidadId
+        ) {
           const inicioO = horaAMinutos(hO.desde);
           const finO = horaAMinutos(hO.hasta);
           if (!(fin <= inicioO || inicio >= finO)) {
             nuevosErrores.push(
-              `Se superpone con otra dirección: ${dir.calle} ${dir.numero}`
+              `Se superpone con otra dirección (${dir.calle} ${dir.numero}) con la misma especialidad`
             );
           }
         }
       }
     }
 
-    // Solapamiento dentro de la misma dirección
+    // ❗ Verifica superposición dentro de la misma dirección con la misma especialidad
     form.horariosAtencion.forEach((hI, i) => {
       if (i === index) return;
-      if (hI.dia === horario.dia) {
+      if (
+        hI.dia === horario.dia &&
+        hI.especialidadId === horario.especialidadId
+      ) {
         const inicioI = horaAMinutos(hI.desde);
         const finI = horaAMinutos(hI.hasta);
         if (!(fin <= inicioI || inicio >= finI))
-          nuevosErrores.push("Se superpone con otro horario en esta dirección");
+          nuevosErrores.push(
+            "Se superpone con otro horario de la misma especialidad"
+          );
       }
     });
 
@@ -108,13 +141,14 @@ const ModalDireccion: React.FC<ModalDireccionProps> = ({
   const handleHorarioChange = (
     index: number,
     field: keyof HorarioAtencion,
-    value: string
+    value: any
   ) => {
     const nuevosHorarios = form.horariosAtencion.map((h, i) =>
       i === index ? { ...h, [field]: value } : h
     );
     setForm((prev) => ({ ...prev, horariosAtencion: nuevosHorarios }));
 
+    // ✅ Revalida todos los horarios y limpia los errores corregidos
     const erroresTotales: { [key: number]: string[] } = {};
     nuevosHorarios.forEach((h, i) => {
       const err = validarHorario(h, i);
@@ -130,6 +164,7 @@ const ModalDireccion: React.FC<ModalDireccionProps> = ({
       desde: "",
       hasta: "",
       duracionTurno: "",
+      especialidadId: undefined,
     };
     setForm((prev) => ({
       ...prev,
@@ -142,13 +177,13 @@ const ModalDireccion: React.FC<ModalDireccionProps> = ({
     const nuevos = form.horariosAtencion.filter((_, i) => i !== index);
     setForm((prev) => ({ ...prev, horariosAtencion: nuevos }));
 
-    // Revalidar
-    const erroresTotales: { [key: number]: string[] } = {};
+    // ✅ Limpia errores correspondientes
+    const nuevosErrores: { [key: number]: string[] } = {};
     nuevos.forEach((h, i) => {
       const err = validarHorario(h, i);
-      if (err.length > 0) erroresTotales[i] = err;
+      if (err.length > 0) nuevosErrores[i] = err;
     });
-    setErrores(erroresTotales);
+    setErrores(nuevosErrores);
   };
 
   const handleSave = async () => {
@@ -159,7 +194,6 @@ const ModalDireccion: React.FC<ModalDireccionProps> = ({
 
     if (!window.confirm("¿Deseas guardar los cambios realizados?")) return;
 
-    // ⚙️ Si el prestador aún no existe, guardamos localmente
     if (!prestadorId || prestadorId === 0) {
       onSave({ ...form, esTemporal: true });
       onClose();
@@ -167,14 +201,16 @@ const ModalDireccion: React.FC<ModalDireccionProps> = ({
     }
 
     try {
-      // 🔧 FIX: Detectar si el ID es temporal (timestamp) o si es nueva dirección
-      const esIdTemporal = form.id > 1000000; // Los timestamps son números muy grandes
-      const esNuevaDireccion = form.id === 0 || esIdTemporal || form.esTemporal === true;
-      
+      const esIdTemporal = form.id > 1000000;
+      const esNuevaDireccion =
+        form.id === 0 || esIdTemporal || form.esTemporal === true;
+
       const method = esNuevaDireccion ? "POST" : "PUT";
       const url = esNuevaDireccion
         ? `${getApiUrl(`/prestadores/${prestadorId}/direcciones`)}`
-        : `${getApiUrl(`/prestadores/${prestadorId}/direcciones/${form.id}`)}`;
+        : `${getApiUrl(
+            `/prestadores/${prestadorId}/direcciones/${form.id}`
+          )}`;
 
       const resDir = await fetch(url, {
         method,
@@ -190,46 +226,36 @@ const ModalDireccion: React.FC<ModalDireccionProps> = ({
       if (!resDir.ok) throw new Error("Error al guardar dirección");
       const dirGuardada: Direccion = await resDir.json();
 
-      // Guardar horarios
       const horariosActualizados: HorarioAtencion[] = [];
+
       for (const hor of form.horariosAtencion) {
         const horData = {
-          ...hor,
-          duracionTurno: hor.duracionTurno.includes("min")
-            ? hor.duracionTurno
-            : hor.duracionTurno + " minutos",
+          dia: hor.dia,
+          desde: normalizarHora(hor.desde),
+          hasta: normalizarHora(hor.hasta),
+          duracionTurno: normalizarHora(hor.duracionTurno),
+          especialidad: hor.especialidadId
+            ? { id: hor.especialidadId }
+            : null,
         };
 
-        // 🔧 FIX: También validar IDs temporales en horarios
         const esHorarioTemporal = !hor.id || hor.id === 0 || hor.id > 1000000;
-        
-        let resHor;
-        if (!esHorarioTemporal) {
-          // Actualizar horario existente
-          resHor = await fetch(
-            `${getApiUrl(
-              `/prestadores/${prestadorId}/direcciones/${dirGuardada.id}/horarios/${hor.id}`
-            )}`,
-            {
-              method: "PUT",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(horData),
-            }
-          );
-        } else {
-          // Crear nuevo horario
-          resHor = await fetch(
-            `${getApiUrl(
-              `/prestadores/${prestadorId}/direcciones/${dirGuardada.id}/horarios`
-            )}`,
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(horData),
-            }
-          );
-        }
 
+        const endpoint = esHorarioTemporal
+          ? `${getApiUrl(
+              `/prestadores/${prestadorId}/direcciones/${dirGuardada.id}/horarios`
+            )}`
+          : `${getApiUrl(
+              `/prestadores/${prestadorId}/direcciones/${dirGuardada.id}/horarios/${hor.id}`
+            )}`;
+
+        const resHor = await fetch(endpoint, {
+          method: esHorarioTemporal ? "POST" : "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(horData),
+        });
+
+        if (!resHor.ok) throw new Error("Error al guardar horario");
         const dataHor = await resHor.json();
         horariosActualizados.push({ ...hor, id: dataHor.id });
       }
@@ -242,12 +268,8 @@ const ModalDireccion: React.FC<ModalDireccionProps> = ({
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    if (e.key === "Enter") handleSave();
-  };
-
   return (
-    <div className="modal-overlay" onKeyDown={handleKeyDown}>
+    <div className="modal-overlay">
       <div className="modal-card">
         <h3 className="section-title">
           {form.id === 0 ? "Nueva Dirección" : "Editar Dirección"}
@@ -272,12 +294,9 @@ const ModalDireccion: React.FC<ModalDireccionProps> = ({
           </div>
         )}
 
-        <div
-          className="modal-content"
-          style={{ maxHeight: "60vh", overflowY: "auto" }}
-        >
+        <div className="modal-content" style={{ maxHeight: "60vh", overflowY: "auto" }}>
           <label>
-            Calle:{" "}
+            Calle:
             <Input
               type="text"
               name="calle"
@@ -287,8 +306,9 @@ const ModalDireccion: React.FC<ModalDireccionProps> = ({
               }
             />
           </label>
+
           <label>
-            Número:{" "}
+            Número:
             <Input
               type="text"
               name="numero"
@@ -298,8 +318,9 @@ const ModalDireccion: React.FC<ModalDireccionProps> = ({
               }
             />
           </label>
+
           <label>
-            Localidad:{" "}
+            Localidad:
             <Input
               type="text"
               name="localidad"
@@ -309,8 +330,9 @@ const ModalDireccion: React.FC<ModalDireccionProps> = ({
               }
             />
           </label>
+
           <label>
-            Código Postal:{" "}
+            Código Postal:
             <Input
               type="text"
               name="codigoPostal"
@@ -321,69 +343,99 @@ const ModalDireccion: React.FC<ModalDireccionProps> = ({
             />
           </label>
 
-          <h4>Horarios de Atención</h4>
+          <h4 style={{ marginTop: "2rem", marginBottom: "1rem" }}>
+            Horarios de Atención
+          </h4>
+
           {form.horariosAtencion.map((hor, i) => (
             <div
               key={i}
-              className="horario-item"
-              style={{ marginBottom: "0.5rem" }}
+              style={{
+                marginBottom: "1.5rem",
+                padding: "1.25rem",
+                backgroundColor: "#f8f9fa",
+                borderRadius: "8px",
+                border: "1px solid #dee2e6",
+              }}
             >
+              <h5 style={{ marginTop: 0, marginBottom: "1rem", color: "#495057" }}>
+                Horario {i + 1}
+              </h5>
+
               <label>
-                Día:{" "}
+                Día:
                 <Select
                   value={hor.dia}
                   onChange={(value) => handleHorarioChange(i, "dia", value)}
                   options={[
                     { value: "Lunes", label: "Lunes" },
                     { value: "Martes", label: "Martes" },
-                    { value: "Miercoles", label: "Miércoles" },
+                    { value: "Miércoles", label: "Miércoles" },
                     { value: "Jueves", label: "Jueves" },
                     { value: "Viernes", label: "Viernes" },
-                    { value: "Sabado", label: "Sábado" },
+                    { value: "Sábado", label: "Sábado" },
+                    { value: "Domingo", label: "Domingo" },
                   ]}
                 />
               </label>
+
               <label>
-                Desde:{" "}
+                Desde:
                 <Input
                   type="time"
-                  value={hor.desde}
-                  onChange={(value) =>
-                    handleHorarioChange(i, "desde", value)
-                  }
+                  value={normalizarHora(hor.desde)}
+                  onChange={(value) => handleHorarioChange(i, "desde", value)}
                 />
               </label>
+
               <label>
-                Hasta:{" "}
+                Hasta:
                 <Input
                   type="time"
-                  value={hor.hasta}
-                  onChange={(value) =>
-                    handleHorarioChange(i, "hasta", value)
-                  }
+                  value={normalizarHora(hor.hasta)}
+                  onChange={(value) => handleHorarioChange(i, "hasta", value)}
                 />
               </label>
+
               <label>
-                Duración:{" "}
+                Duración:
                 <Input
                   type="time"
-                  value={hor.duracionTurno}
+                  value={normalizarHora(hor.duracionTurno)}
                   onChange={(value) =>
                     handleHorarioChange(i, "duracionTurno", value)
                   }
                 />
               </label>
-              <div style={{ marginTop: "15px" }}>
+
+              {especialidadesPrestador.length > 0 && (
+                <label>
+                  Especialidad:
+                  <Select
+                    value={hor.especialidadId?.toString() || ""}
+                    onChange={(value) =>
+                      handleHorarioChange(i, "especialidadId", Number(value))
+                    }
+                    options={especialidadesPrestador.map((esp) => ({
+                      value: esp.id.toString(),
+                      label: esp.nombre,
+                    }))}
+                  />
+                </label>
+              )}
+
+              <div style={{ marginTop: "1rem" }}>
                 <Button
                   variant="danger"
                   size="small"
                   onClick={() => handleDeleteHorario(i)}
                 >
-                  Eliminar
+                  Eliminar horario
                 </Button>
               </div>
             </div>
           ))}
+
           <Button variant="primary" onClick={handleAddHorario}>
             + Agregar nuevo horario
           </Button>

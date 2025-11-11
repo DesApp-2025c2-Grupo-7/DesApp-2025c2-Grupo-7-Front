@@ -4,6 +4,12 @@ export interface HorarioAtencion {
     desde: string;
     hasta: string;
     duracionTurno: string;
+    
+    /** 🆕 ID de la especialidad que se atiende en este horario (solo UNA por horario) */
+    especialidadId?: number;
+    
+    /** 🆕 Objeto especialidad completo (viene del backend con eager: true) */
+    especialidad?: Especialidad;
 }
 
 export interface Direccion {
@@ -15,7 +21,7 @@ export interface Direccion {
     horariosAtencion: HorarioAtencion[];
 
     /** Campo opcional para manejar datos locales antes de persistir en el backend */
-    esTemporal?: boolean; // 👈 agregado
+    esTemporal?: boolean;
 }
 
 export interface Prestador {
@@ -28,8 +34,14 @@ export interface Prestador {
     email: string[];
     direccion: Direccion[];
 
+    /** 🆕 ID del centro médico al que está asignado (solo para profesionales independientes) */
+    centroAsignadoId?: number | null;
+
+    /** 🆕 Fecha de baja del prestador */
+    fechaBaja?: string | null;
+
     /** Indica que el prestador aún no fue guardado en la base */
-    esTemporal?: boolean; // 👈 agregado
+    esTemporal?: boolean;
 }
 
 export interface Especialidad {
