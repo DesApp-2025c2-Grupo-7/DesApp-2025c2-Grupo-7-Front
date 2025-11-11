@@ -33,7 +33,7 @@ const Paginacion: React.FC<PaginacionProps> = ({ totalPages, currentPage, onPage
           key={i}
           variant={i + 1 === currentPage ? "primary" : "secondary"}
           size="small"
-          className="page-btn"
+          className={`page-btn ${i + 1 === currentPage ? "active" : ""}`}
           onClick={() => onPageChange(i + 1)}
         >
           {i + 1}

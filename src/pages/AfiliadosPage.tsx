@@ -236,6 +236,7 @@ const AfiliadosPage: React.FC = () => {
         />
 
         <BarraBusqueda
+          mode="afiliados"
           busqueda={busqueda}
           setBusqueda={setBusqueda}
           searchByNombre={searchByNombre}

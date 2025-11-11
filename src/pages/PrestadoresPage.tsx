@@ -7,7 +7,6 @@ import BarraBusqueda from "../components/genericos/BarraBusqueda";
 import ListaPrestadores from "../components/prestadores/ListaPrestadores";
 import Paginacion from "../components/genericos/Paginacion";
 import "../components/genericos/PaginaEstilos.css";
-import { filtrarPorBusqueda } from "../utils/filtroBusqueda";
 import type { Prestador } from "../types/prestadores";
 import { getApiUrl } from "../config/env";
 
@@ -16,9 +15,18 @@ const PrestadoresPage: React.FC = () => {
   const [prestadores, setPrestadores] = useState<Prestador[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Estados de filtros para prestadores
+  const [searchByNombre, setSearchByNombre] = useState(true);
+  const [searchByCuil, setSearchByCuil] = useState(false);
+  const [searchByEspecialidad, setSearchByEspecialidad] = useState(false);
+  const [searchByLocalidad, setSearchByLocalidad] = useState(false);
+  const [onlyProfesionales, setOnlyProfesionales] = useState(false);
+  const [onlyCentros, setOnlyCentros] = useState(false);
+  const [includeBajas, setIncludeBajas] = useState(false);
+
   // Paginación
   const [currentPage, setCurrentPage] = useState(1);
-  const prestadoresPerPage = 10;
+  const prestadoresPerPage = 6;
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -53,8 +61,58 @@ const PrestadoresPage: React.FC = () => {
   const handleVolver = () => navigate("/");
   const handleAlta = () => navigate("/prestadores/alta");
 
-  // Filtrado
-  const prestadoresFiltrados = filtrarPorBusqueda(prestadores, busqueda);
+  // Filtrado de prestadores
+  const prestadoresFiltrados = prestadores.filter((prestador) => {
+    // Filtro por tipo de prestador
+    if (onlyProfesionales && !prestador.esProfesionalIndependiente) return false;
+    if (onlyCentros && prestador.esProfesionalIndependiente) return false;
+
+    // Filtro por estado (bajas)
+    if (!includeBajas && prestador.fechaBaja) return false;
+
+    // Si no hay búsqueda, mostrar todos los que pasaron los filtros anteriores
+    if (!busqueda.trim()) return true;
+
+    const searchLower = busqueda.toLowerCase().trim();
+
+    // Si no hay ningún filtro de búsqueda activo, buscar en todos los campos
+    const noHayFiltrosActivos = !searchByNombre && !searchByCuil && !searchByEspecialidad && !searchByLocalidad;
+
+    if (noHayFiltrosActivos) {
+      // Buscar en todos los campos
+      return (
+        prestador.nombreCompleto.toLowerCase().includes(searchLower) ||
+        prestador.numeroCUIL.includes(searchLower) ||
+        prestador.especialidades?.some(esp => esp.nombre.toLowerCase().includes(searchLower)) ||
+        prestador.direccion?.some(dir => dir.localidad.toLowerCase().includes(searchLower))
+      );
+    }
+
+    // Si hay filtros activos, aplicarlos
+    let matchFound = false;
+
+    if (searchByNombre && prestador.nombreCompleto.toLowerCase().includes(searchLower)) {
+      matchFound = true;
+    }
+
+    if (searchByCuil && prestador.numeroCUIL.includes(searchLower)) {
+      matchFound = true;
+    }
+
+    if (searchByEspecialidad && prestador.especialidades?.some(esp => 
+      esp.nombre.toLowerCase().includes(searchLower)
+    )) {
+      matchFound = true;
+    }
+
+    if (searchByLocalidad && prestador.direccion?.some(dir => 
+      dir.localidad.toLowerCase().includes(searchLower)
+    )) {
+      matchFound = true;
+    }
+
+    return matchFound;
+  });
 
   // Calcular total de páginas
   const totalPages = Math.ceil(prestadoresFiltrados.length / prestadoresPerPage) || 1;
@@ -66,10 +124,10 @@ const PrestadoresPage: React.FC = () => {
     }
   }, [currentPage, totalPages]);
 
-  // Reiniciar página al cambiar búsqueda
+  // Reiniciar página al cambiar búsqueda o filtros
   useEffect(() => {
     setCurrentPage(1);
-  }, [busqueda]);
+  }, [busqueda, searchByNombre, searchByCuil, searchByEspecialidad, searchByLocalidad, onlyProfesionales, onlyCentros, includeBajas]);
 
   const startIndex = (currentPage - 1) * prestadoresPerPage;
   const prestadoresVisibles = prestadoresFiltrados.slice(startIndex, startIndex + prestadoresPerPage);
@@ -85,20 +143,23 @@ const PrestadoresPage: React.FC = () => {
         <PrestadoresHeader onVolver={handleVolver} onAlta={handleAlta} mostrarAlta={true} />
 
         <BarraBusqueda
+          mode="prestadores"
           busqueda={busqueda}
           setBusqueda={setBusqueda}
-          searchByNombre={false}
-          setSearchByNombre={() => {}}
-          searchByApellido={false}
-          setSearchByApellido={() => {}}
-          searchByCredencial={false}
-          setSearchByCredencial={() => {}}
-          searchByDni={false}
-          setSearchByDni={() => {}}
-          onlyTitulares={false}
-          setOnlyTitulares={() => {}}
-          includeInactivos={false}
-          setIncludeInactivos={() => {}}
+          searchByNombre={searchByNombre}
+          setSearchByNombre={setSearchByNombre}
+          searchByCuil={searchByCuil}
+          setSearchByCuil={setSearchByCuil}
+          searchByEspecialidad={searchByEspecialidad}
+          setSearchByEspecialidad={setSearchByEspecialidad}
+          searchByLocalidad={searchByLocalidad}
+          setSearchByLocalidad={setSearchByLocalidad}
+          onlyProfesionales={onlyProfesionales}
+          setOnlyProfesionales={setOnlyProfesionales}
+          onlyCentros={onlyCentros}
+          setOnlyCentros={setOnlyCentros}
+          includeBajas={includeBajas}
+          setIncludeBajas={setIncludeBajas}
         />
 
         {loading ? (
