@@ -7,7 +7,7 @@ import { useModal } from "../hooks/useModal";
 import { agendaService } from "../services/agendaService";
 import { useNavigate } from "react-router-dom";
 import SubHeader from "../components/genericos/SubHeader";
-
+ 
 import {
   Calendar as RBCalendar,
   Views,
@@ -25,8 +25,6 @@ type Turno = {
   hora: string; // HH:MM
   duracion?: number; // minutes
   paciente?: any;
-  especialidad?: any;
-  centro?: string;
 };
 
 const diasSemanaEsp = [
@@ -72,7 +70,10 @@ const formatDateLocal = (d: Date) =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
     d.getDate()
   ).padStart(2, "0")}`;
-const generateTurnos = (prestadoresList: any[], date: Date): Turno[] => {
+const generateTurnos = (
+  prestadoresList: any[],
+  date: Date
+): Turno[] => {
   const out: Turno[] = [];
   const weekStart = startOfWeek(date, { weekStartsOn: 1 });
   for (const p of prestadoresList || []) {
@@ -102,8 +103,6 @@ const generateTurnos = (prestadoresList: any[], date: Date): Turno[] => {
             fecha,
             hora,
             duracion: dur,
-            especialidad: h.especialidad || null,
-            centro: d.nombre || p.nombre || "",
           });
         }
       }
@@ -123,7 +122,7 @@ const AgendaPage: React.FC = () => {
 
   const [turnos, setTurnos] = useState<Turno[]>([]);
   const [events, setEvents] = useState<any[]>([]);
-
+  
   const modal = useModal();
   const navigate = useNavigate();
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
@@ -131,6 +130,7 @@ const AgendaPage: React.FC = () => {
   useEffect(() => {
     currentDateRef.current = currentDate;
   }, [currentDate]);
+  
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -159,6 +159,8 @@ const AgendaPage: React.FC = () => {
           )
         );
         setEspecialidades(specs as string[]);
+
+       
       } catch (e) {
         console.error("Error cargando datos de agenda", e);
       }
@@ -193,10 +195,8 @@ const AgendaPage: React.FC = () => {
   const prestadoresFiltrados = useMemo(() => {
     const isCentro = (p: any) => {
       if (!p) return false;
-      if (Object.prototype.hasOwnProperty.call(p, "isProfesionalIndependiente"))
-        return !Boolean(p.isProfesionalIndependiente);
-      if (Object.prototype.hasOwnProperty.call(p, "esProfesionalIndependiente"))
-        return !Boolean(p.esProfesionalIndependiente);
+      if (Object.prototype.hasOwnProperty.call(p, 'isProfesionalIndependiente')) return !Boolean(p.isProfesionalIndependiente);
+      if (Object.prototype.hasOwnProperty.call(p, 'esProfesionalIndependiente')) return !Boolean(p.esProfesionalIndependiente);
       const tipo = p.tipoPrestacion || p.tipo || "";
       return /centro/i.test(String(tipo));
     };
@@ -209,8 +209,7 @@ const AgendaPage: React.FC = () => {
           .includes(filtroEspecialidad)
       )
         return false;
-      if (filtroPrestador && String(p.id) !== String(filtroPrestador))
-        return false;
+      if (filtroPrestador && String(p.id) !== String(filtroPrestador)) return false;
 
       // apply centro/independiente filters
       if (onlyCentros && !onlyIndependientes) {
@@ -221,64 +220,38 @@ const AgendaPage: React.FC = () => {
 
       return true;
     });
-  }, [
-    prestadores,
-    filtroEspecialidad,
-    filtroPrestador,
-    onlyCentros,
-    onlyIndependientes,
-  ]);
+  }, [prestadores, filtroEspecialidad, filtroPrestador, onlyCentros, onlyIndependientes]);
 
-  const allowedPrestadorIds = useMemo(
-    () => new Set((prestadoresFiltrados || []).map((p: any) => String(p.id))),
-    [prestadoresFiltrados]
-  );
+  const allowedPrestadorIds = useMemo(() => new Set((prestadoresFiltrados || []).map((p: any) => String(p.id))), [prestadoresFiltrados]);
 
   useEffect(() => {
     if (!filtroPrestador) return;
-    const sel = prestadores.find(
-      (p) => String(p.id) === String(filtroPrestador)
-    );
+    const sel = prestadores.find((p) => String(p.id) === String(filtroPrestador));
     if (!sel) return;
-    const hasDireccion =
-      Array.isArray(sel.direccion) && sel.direccion.length > 0;
-    const hasHorarios =
-      hasDireccion &&
-      sel.direccion.some(
-        (d: any) =>
-          Array.isArray(d.horariosAtencion) && d.horariosAtencion.length > 0
-      );
+    const hasDireccion = Array.isArray(sel.direccion) && sel.direccion.length > 0;
+    const hasHorarios = hasDireccion && sel.direccion.some((d: any) => Array.isArray(d.horariosAtencion) && d.horariosAtencion.length > 0);
 
     // check whether there are any turnos for this prestador in the current period/day
-    const anyTurnos = (turnos || []).some(
-      (t) =>
-        String(t.prestadorId) === String(sel.id) &&
-        t.fecha === formatDateLocal(currentDate)
-    );
+    const anyTurnos = (turnos || []).some((t) => String(t.prestadorId) === String(sel.id) && t.fecha === formatDateLocal(currentDate));
 
     if (!hasDireccion) {
       modal.mostrarAdvertencia(
         "Prestador sin dirección",
-        `El prestador ${
-          sel.nombreCompleto || sel.nombre
-        } no tiene una dirección configurada. Por ese motivo no tiene horarios de atención ni turnos asociados.`
+        `El prestador ${sel.nombreCompleto || sel.nombre} no tiene una dirección configurada. Por ese motivo no tiene horarios de atención ni turnos asociados.`
       );
     } else if (!hasHorarios) {
       modal.mostrarAdvertencia(
         "Sin horarios de atención",
-        `El prestador ${
-          sel.nombreCompleto || sel.nombre
-        } tiene direcciones registradas pero no dispone de horarios de atención. Por ese motivo no tiene turnos asociados.`
+        `El prestador ${sel.nombreCompleto || sel.nombre} tiene direcciones registradas pero no dispone de horarios de atención. Por ese motivo no tiene turnos asociados.`
       );
     } else if (!anyTurnos) {
       modal.mostrarAdvertencia(
         "Sin turnos en el periodo",
-        `El prestador ${
-          sel.nombreCompleto || sel.nombre
-        } no tiene turnos para la fecha seleccionada.`
+        `El prestador ${sel.nombreCompleto || sel.nombre} no tiene turnos para la fecha seleccionada.`
       );
     }
   }, [filtroPrestador, prestadores, turnos, currentDate]);
+
 
   const renderCalendar = () => {
     const resources = (prestadoresFiltrados || prestadores).map((p) => ({
@@ -294,6 +267,8 @@ const AgendaPage: React.FC = () => {
     const minTime = 6; // 6:00
     const maxTime = 22; // 22:00
 
+    
+    
     const CustomToolbar = (toolbarProps: any) => {
       const { label, view: toolbarView, onView } = toolbarProps;
 
@@ -312,10 +287,7 @@ const AgendaPage: React.FC = () => {
 
       const goPrev = () => {
         if (toolbarView === "day") {
-          setCurrentDate(
-            (prev) =>
-              new Date(prev.getFullYear(), prev.getMonth(), prev.getDate() - 1)
-          );
+          setCurrentDate((prev) => new Date(prev.getFullYear(), prev.getMonth(), prev.getDate() - 1));
         } else {
           // week
           setCurrentDate((prev) => {
@@ -326,10 +298,7 @@ const AgendaPage: React.FC = () => {
       };
       const goNext = () => {
         if (toolbarView === "day") {
-          setCurrentDate(
-            (prev) =>
-              new Date(prev.getFullYear(), prev.getMonth(), prev.getDate() + 1)
-          );
+          setCurrentDate((prev) => new Date(prev.getFullYear(), prev.getMonth(), prev.getDate() + 1));
         } else {
           // week
           setCurrentDate((prev) => {
@@ -340,14 +309,12 @@ const AgendaPage: React.FC = () => {
       };
 
       const goToday = () => {
-        if (toolbarView === "week")
-          setCurrentDate(startOfWeek(new Date(), { weekStartsOn: 1 }));
+        if (toolbarView === "week") setCurrentDate(startOfWeek(new Date(), { weekStartsOn: 1 }));
         else setCurrentDate(new Date());
       };
 
       const centerLabel = (() => {
-        if (toolbarView === "week")
-          return formatRange(startOfWeekDate, endOfWeekDate);
+        if (toolbarView === "week") return formatRange(startOfWeekDate, endOfWeekDate);
         if (toolbarView === "day")
           return new Date(currentDate).toLocaleDateString("es-ES", {
             weekday: "long",
@@ -360,28 +327,11 @@ const AgendaPage: React.FC = () => {
       return (
         <div className="rbc-custom-toolbar">
           <div className="rbc-toolbar-left" style={{ display: "flex" }}>
-            <button
-              className="rbc-btn small"
-              onClick={() => onView && onView("week")}
-            >
-              Semana
-            </button>
-            <button
-              className="rbc-btn small"
-              onClick={() => onView && onView("day")}
-            >
-              Día
-            </button>
+           <button className="rbc-btn small" onClick={() => onView && onView("week")}>Semana</button>
+            <button className="rbc-btn small" onClick={() => onView && onView("day")}>Día</button>
+
           </div>
-          <div
-            className="rbc-toolbar-center"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              justifyContent: "center",
-            }}
-          >
+          <div className="rbc-toolbar-center" style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center' }}>
             <button className="rbc-btn" onClick={goPrev} aria-label="Anterior">
               ‹
             </button>
@@ -392,13 +342,7 @@ const AgendaPage: React.FC = () => {
               onKeyDown={(e: any) => {
                 if (e.key === "Enter") goToday();
               }}
-              style={{
-                minWidth: 180,
-                textAlign: "center",
-                fontWeight: 600,
-                color: "#0b66d1",
-                cursor: "pointer",
-              }}
+              style={{ minWidth: 180, textAlign: "center", fontWeight: 600, color: "#0b66d1", cursor: "pointer" }}
             >
               {centerLabel}
             </div>
@@ -407,80 +351,38 @@ const AgendaPage: React.FC = () => {
             </button>
           </div>
           <div className="rbc-toolbar-right">
-            {/* Legend */}
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 12,
-                marginLeft: 12,
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <span
-                  style={{
-                    width: 14,
-                    height: 14,
-                    background: "#e9fbe9",
-                    border: "1px solid #9be79b",
-                    borderRadius: 3,
-                    display: "inline-block",
-                  }}
-                />
-                <small>Profesionales independientes</small>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <span
-                  style={{
-                    width: 14,
-                    height: 14,
-                    background: "#e6f7ff",
-                    border: "1px solid #9ad6ff",
-                    borderRadius: 3,
-                    display: "inline-block",
-                  }}
-                />
-                <small>Centros</small>
+              {/* Legend */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginLeft: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ width: 14, height: 14, background: '#e9fbe9', border: '1px solid #9be79b', borderRadius: 3, display: 'inline-block' }} />
+                  <small>Profesionales independientes</small>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ width: 14, height: 14, background: '#e6f7ff', border: '1px solid #9ad6ff', borderRadius: 3, display: 'inline-block' }} />
+                  <small>Centros</small>
+                </div>
               </div>
             </div>
-          </div>
         </div>
+        
       );
     };
 
     const showDetalleTurno = (prest?: any, turnoOrArr?: any) => {
-      const arr = Array.isArray(turnoOrArr)
-        ? turnoOrArr
-        : turnoOrArr
-        ? [turnoOrArr]
-        : [];
-      const turno =
-        !Array.isArray(turnoOrArr) && turnoOrArr ? turnoOrArr : undefined;
-      const p =
-        prest ||
-        (turno
-          ? prestadores.find((x) => String(x.id) === String(turno.prestadorId))
-          : undefined);
+      const arr = Array.isArray(turnoOrArr) ? turnoOrArr : turnoOrArr ? [turnoOrArr] : [];
+      const turno = !Array.isArray(turnoOrArr) && turnoOrArr ? turnoOrArr : undefined;
+      const p = prest || (turno ? prestadores.find((x) => String(x.id) === String(turno.prestadorId)) : undefined);
 
-      const addresses =
-        p && Array.isArray(p.direccion) && p.direccion.length > 0
-          ? p.direccion
-              .map((d: any) =>
-                `${d.calle || ""} ${d.numero || ""} ${d.localidad || ""}`.trim()
-              )
-              .filter(Boolean)
-              .join(" — ")
-          : "No registrada";
+      const addresses = p && Array.isArray(p.direccion) && p.direccion.length > 0
+        ? p.direccion.map((d: any) => `${d.calle || ''} ${d.numero || ''} ${d.localidad || ''}`.trim()).filter(Boolean).join(' — ')
+        : 'No registrada';
 
-      // ✅ Solo mostrar la especialidad del turno actual
-      const specs =
-        arr.length > 0
-          ? arr[0]?.especialidad?.nombre || arr[0]?.especialidad || "-"
-          : turno
-          ? turno.especialidad?.nombre || turno.especialidad || "-"
-          : "-";
+      const specs = p && Array.isArray(p.especialidades)
+        ? p.especialidades.map((s: any) => (s && s.nombre ? s.nombre : s)).filter(Boolean).join(', ')
+        : '-';
 
-      let rangeText = "-";
+      
+      let rangeText = '-';
       if (arr.length > 0) {
         let minStart = Infinity;
         let maxEnd = -Infinity;
@@ -490,54 +392,31 @@ const AgendaPage: React.FC = () => {
           minStart = Math.min(minStart, s);
           maxEnd = Math.max(maxEnd, s + dur);
         }
-        const fmt = (m: number) =>
-          `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(
-            m % 60
-          ).padStart(2, "0")}`;
+        const fmt = (m: number) => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
         rangeText = `${fmt(minStart)} - ${fmt(maxEnd)}`;
       } else if (turno) {
         const s = horaAMinutos(turno.hora);
         const dur = Number(turno.duracion || 30);
-        const fmt = (m: number) =>
-          `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(
-            m % 60
-          ).padStart(2, "0")}`;
+        const fmt = (m: number) => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
         rangeText = `${fmt(s)} - ${fmt(s + dur)}`;
       }
 
       modal.mostrarModal({
-        titulo: "Detalle de turno",
-        mensaje: p
-          ? p.nombreCompleto || `${p.nombre} ${p.apellido || ""}`
-          : "Turno",
-        tipo: "info",
+        titulo: 'Detalle de turno',
+        mensaje: p ? (p.nombreCompleto || `${p.nombre} ${p.apellido || ''}`) : 'Turno',
+        tipo: 'info',
         contenidoExtra: (
           <div>
             {turno && (
               <>
-                <p>
-                  <strong>Inicio:</strong>{" "}
-                  {new Date(`${turno.fecha}T${turno.hora}:00`).toLocaleString()}
-                </p>
-                <p>
-                  <strong>Duración:</strong>{" "}
-                  {Math.round(Number(turno.duracion || 30))} min
-                </p>
+                <p><strong>Inicio:</strong> {new Date(`${turno.fecha}T${turno.hora}:00`).toLocaleString()}</p>
+                <p><strong>Duración:</strong> {Math.round((Number(turno.duracion || 30)))} min</p>
               </>
             )}
-            <p>
-              <strong>Rango:</strong> {rangeText}
-            </p>
-            <p>
-              <strong>Turnos:</strong>{" "}
-              {arr.length > 0 ? arr.length : turno ? 1 : 0}
-            </p>
-            <p>
-              <strong>Dirección(es):</strong> {addresses}
-            </p>
-            <p>
-              <strong>Especialidad:</strong> {specs}
-            </p>
+            <p><strong>Rango:</strong> {rangeText}</p>
+            <p><strong>Turnos:</strong> {arr.length > 0 ? arr.length : (turno ? 1 : 0)}</p>
+            <p><strong>Dirección(es):</strong> {addresses}</p>
+            <p><strong>Especialidades:</strong> {specs}</p>
           </div>
         ),
         soloInformacion: true,
@@ -546,15 +425,11 @@ const AgendaPage: React.FC = () => {
 
     const isCentroPrestador = (p: any) => {
       if (!p) return false;
-
-      if (
-        Object.prototype.hasOwnProperty.call(p, "isProfesionalIndependiente")
-      ) {
+      
+      if (Object.prototype.hasOwnProperty.call(p, 'isProfesionalIndependiente')) {
         return !Boolean(p.isProfesionalIndependiente);
       }
-      if (
-        Object.prototype.hasOwnProperty.call(p, "esProfesionalIndependiente")
-      ) {
+      if (Object.prototype.hasOwnProperty.call(p, 'esProfesionalIndependiente')) {
         return !Boolean(p.esProfesionalIndependiente);
       }
       const tipo = p.tipoPrestacion || p.tipo || "";
@@ -575,46 +450,29 @@ const AgendaPage: React.FC = () => {
             <CustomToolbar onView={(v: any) => setView(v)} view={"day"} />
             <div className="day-cards-view">
               {(() => {
-                const dayKey = formatDateLocal(currentDate);
-                const presToShow = prestadoresFiltrados;
-                if (!presToShow || presToShow.length === 0)
-                  return <div className="muted">No hay prestadores</div>;
-
-                return presToShow.flatMap((p: any) => {
-                  // Obtener los turnos del prestador en el día actual
-                  const myTurnos = (turnos || [])
-                    .filter(
-                      (t: any) =>
-                        String(t.prestadorId) === String(p.id) &&
-                        t.fecha === dayKey
-                    )
-                    .sort(
-                      (a: any, b: any) =>
-                        horaAMinutos(a.hora) - horaAMinutos(b.hora)
-                    );
-
-                  // Agrupar por especialidad
-                  const groups: { [k: string]: any[] } = {};
-                  for (const t of myTurnos) {
-                    const key =
-                      t.especialidad?.nombre ||
-                      t.especialidad ||
-                      "sin-especialidad";
-                    groups[key] = groups[key] || [];
-                    groups[key].push(t);
-                  }
-
-                  // Renderizar una tarjeta por especialidad
-                  return Object.entries(groups).map(([esp, arr]) => {
+                  const dayKey = formatDateLocal(currentDate);
+                  const presToShow = prestadoresFiltrados;
+                  if (!presToShow || presToShow.length === 0)
+                    return <div className="muted">No hay prestadores</div>;
+                  return presToShow.map((p: any) => {
+                    const myTurnos = (turnos || [])
+                      .filter(
+                        (t: any) =>
+                          String(t.prestadorId) === String(p.id) &&
+                          t.fecha === dayKey
+                      )
+                      .sort(
+                        (a: any, b: any) =>
+                          horaAMinutos(a.hora) - horaAMinutos(b.hora)
+                      );
                     let minStart = Infinity;
                     let maxEnd = -Infinity;
-                    for (const t of arr) {
+                    for (const t of myTurnos) {
                       const s = horaAMinutos(t.hora);
                       const dur = Number(t.duracion || 30);
                       minStart = Math.min(minStart, s);
                       maxEnd = Math.max(maxEnd, s + dur);
                     }
-
                     const fmt = (m: number) =>
                       `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(
                         m % 60
@@ -623,10 +481,19 @@ const AgendaPage: React.FC = () => {
                       minStart === Infinity
                         ? "-"
                         : `${fmt(minStart)} - ${fmt(maxEnd)}`;
-
+                    const todayNameNorm = stripDiacritics(
+                      diasSemanaEsp[new Date(currentDate).getDay()]
+                    );
+                    const horariosForDay = (p.direccion || [])
+                      .flatMap((d: any) => d.horariosAtencion || [])
+                      .filter(
+                        (h: any) => stripDiacritics(h.dia) === todayNameNorm
+                      );
                     const durSet = Array.from(
                       new Set(
-                        arr.map((h: any) => parseDuracion(h.duracion || 30))
+                        horariosForDay.map((h: any) =>
+                          parseDuracion(h.duracionTurno || 30)
+                        )
                       )
                     );
                     const durText =
@@ -636,52 +503,27 @@ const AgendaPage: React.FC = () => {
                         ? "N/A"
                         : `${durSet.join(", ")} min`;
 
-                    const todayNameNorm = stripDiacritics(
-                      diasSemanaEsp[new Date(currentDate).getDay()]
-                    );
-                    const horariosForDay = (p.direccion || [])
-                      .flatMap((d: any) => d.horariosAtencion || [])
-                      .filter(
-                        (h: any) => stripDiacritics(h.dia) === todayNameNorm
-                      );
-
                     const hasHorarios = horariosForDay.length > 0;
-                    const noHorarioReason =
-                      !p.direccion || p.direccion.length === 0
-                        ? "Sin direcciones configuradas"
-                        : horariosForDay.length === 0
-                        ? "No tiene horarios para el día seleccionado"
-                        : "";
+                    const noHorarioReason = !p.direccion || p.direccion.length === 0
+                      ? "Sin direcciones configuradas"
+                      : horariosForDay.length === 0
+                      ? "No tiene horarios para el día seleccionado"
+                      : "";
 
                     return (
-                      <div className="prestador-card" key={`${p.id}-${esp}`}>
-                        <h4
-                          style={{
-                            color: "#0b8f4a",
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 8,
-                          }}
-                        >
-                          <span>
-                            {`${esp} - ${
-                              p.nombreCompleto || p.nombre || "Prestador"
-                            }`}
-                          </span>
+                      <div className="prestador-card" key={p.id}>
+                        <h4 style={{ color: "#0b8f4a", display: "flex", alignItems: "center", gap: 8 }}>
+                          <span>{p.nombreCompleto || p.nombre + " " + p.apellido}</span>
                           {!hasHorarios && (
-                            <span
-                              title={noHorarioReason}
-                              aria-label={noHorarioReason}
-                              style={{
-                                background: "#fff0f0",
-                                color: "#a00",
-                                padding: "2px 8px",
-                                borderRadius: 12,
-                                fontSize: 12,
-                                fontWeight: 600,
-                                cursor: noHorarioReason ? "help" : "default",
-                              }}
-                            >
+                            <span title={noHorarioReason} aria-label={noHorarioReason} style={{
+                              background: "#fff0f0",
+                              color: "#a00",
+                              padding: "2px 8px",
+                              borderRadius: 12,
+                              fontSize: 12,
+                              fontWeight: 600,
+                              cursor: noHorarioReason ? "help" : "default",
+                            }}>
                               Sin horarios
                             </span>
                           )}
@@ -699,14 +541,14 @@ const AgendaPage: React.FC = () => {
                               {rangeText}
                             </div>
                             <div style={{ fontSize: 13, color: "#333" }}>
-                              {durText} • {arr.length} turno
-                              {arr.length !== 1 ? "s" : ""}
+                              {durText} • {myTurnos.length} turno
+                              {myTurnos.length !== 1 ? "s" : ""}
                             </div>
                           </div>
                           <div style={{ display: "flex", gap: 8 }}>
                             <button
                               className="rbc-btn"
-                              onClick={() => showDetalleTurno(p, arr)}
+                              onClick={() => showDetalleTurno(p, myTurnos)}
                             >
                               Detalle
                             </button>
@@ -715,8 +557,8 @@ const AgendaPage: React.FC = () => {
                       </div>
                     );
                   });
-                });
-              })()}
+                })()
+              }
             </div>
           </div>
         ) : view === "week" ? (
@@ -736,19 +578,12 @@ const AgendaPage: React.FC = () => {
                   const dayTurnos = turnos.filter(
                     (t) =>
                       t.fecha === dayKey &&
-                      (!filtroPrestador ||
-                        String(t.prestadorId) === String(filtroPrestador)) &&
-                      (!filtroEspecialidad ||
-                        (
-                          prestadores.find(
-                            (p) => String(p.id) === String(t.prestadorId)
-                          )?.especialidades || []
-                        )
-                          .map((s: any) => s.nombre)
-                          .includes(filtroEspecialidad)) &&
+                      (!filtroPrestador || String(t.prestadorId) === String(filtroPrestador)) &&
+                      (!filtroEspecialidad || (
+                        prestadores.find((p) => String(p.id) === String(t.prestadorId))?.especialidades || []
+                      ).map((s: any) => s.nombre).includes(filtroEspecialidad)) &&
                       // respect centro/independiente filters
-                      (allowedPrestadorIds.size === 0 ||
-                        allowedPrestadorIds.has(String(t.prestadorId)))
+                      (allowedPrestadorIds.size === 0 || allowedPrestadorIds.has(String(t.prestadorId)))
                   );
                   const isToday = dayKey === todayKey;
                   return (
@@ -767,21 +602,14 @@ const AgendaPage: React.FC = () => {
                           (() => {
                             const groups: { [k: string]: any[] } = {};
                             for (const dt of dayTurnos) {
-                              const key = `${dt.prestadorId}-${
-                                dt.especialidad?.nombre || "sin-especialidad"
-                              }`;
+                              const key = String(dt.prestadorId);
                               groups[key] = groups[key] || [];
                               groups[key].push(dt);
                             }
-
                             return Object.entries(groups).map(([pid, arr]) => {
                               const prest = prestadores.find(
-                                (p) =>
-                                  String(p.id) === String(arr[0]?.prestadorId)
+                                (p) => String(p.id) === String(pid)
                               );
-                              console.log(prestadores);
-                              console.log(pid);
-                              console.log(groups);
                               let minStart = Infinity;
                               let maxEnd = -Infinity;
                               for (const t of arr) {
@@ -809,20 +637,13 @@ const AgendaPage: React.FC = () => {
                                     background: bg,
                                     borderColor: border,
                                   }}
-                                  onClick={() => showDetalleTurno(prest, arr)}
+                                    onClick={() => showDetalleTurno(prest, arr)}
                                 >
                                   <div className="chip-time">{rangeText}</div>
                                   <div className="chip-title">
-                                    {`${
-                                      arr[0]?.especialidad?.nombre ||
-                                      arr[0]?.especialidad ||
-                                      "Sin especialidad"
-                                    } - ${
-                                      prest?.nombre ||
-                                      prest?.nombreCompleto ||
-                                      arr[0]?.centroNombre ||
-                                      "Prestador"
-                                    }`}
+                                    {prest
+                                      ? prest.nombre || prest.nombreCompleto
+                                      : "Prestador"}
                                   </div>
                                 </div>
                               );
@@ -870,19 +691,11 @@ const AgendaPage: React.FC = () => {
                       const dayTurnos = turnos.filter(
                         (t) =>
                           t.fecha === dayKey &&
-                          (!filtroPrestador ||
-                            String(t.prestadorId) ===
-                              String(filtroPrestador)) &&
-                          (!filtroEspecialidad ||
-                            (
-                              prestadores.find(
-                                (p) => String(p.id) === String(t.prestadorId)
-                              )?.especialidades || []
-                            )
-                              .map((s: any) => s.nombre)
-                              .includes(filtroEspecialidad)) &&
-                          (allowedPrestadorIds.size === 0 ||
-                            allowedPrestadorIds.has(String(t.prestadorId)))
+                          (!filtroPrestador || String(t.prestadorId) === String(filtroPrestador)) &&
+                          (!filtroEspecialidad || (
+                            prestadores.find((p) => String(p.id) === String(t.prestadorId))?.especialidades || []
+                          ).map((s: any) => s.nombre).includes(filtroEspecialidad)) &&
+                          (allowedPrestadorIds.size === 0 || allowedPrestadorIds.has(String(t.prestadorId)))
                       );
                       const isToday = dayKey === formatDateLocal(new Date());
                       return (
@@ -950,9 +763,7 @@ const AgendaPage: React.FC = () => {
                                           background: bg,
                                           borderColor: border,
                                         }}
-                                        onClick={() =>
-                                          showDetalleTurno(prest, arr)
-                                        }
+                                        onClick={() => showDetalleTurno(prest, arr)}
                                       >
                                         {rangeText} -{" "}
                                         {prest
@@ -984,7 +795,7 @@ const AgendaPage: React.FC = () => {
             </div>
           </div>
         ) : (
-          <RBCalendar
+            <RBCalendar
             localizer={localizer}
             events={events}
             resources={resources}
@@ -1000,14 +811,8 @@ const AgendaPage: React.FC = () => {
               showDetalleTurno(undefined, evt.extendedProps);
             }}
             eventPropGetter={(event: any) => {
-              const pid =
-                event.extendedProps?.prestadorId ??
-                (event.resourceId && String(event.resourceId).startsWith("p-")
-                  ? String(event.resourceId).slice(2)
-                  : undefined);
-              const prest = prestadores.find(
-                (p) => String(p.id) === String(pid)
-              );
+              const pid = event.extendedProps?.prestadorId ?? (event.resourceId && String(event.resourceId).startsWith('p-') ? String(event.resourceId).slice(2) : undefined);
+              const prest = prestadores.find((p) => String(p.id) === String(pid));
               const colors = getPrestadorTagColors(prest);
               return {
                 style: {
@@ -1015,14 +820,15 @@ const AgendaPage: React.FC = () => {
                   border: `1px solid ${colors.border}`,
                   color: colors.text,
                   borderRadius: 12,
-                  padding: "2px 8px",
-                },
+                  padding: '2px 8px'
+                }
               };
             }}
             min={new Date(1970, 1, 1, minTime, 0, 0)}
             max={new Date(1970, 1, 1, maxTime, 0, 0)}
             components={{ toolbar: CustomToolbar }}
-            onRangeChange={() => {}}
+            onRangeChange={() => {
+            }}
             toolbar={true}
           />
         )}
@@ -1033,10 +839,10 @@ const AgendaPage: React.FC = () => {
   return (
     <>
       <div className="admin-page">
-        <Header
-          title="Panel de Administración"
-          subtitle="Medicina Prepaga - Administración de agenda de turnos"
-        />
+         <Header
+           title="Panel de Administración" 
+           subtitle="Medicina Prepaga - Administración de agenda de turnos"
+          />
         <div className="admin-content">
           <SubHeader
             title="Agenda"
@@ -1061,15 +867,15 @@ const AgendaPage: React.FC = () => {
             >
               <label>Especialidad:</label>
               <Select
-                value={filtroEspecialidad}
-                onChange={(value) => setFiltroEspecialidad(value)}
-                options={[
-                  { value: "", label: "Todos" },
-                  ...especialidades.map((especialidad) => ({
-                    value: especialidad,
-                    label: especialidad,
-                  })),
-                ]}
+                        value={filtroEspecialidad}
+                        onChange={(value) => setFiltroEspecialidad(value)}
+                        options={[
+                          { value: "", label: "Todos" },
+                          ...especialidades.map((especialidad) => ({
+                            value: especialidad,
+                            label: especialidad,
+                          })),
+                        ]}
               ></Select>
             </div>
             <div
@@ -1081,29 +887,22 @@ const AgendaPage: React.FC = () => {
             >
               <label>Prestador:</label>
               <Select
-                value={filtroPrestador}
-                onChange={(value) => setFiltroPrestador(value)}
-                options={[
-                  { value: "", label: "Todos" },
-                  ...prestadores.map((prestador) => ({
-                    value: prestador.id,
-                    label:
-                      prestador.nombreCompleto ||
-                      prestador.nombre + " " + (prestador.apellido || ""),
-                  })),
-                ]}
+                        value={filtroPrestador}
+                        onChange={(value) => setFiltroPrestador(value)}
+                        options={[
+                          { value: "", label: "Todos" },
+                          ...prestadores.map((prestador) => ({
+                            value: prestador.id,
+                            label:
+                              prestador.nombreCompleto ||
+                              prestador.nombre + " " + (prestador.apellido || ""),
+                          })),
+                        ]}
               ></Select>
             </div>
 
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <label
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                  fontSize: 13,
-                }}
-              >
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
                 <input
                   type="checkbox"
                   checked={onlyCentros}
@@ -1111,14 +910,7 @@ const AgendaPage: React.FC = () => {
                 />
                 Solo centros médicos
               </label>
-              <label
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                  fontSize: 13,
-                }}
-              >
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
                 <input
                   type="checkbox"
                   checked={onlyIndependientes}
@@ -1126,23 +918,26 @@ const AgendaPage: React.FC = () => {
                 />
                 Solo profesionales independientes
               </label>
+
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <button
-                className="rbc-btn small"
-                onClick={() => {
-                  setFiltroEspecialidad("");
-                  setFiltroPrestador("");
-                  setOnlyCentros(false);
-                  setOnlyIndependientes(false);
-                }}
-              >
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <button
+                  className="rbc-btn small"
+                  onClick={() => {
+                    setFiltroEspecialidad("");
+                    setFiltroPrestador("");
+                    setOnlyCentros(false);
+                    setOnlyIndependientes(false);
+                  }}
+                >
                 Eliminar filtros
               </button>
             </div>
           </div>
 
-          <div>{renderCalendar()}</div>
+          <div>
+            {renderCalendar()}
+          </div>
         </div>
       </div>
 
