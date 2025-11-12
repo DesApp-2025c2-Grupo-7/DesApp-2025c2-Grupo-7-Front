@@ -52,8 +52,11 @@ const GrupoFamiliarAccordion: React.FC<GrupoFamiliarAccordionProps> = ({
   };
 
   const getEstadoText = (miembro: Afiliado) => {
-    if (!miembro.fechaBaja) return 'Activo';
     const today = new Date().toISOString().split('T')[0];
+    if (miembro.fechaAlta && miembro.fechaAlta > today) {
+      return `Activo a partir de ${miembro.fechaAlta}`;
+    } 
+    if (!miembro.fechaBaja) return 'Activo';
     if (miembro.fechaBaja > today) {
       return `Activo hasta ${miembro.fechaBaja}`;
     }

@@ -18,7 +18,7 @@ export interface IntegranteData {
     numero: string;
     localidad: string;
     codigoPostal: string;
-    depto: string | null;
+    depto?: string | null;
   }>;
   situacionesTerapeuticas: Array<{
     diagnostico: string;
@@ -71,24 +71,55 @@ class PersonasService {
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      // Try to extract server error message
+      let details = '';
+      try {
+        const ct = response.headers.get('content-type') || '';
+        if (ct.includes('application/json')) {
+          const body = await response.json();
+          details = JSON.stringify(body);
+        } else {
+          details = await response.text();
+        }
+      } catch (e) {
+        details = `Could not parse error body: ${(e as Error).message}`;
+      }
+      throw new Error(`HTTP error ${response.status}: ${details}`);
     }
 
     return response.json();
   }
 
   // Crear un nuevo integrante en el grupo familiar
-  async createIntegrante(afiliadoId: number, integranteData: IntegranteData) {
-    const response = await fetch(getApiUrl(`/personas/${afiliadoId}/integrantes`), {
+  async createIntegrante(titularCredencial: string, integranteData: IntegranteData) {
+    const payload = {
+      ...integranteData,
+      tipoPersona: 'INTEGRANTE',
+      grupoFamiliarId: titularCredencial,
+    } as any;
+
+    const response = await fetch(getApiUrl(`/personas`), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(integranteData),
+      body: JSON.stringify(payload),
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      let details = '';
+      try {
+        const ct = response.headers.get('content-type') || '';
+        if (ct.includes('application/json')) {
+          const body = await response.json();
+          details = JSON.stringify(body);
+        } else {
+          details = await response.text();
+        }
+      } catch (e) {
+        details = `Could not parse error body: ${(e as Error).message}`;
+      }
+      throw new Error(`HTTP error ${response.status}: ${details}`);
     }
 
     return response.json();

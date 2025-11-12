@@ -6,10 +6,10 @@ import ModalConfirmacion from "../genericos/ModalConfirmacion";
 import Modal from "../genericos/Modal";
 import GrupoFamiliarAccordion from "./GrupoFamiliarAccordion";
 import CardDireccionesAfiliados from "./CardDireccionesAfiliados";
+import SituacionesTerapeuticasInput from "./SituacionesTerapeuticasInput";
 import { AlertTriangle, UserX, UserPlus, Plus, Trash2, Edit2, PenOff } from "lucide-react";
 import { useModal } from "../../hooks/useModal";
 import { personasService } from "../../services/personasService";
-import { calcularProximoSufijo } from "../../utils/calcularSufijo";
 import "./ListaAfiliados.css"
 import type { Afiliado, GrupoFamiliar, Direccion } from "../../types/afiliados";
 
@@ -33,30 +33,42 @@ interface AfiliadoFormProps {
   onCancelarEdicion?: () => void; // Callback para cancelar edición
   onActivarEdicion?: () => void; // Callback para activar modo edición
   onIntegranteCreado?: (nuevoIntegrante: any) => void; // Callback para manejar integrante creado
+  externalOpenAgregarIntegrante?: boolean;
+  onExternalOpenHandled?: () => void;
 }
 
 const AfiliadosForm: React.FC<AfiliadoFormProps> = ({ 
-    afiliado, 
-    afiliadoTitular, 
-    grupoFamiliar, 
-    miembrosGrupo, 
-    onDarDeBaja,
-    modoEdicion = false,
-    onGuardarCambios,
-    onCancelarEdicion,
-    onActivarEdicion,
-    onIntegranteCreado
+  afiliado, 
+  afiliadoTitular, 
+  grupoFamiliar, 
+  miembrosGrupo, 
+  onDarDeBaja,
+  modoEdicion = false,
+  onGuardarCambios,
+  onCancelarEdicion,
+  onActivarEdicion,
+  onIntegranteCreado,
+  externalOpenAgregarIntegrante,
+  onExternalOpenHandled
 }) => {
     const [mostrarModalBaja, setMostrarModalBaja] = useState(false);
     const [mostrarModalAgregarIntegrante, setMostrarModalAgregarIntegrante] = useState(false);
     const [situacionesTerapeuticas, setSituacionesTerapeuticas] = useState<Array<{diagnostico: string, fechaInicio: string, fechaFin: string}>>([]);
     const [direcciones, setDirecciones] = useState<Direccion[]>(afiliado?.direccion || []);
-  // Estados específicos del modal de Agregar Integrante para múltiples contactos/direcciones
   const [modalEmails, setModalEmails] = useState<string[]>(['']);
   const [modalTelefonos, setModalTelefonos] = useState<string[]>(['']);
   const [modalDirecciones, setModalDirecciones] = useState<NewDireccion[]>([
     { calle: '', numero: '', localidad: '', codigoPostal: '', depto: '' }
   ]);
+    const [modalFechaAlta, setModalFechaAlta] = useState<string>(new Date().toISOString().split('T')[0]);
+    // Lista de diagnósticos (actualmente hardcodeada en frontend)
+    const [listaSituacionesTerapeuticas] = useState([
+      'Diabetes',
+      'Hipertension',
+      'Alcoholismo',
+      'Obesidad',
+      'Asma',
+    ]);
     
     // Hook para el modal
     const modal = useModal();
@@ -105,12 +117,14 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
     // Escuchar evento personalizado del header
     useEffect(() => {
         const handleAbrirModal = () => {
-      if (esTitular()) {
+      // Abrir el modal si estamos viendo al titular OR si se pasó `afiliadoTitular` (estamos viendo un integrante)
+      if (esTitular() || afiliadoTitular) {
         // inicializar valores del modal antes de abrir
         setModalEmails(['']);
         setModalTelefonos(['']);
-                setModalDirecciones([{ calle: '', numero: '', localidad: '', codigoPostal: '', depto: '' }]);
+        setModalDirecciones([{ calle: '', numero: '', localidad: '', codigoPostal: '', depto: '' }]);
         setSituacionesTerapeuticas([{ diagnostico: '', fechaInicio: '', fechaFin: '' }]);
+        setModalFechaAlta(new Date().toISOString().split('T')[0]);
         setMostrarModalAgregarIntegrante(true);
       }
         };
@@ -121,11 +135,25 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
         };
     }, []);
 
-    const isActive = () => {
-        if (!afiliado?.fechaBaja) return true;
-        const today = new Date().toISOString().split('T')[0];
-        return afiliado.fechaBaja > today;
-    };
+    // Si el padre solicita abrir el modal mediante la prop externa, abrirlo aquí
+    useEffect(() => {
+      if (externalOpenAgregarIntegrante) {
+        // Abrir si el usuario actual es titular, o si estamos viendo un integrante pero tenemos al titular en props
+        if (esTitular() || afiliadoTitular) {
+          handleAbrirModalAgregarIntegrante();
+        }
+        onExternalOpenHandled?.();
+      }
+    }, [externalOpenAgregarIntegrante]);
+
+  const isActive = () => {
+    const today = new Date().toISOString().split('T')[0];
+    // Si la fecha de alta está en el futuro, aún no está activo
+    if (afiliado?.fechaAlta && afiliado.fechaAlta > today) return false;
+    // Si no tiene fecha de baja, está activo
+    if (!afiliado?.fechaBaja) return true;
+    return afiliado.fechaBaja > today;
+  };
 
     const esTitular = () => {
         // El backend usa tipoPersona para distinguir: AFILIADO = titular, INTEGRANTE = integrante
@@ -195,7 +223,8 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
     setModalTelefonos(['']);
     setModalDirecciones([{ calle: '', numero: '', localidad: '', codigoPostal: '', depto: '' }]);
     setSituacionesTerapeuticas([{ diagnostico: '', fechaInicio: '', fechaFin: '' }]);
-    setMostrarModalAgregarIntegrante(true);
+      setModalFechaAlta(new Date().toISOString().split('T')[0]);
+      setMostrarModalAgregarIntegrante(true);
     };
 
   const handleCerrarModalAgregarIntegrante = () => {
@@ -220,6 +249,7 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
     setModalEmails(['']);
     setModalTelefonos(['']);
     setModalDirecciones([{ calle: '', numero: '', localidad: '', codigoPostal: '', depto: '' }]);
+    setModalFechaAlta(new Date().toISOString().split('T')[0]);
   };
 
     const validarFormularioIntegrante = (): { esValido: boolean; errores: string[] } => {
@@ -251,34 +281,42 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
           if (!(dir.localidad || '').trim()) errores.push('Localidad es obligatoria');
         }
 
-        if (!getInputValue('fechaAlta')) errores.push('Fecha de alta es obligatoria');
+  // Use modalFechaAlta state (controlled) instead of querying the DOM for more reliable value
+  if (!modalFechaAlta) errores.push('Fecha de alta es obligatoria');
 
         // Validar fechas del sistema
-        const fechaAlta = getInputValue('fechaAlta');
-        const fechaBaja = getInputValue('fechaBaja');
-        const fechaNacimiento = getInputValue('fechaNacimiento');
+  // Use the controlled modal state for fechaAlta
+  const fechaAlta = modalFechaAlta;
+  const fechaNacimiento = getInputValue('fechaNacimiento');
 
         if (fechaNacimiento && fechaAlta && fechaNacimiento > fechaAlta) {
             errores.push('Fecha de alta no puede ser anterior a la fecha de nacimiento');
         }
 
-        if (fechaBaja && fechaAlta && fechaBaja < fechaAlta) {
-            errores.push('Fecha de baja no puede ser anterior a la fecha de alta');
-        }
+    // Las altas/bajas diferidas las maneja el backend; permitir cualquier fecha aquí
 
-        // Validar situaciones terapéuticas (si existen, deben estar completas)
-        situacionesTerapeuticas.forEach((situacion, index) => {
-            if (!situacion.diagnostico.trim()) {
-                errores.push(`Diagnóstico de la situación ${index + 1} es obligatorio`);
-            }
-            if (!situacion.fechaInicio.trim()) {
-                errores.push(`Fecha de inicio de la situación ${index + 1} es obligatoria`);
-            }
-            // Validar que fecha fin no sea anterior a fecha inicio
-            if (situacion.fechaFin && situacion.fechaInicio && situacion.fechaFin < situacion.fechaInicio) {
-                errores.push(`Fecha de fin no puede ser anterior a fecha de inicio en situación ${index + 1}`);
-            }
-        });
+    // Validar situaciones terapéuticas (si existen):
+    // - Ignorar filas totalmente vacías (considerarlas no cargadas)
+    // - Si el usuario completó el diagnóstico, exigir fecha de inicio
+    // - Validar que fechaFin no sea anterior a fechaInicio cuando ambas están presentes
+    situacionesTerapeuticas.forEach((situacion, index) => {
+      const dx = situacion.diagnostico ? situacion.diagnostico.trim() : '';
+      const fi = situacion.fechaInicio ? situacion.fechaInicio.trim() : '';
+      const ff = situacion.fechaFin ? situacion.fechaFin.trim() : '';
+
+      // Si la fila está totalmente vacía, considerarla no cargada y seguir
+      if (!dx && !fi && !ff) return;
+
+      // Si el usuario puso diagnóstico, entonces la fecha de inicio es obligatoria
+      if (dx && !fi) {
+        errores.push(`Fecha de inicio de la situación ${index + 1} es obligatoria`);
+      }
+
+      // Si fecha fin y fecha inicio están presentes, validar orden
+      if (ff && fi && ff < fi) {
+        errores.push(`Fecha de fin no puede ser anterior a fecha de inicio en situación ${index + 1}`);
+      }
+    });
 
         // Validación dinámica: si en el modal hay labels con '*' considerar esos campos obligatorios
         try {
@@ -289,15 +327,22 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
             if (label.textContent.includes('*')) {
               // buscar input/select/textarea asociado dentro del mismo contenedor
               let inputEl: any = null;
+              // Preferir el 'for' si está presente
+              const htmlFor = label.getAttribute('for');
+              if (htmlFor) {
+                inputEl = document.getElementById(htmlFor) as (HTMLInputElement|HTMLSelectElement|HTMLTextAreaElement)|null;
+              }
+
               const container = label.parentElement;
-              if (container) {
+              if (!inputEl && container) {
                 inputEl = container.querySelector('input[name], select[name], textarea[name]') as (HTMLInputElement|HTMLSelectElement|HTMLTextAreaElement)|null;
               }
               if (!inputEl) {
                 const next = label.nextElementSibling as HTMLElement | null;
                 if (next) {
+                  // si el siguiente elemento contiene el input/select
                   inputEl = next.querySelector('input[name], select[name], textarea[name]') as (HTMLInputElement|HTMLSelectElement|HTMLTextAreaElement)|null;
-                  if (!inputEl && (next as HTMLInputElement).tagName && ((next as HTMLInputElement).tagName.toLowerCase() === 'input' || (next as HTMLSelectElement).tagName.toLowerCase() === 'select')) {
+                  if (!inputEl && (next as HTMLInputElement).tagName && ((next as HTMLInputElement).tagName.toLowerCase() === 'input' || (next as HTMLSelectElement).tagName.toLowerCase() === 'select' || (next as HTMLTextAreaElement).tagName.toLowerCase() === 'textarea')) {
                     inputEl = next as any;
                   }
                 }
@@ -318,7 +363,9 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
           // ignore DOM-related errors in non-browser environments
         }
 
-        return { esValido: errores.length === 0, errores };
+  // Dedupe final de errores para evitar mensajes repetidos
+  const uniqueErrores = Array.from(new Set(errores));
+  return { esValido: uniqueErrores.length === 0, errores: uniqueErrores };
     };
 
     const handleConfirmarAgregarIntegrante = async () => {
@@ -339,8 +386,6 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
             return input?.value || '';
         };
         
-        // Calcular el próximo sufijo para mostrarlo en la confirmación
-        const proximoSufijo = calcularProximoSufijo(miembrosGrupo);
       // Determinar titular real (si se pasó por props) y crear contenido extra con los datos del integrante
       const titular = afiliadoTitular || afiliado;
 
@@ -361,14 +406,11 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
           </div>
 
           <div style={{ marginBottom: 8 }}>
-            <strong>Fecha de alta (propuesta):</strong>
-            <div>{getInputValue('fechaAlta') || '—'}</div>
+            <strong>Fecha de alta:</strong>
+            <div>{modalFechaAlta || '—'}</div>
           </div>
 
-          <div>
-            <strong>Sufijo asignado:</strong>
-            <div>{proximoSufijo}</div>
-          </div>
+          {/* El backend asigna credencial y sufijo automáticamente; no mostrar ni calcular desde frontend */}
         </div>
       );
 
@@ -395,10 +437,6 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
 
   // Crear el integrante en el backend
         try {
-            // Calcular el próximo sufijo disponible
-            const proximoSufijo = calcularProximoSufijo(miembrosGrupo);
-            console.log('Próximo sufijo calculado para el nuevo integrante:', proximoSufijo);
-            console.log('Miembros actuales del grupo:', miembrosGrupo.map(m => ({id: m.id, sufijo: m.sufijo, nombre: m.nombre})));
 
       const integranteData = {
         nombre: getInputValue('nombre'),
@@ -409,23 +447,26 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
         telefono: modalTelefonos.filter(t => t.trim() !== ''),
         email: modalEmails.filter(e => e.trim() !== ''),
         parentesco: getInputValue('parentesco') || 'Integrante',
-        fechaAlta: getInputValue('fechaAlta'),
+  // Use controlled modalFechaAlta to ensure the selected date is sent
+  fechaAlta: modalFechaAlta,
         fechaBaja: getInputValue('fechaBaja') || null,
-        sufijo: proximoSufijo,
         direccion: modalDirecciones
           .filter(d => (d.calle || '').trim() !== '' || (d.numero || '').trim() !== '' || (d.localidad || '').trim() !== '')
-          .map(d => ({ calle: d.calle || '', numero: d.numero || '', localidad: d.localidad || '', codigoPostal: String(d.codigoPostal || ''), depto: d.depto && d.depto.trim() !== '' ? d.depto : null })),
-        situacionesTerapeuticas: situacionesTerapeuticas.filter(st => 
-          st.diagnostico.trim() !== '' || st.fechaInicio.trim() !== ''
-        )
+          .map(d => ({ calle: d.calle || '', numero: d.numero || '', localidad: d.localidad || '', codigoPostal: String(d.codigoPostal || '') })),
+            situacionesTerapeuticas: situacionesTerapeuticas
+              // Considerar una situación como cargada sólo si se completó el diagnóstico.
+              .filter(st => st.diagnostico.trim() !== '')
+              .map(st => ({ ...st, fechaFin: (st.fechaFin || '').trim() === '' ? null : st.fechaFin })),
+            // No enviar 'sufijo' desde el frontend: el backend asigna credencial y sufijo automáticamente
       };
 
-            const idTitular = afiliadoTitular?.id || afiliado?.id;
-            if (!idTitular) {
-                throw new Error('ID del titular no disponible');
-            }
+      const titularCredencial = afiliadoTitular?.credencial || afiliado?.credencial;
+      if (!titularCredencial) {
+        throw new Error('Credencial del titular no disponible');
+      }
 
-        const nuevoIntegrante = await personasService.createIntegrante(idTitular, integranteData);
+  console.log('Payload crear integrante:', JSON.stringify(integranteData, null, 2));
+  const nuevoIntegrante = await personasService.createIntegrante(titularCredencial, integranteData);
         console.log('Integrante creado exitosamente:', nuevoIntegrante);
 
         if (onIntegranteCreado) {
@@ -673,39 +714,12 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
         }
     };
 
-    const getEstadoText = () => {
-        if (!afiliado?.fechaBaja) return 'Activo';
-        const today = new Date().toISOString().split('T')[0];
-        if (afiliado.fechaBaja > today) {
-            return `Activo hasta ${afiliado.fechaBaja}`;
-        }
-        return 'Inactivo';
-    };
 
   // Use the real titular (passed via props) when showing modal info; fallback to current afiliado
   const titularParaModal = afiliadoTitular || afiliado;
 
   return (
     <>
-          <div className="afiliado-header">
-            <div className="afiliado-info">
-              {!esTitular() && afiliadoTitular && (
-                <p className="grupo-familiar-info">
-                  Integrante del grupo familiar de <strong>{afiliadoTitular.nombre} {afiliadoTitular.apellido}</strong>
-                </p>
-              )}
-              {esTitular() && (
-                <p className="grupo-familiar-info">
-                  Titular del grupo familiar de <strong>{afiliado?.nombre} {afiliado?.apellido}</strong>
-                </p>
-              )}
-              <h2>{afiliado?.nombre} {afiliado?.apellido}</h2>
-              <span className={`estado-badge ${isActive() ? 'activo' : 'inactivo'}`}>
-                {getEstadoText()}
-              </span>
-            </div>
-          </div>
-
           <div className={`afiliado-form ${modoEdicion ? 'modo-edicion' : ''}`}>
             {/* Campos no editables */}
             <div className={`form-row ${getFieldClassName(true)}`}>
@@ -1154,26 +1168,26 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
                           <div className="form-row-double">
                             <div className="form-row-double-item-left">
                               <label>Calle *</label>
-                              <Input type="text" value={d.calle} onChange={(v: string) => setModalDirecciones(prev => prev.map((x,i)=> i===idx? {...x, calle: v} : x))} placeholder="Av. Corrientes" />
+                              <Input type="text" name={`calle-${idx}`} value={d.calle} onChange={(v: string) => setModalDirecciones(prev => prev.map((x,i)=> i===idx? {...x, calle: v} : x))} placeholder="Av. Corrientes" />
                             </div>
                             <div className="form-row-double-item-right">
                               <label>Número *</label>
-                              <Input type="text" value={d.numero} onChange={(v: string) => setModalDirecciones(prev => prev.map((x,i)=> i===idx? {...x, numero: v} : x))} placeholder="1234" />
+                              <Input type="text" name={`numero-${idx}`} value={d.numero} onChange={(v: string) => setModalDirecciones(prev => prev.map((x,i)=> i===idx? {...x, numero: v} : x))} placeholder="1234" />
                             </div>
                           </div>
 
                           <div className="form-row-triple">
                             <div className="form-row-triple-item">
                               <label>Departamento</label>
-                              <Input type="text" value={d.depto ?? ''} onChange={(v: string) => setModalDirecciones(prev => prev.map((x,i)=> i===idx? {...x, depto: v} : x))} placeholder="1A" />
+                              <Input type="text" name={`depto-${idx}`} value={d.depto ?? ''} onChange={(v: string) => setModalDirecciones(prev => prev.map((x,i)=> i===idx? {...x, depto: v} : x))} placeholder="1A" />
                             </div>
                             <div className="form-row-triple-item">
                               <label>Código Postal *</label>
-                              <Input type="text" value={d.codigoPostal ?? ''} onChange={(v: string) => setModalDirecciones(prev => prev.map((x,i)=> i===idx? {...x, codigoPostal: v} : x))} placeholder="1043" />
+                              <Input type="text" name={`codigoPostal-${idx}`} value={d.codigoPostal ?? ''} onChange={(v: string) => setModalDirecciones(prev => prev.map((x,i)=> i===idx? {...x, codigoPostal: v} : x))} placeholder="1043" />
                             </div>
                             <div className="form-row-triple-item">
                               <label>Localidad *</label>
-                              <Input type="text" value={d.localidad} onChange={(v: string) => setModalDirecciones(prev => prev.map((x,i)=> i===idx? {...x, localidad: v} : x))} placeholder="CABA" />
+                              <Input type="text" name={`localidad-${idx}`} value={d.localidad} onChange={(v: string) => setModalDirecciones(prev => prev.map((x,i)=> i===idx? {...x, localidad: v} : x))} placeholder="CABA" />
                             </div>
                           </div>
 
@@ -1201,11 +1215,12 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
                     <div className="form-row-double">
                       <div className="form-row-double-item-left">
                         <label>Fecha de Alta del Sistema *</label>
-                        <Input 
-                          type="date" 
-                          name="fechaAlta" 
-                          required 
-                          value={new Date().toISOString().split('T')[0]}
+                        <Input
+                          type="date"
+                          name="fechaAlta"
+                          required
+                          value={modalFechaAlta}
+                          onChange={(v: string) => setModalFechaAlta(v)}
                         />
                         <small className="form-help">Fecha en que se registra en el sistema</small>
                       </div>
@@ -1222,7 +1237,7 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
 
                     <div className="form-note">
                       <small>
-                        La fecha de alta se establece automáticamente a la fecha de hoy. 
+                        La fecha de alta se propone con la fecha de hoy, pero puede modificarse si necesita una alta diferida.
                       </small>
                     </div>
                   </div>
@@ -1265,35 +1280,12 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
                             </div>
                             
                             <div className="form-row">
-                              <label>Diagnóstico *</label>
-                              <Input 
-                                type="text" 
-                                value={situacion.diagnostico}
-                                onChange={(value) => actualizarSituacionTerapeutica(index, 'diagnostico', value)}
-                                placeholder="Descripción del diagnóstico"
-                                required
+                              <label>Diagnóstico</label>
+                              <SituacionesTerapeuticasInput
+                                value={situacion}
+                                onChange={(field, value) => actualizarSituacionTerapeutica(index, field as any, value)}
+                                listaSituacionesTerapeuticas={listaSituacionesTerapeuticas}
                               />
-                            </div>
-                            
-                            <div className="form-row-double">
-                              <div className="form-row-double-item-left">
-                                <label>Fecha de Inicio *</label>
-                                <Input 
-                                  type="date" 
-                                  value={situacion.fechaInicio}
-                                  onChange={(value) => actualizarSituacionTerapeutica(index, 'fechaInicio', value)}
-                                  required
-                                />
-                              </div>
-                              <div className="form-row-double-item-right">
-                                <label>Fecha de Fin (opcional)</label>
-                                <Input 
-                                  type="date" 
-                                  value={situacion.fechaFin}
-                                  onChange={(value) => actualizarSituacionTerapeutica(index, 'fechaFin', value)}
-                                  placeholder="Dejar vacío si está activa"
-                                />
-                              </div>
                             </div>
                           </div>
                         ))}

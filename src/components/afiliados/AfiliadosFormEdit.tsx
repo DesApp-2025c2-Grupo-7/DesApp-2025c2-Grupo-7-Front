@@ -18,8 +18,6 @@ type SituacionTerapeutica = {
 };
 
 type FormDataType = {
-  credencial: string;
-  sufijo: string;
   tipoDocumento: string;
   numeroDocumento: string;
   nombre: string;
@@ -48,8 +46,6 @@ export default function AfiliadosFormEdit() {
   const [isLoading, setIsLoading] = useState(false);
 
   const [formData, setFormData] = useState<FormDataType>({
-    credencial: "000000", // Sin sufijo inicial
-    sufijo: "00", // Titular siempre es 00
     tipoDocumento: "DNI", // Valor predeterminado
     numeroDocumento: "",
     nombre: "",
@@ -125,8 +121,7 @@ export default function AfiliadosFormEdit() {
     const errores: string[] = [];
 
     // Validar campos obligatorios
-    if (!formData.credencial.trim())
-      errores.push("La credencial es obligatoria");
+    // La credencial y sufijo se asignan automáticamente en el backend; no validar aquí
     if (!formData.nombre.trim()) errores.push("El nombre es obligatorio");
     if (!formData.apellido.trim()) errores.push("El apellido es obligatorio");
     if (!formData.numeroDocumento.trim())
@@ -220,8 +215,7 @@ export default function AfiliadosFormEdit() {
     try {
       // Preparar datos para el backend
       const datosAfiliado = {
-        credencial: formData.credencial,
-        sufijo: formData.sufijo,
+        // No enviar credencial/sufijo: el backend los genera automáticamente
         tipoPersona: "AFILIADO", // Titular
         tipoDocumento: formData.tipoDocumento,
         numeroDocumento: formData.numeroDocumento,
@@ -233,7 +227,10 @@ export default function AfiliadosFormEdit() {
         parentesco: "Titular",
         fechaAlta: formData.fechaAlta,
         fechaBaja: formData.fechaBaja || null,
-        direccion: formData.direccion.filter((dir) => dir.calle.trim() !== ""),
+        // Omitir el campo 'depto' en el payload porque la entidad de la DB no lo contiene
+        direccion: formData.direccion
+          .filter((dir) => dir.calle.trim() !== "")
+          .map((dir) => ({ calle: dir.calle, numero: dir.numero, localidad: dir.localidad, codigoPostal: dir.codigoPostal })),
         situacionesTerapeuticas: formData.situacionesTerapeuticas
           .filter(
             (st) => st.diagnostico.trim() !== "" && st.fechaInicio.trim() !== ""
@@ -244,20 +241,16 @@ export default function AfiliadosFormEdit() {
           })),
         // planMedico va en la raíz del DTO (el backend lo lee desde dto.planMedico)
         planMedico: formData.planMedico,
-        // Datos del grupo familiar opcionales (dejamos fechaAlta si se necesita)
-        grupoFamiliar: {
-          fechaAlta: formData.fechaAlta,
-          estado: "ACTIVO",
-        },
       };
 
-      // Llamar al servicio para crear el titular (usando createIntegrante para titular)
-      const nuevoAfiliado = await personasService.createAfiliado(datosAfiliado);
+  // Llamar al servicio para crear el titular (usando createIntegrante para titular)
+  console.log('Payload crear afiliado:', JSON.stringify(datosAfiliado, null, 2));
+  const nuevoAfiliado = await personasService.createAfiliado(datosAfiliado);
 
       // Mostrar modal de éxito y navegar cuando el usuario confirme
       modal.mostrarModal({
         titulo: "¡Afiliado creado exitosamente!",
-        mensaje: `Se ha dado de alta al titular ${formData.nombre} ${formData.apellido} con la credencial ${formData.credencial}-00.`,
+        mensaje: `Se ha dado de alta al titular ${formData.nombre} ${formData.apellido}. Credencial asignada: ${nuevoAfiliado.credencial}-${nuevoAfiliado.sufijo}`,
         submensaje: "Presione Aceptar para ir al perfil del afiliado.",
         tipo: "success",
         textoBotonConfirmar: "Aceptar",
@@ -281,20 +274,7 @@ export default function AfiliadosFormEdit() {
     <>
       <form className="afiliado-form" onSubmit={handleSubmit}>
         {/* Credencial */}
-        <div className="form-row">
-          <label>Credencial del Titular</label>
-          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <Input
-              type="text"
-              value={formData.credencial}
-              onChange={(value: string) =>
-                handleInputChange("credencial", value)
-              }
-              placeholder="000000"
-              required
-            />
-          </div>
-        </div>
+        {/* La credencial se asigna automáticamente en el backend */}
 
         {/* Parentesco */}
         <div className="form-row">
@@ -334,7 +314,6 @@ export default function AfiliadosFormEdit() {
           />
         </div>
 
-        <div className="form-row"></div>
 
         {/* Nombre */}
         <div className="form-row">
@@ -371,8 +350,10 @@ export default function AfiliadosFormEdit() {
                 handleInputChange("tipoDocumento", value)
               }
               options={[
-                { value: "DNI", label: "DNI" },
-                { value: "CUIL", label: "CUIL" },
+                  { value: "DNI", label: "DNI" },
+                  { value: "LC", label: "LC" },
+                  { value: "LE", label: "LE" },
+                  { value: "PASAPORTE", label: "Pasaporte" }
               ]}
             />
           </div>
