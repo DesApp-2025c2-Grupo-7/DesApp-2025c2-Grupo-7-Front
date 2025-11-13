@@ -1,6 +1,6 @@
 ﻿import React from "react";
-import { Heart, Bell, User } from "lucide-react";
-import Button from "./Button";
+import { Heart} from "lucide-react";
+
 import "./Header.css";
 
 interface HeaderProps {
@@ -25,25 +25,6 @@ const Header: React.FC<HeaderProps> = ({
                 </div>
             </div>
 
-            {/* Iconos + botón salir */}
-            <div className="header-right">
-                <Button 
-                    variant="primary" 
-                    size="small" 
-                    icon={Bell} 
-                    iconPosition="left" 
-                    className="header-icon"
-                >
-                </Button>
-                <Button 
-                    variant="primary" 
-                    size="small" 
-                    icon={User} 
-                    iconPosition="left" 
-                    className="header-icon"
-                >
-                </Button>
-            </div>
         </header>
     );
 };
