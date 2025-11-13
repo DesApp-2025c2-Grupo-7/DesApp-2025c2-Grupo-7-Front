@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronDown, ChevronUp, Users, Eye, UserPlus } from "lucide-react";
 import type { Afiliado, GrupoFamiliar } from "../../types/afiliados";
+import { esPersonaActiva, getTextoEstadoPersona } from "../../utils/estadoAfiliado";
 import "./GrupoFamiliarAccordion.css";
 
 interface GrupoFamiliarAccordionProps {
@@ -45,23 +46,9 @@ const GrupoFamiliarAccordion: React.FC<GrupoFamiliarAccordionProps> = ({
     }
   };
 
-  const isActiveAfiliado = (miembro: Afiliado) => {
-    if (!miembro.fechaBaja) return true;
-    const today = new Date().toISOString().split('T')[0];
-    return miembro.fechaBaja > today;
-  };
-
-  const getEstadoText = (miembro: Afiliado) => {
-    const today = new Date().toISOString().split('T')[0];
-    if (miembro.fechaAlta && miembro.fechaAlta > today) {
-      return `Activo a partir de ${miembro.fechaAlta}`;
-    } 
-    if (!miembro.fechaBaja) return 'Activo';
-    if (miembro.fechaBaja > today) {
-      return `Activo hasta ${miembro.fechaBaja}`;
-    }
-    return 'Inactivo';
-  };
+  // Usar funciones utilitarias estandarizadas
+  const isActiveAfiliado = (miembro: Afiliado) => esPersonaActiva(miembro);
+  const getEstadoText = (miembro: Afiliado) => getTextoEstadoPersona(miembro);
 
 
   // Debug temporal

@@ -9,6 +9,7 @@ import { useModal } from "../hooks/useModal";
 import Modal from "../components/genericos/Modal";
 import { getApiUrl } from "../config/env";
 import { personasService } from "../services/personasService";
+import { getLabelEstadoPersona } from "../utils/estadoAfiliado";
 
 /**
  * Función auxiliar para limpiar los datos de un afiliado antes de enviarlos al backend
@@ -398,18 +399,7 @@ const AfiliadoProfile: React.FC = () => {
               : `Integrante del grupo familiar de ${afiliado?.nombre} ${afiliado?.apellido}`
           }
           typeTag={((afiliadoMostrado as any)?.tipoPersona === "AFILIADO") || (afiliadoMostrado?.parentesco === "Titular") ? undefined : 'INTEGRANTE'}
-          statusLabel={(function(){
-            const today = new Date().toISOString().split('T')[0];
-            if (!afiliadoMostrado) return '';
-            
-            // Si la fecha de alta está en el futuro, mostrar que estará activo desde esa fecha
-            if (afiliadoMostrado.fechaAlta && afiliadoMostrado.fechaAlta > today) {
-              return `ACTIVO A PARTIR DE ${afiliadoMostrado.fechaAlta}`;
-            }
-            
-            if (!afiliadoMostrado.fechaBaja) return 'ACTIVO';
-            return afiliadoMostrado.fechaBaja > today ? 'ACTIVO' : 'INACTIVO';
-          })()}
+          statusLabel={afiliadoMostrado ? getLabelEstadoPersona(afiliadoMostrado) : ''}
           onVolver={handleVolver}
           onAlta={handleSolicitarAbrirIntegrante}
           buttonText="Dar de alta integrante"

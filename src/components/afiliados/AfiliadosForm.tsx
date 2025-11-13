@@ -10,6 +10,7 @@ import SituacionesTerapeuticasInput from "./SituacionesTerapeuticasInput";
 import { AlertTriangle, UserX, UserPlus, Plus, Trash2, Edit2, PenOff } from "lucide-react";
 import { useModal } from "../../hooks/useModal";
 import { personasService } from "../../services/personasService";
+import { esPersonaActiva } from "../../utils/estadoAfiliado";
 import "./ListaAfiliados.css"
 import type { Afiliado, GrupoFamiliar, Direccion } from "../../types/afiliados";
 
@@ -146,14 +147,8 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
       }
     }, [externalOpenAgregarIntegrante]);
 
-  const isActive = () => {
-    const today = new Date().toISOString().split('T')[0];
-    // Si la fecha de alta está en el futuro, aún no está activo
-    if (afiliado?.fechaAlta && afiliado.fechaAlta > today) return false;
-    // Si no tiene fecha de baja, está activo
-    if (!afiliado?.fechaBaja) return true;
-    return afiliado.fechaBaja > today;
-  };
+  // Usar función utilitaria estandarizada
+  const isActive = () => esPersonaActiva(afiliado);
 
     const esTitular = () => {
         // El backend usa tipoPersona para distinguir: AFILIADO = titular, INTEGRANTE = integrante

@@ -92,37 +92,71 @@ class PersonasService {
 
   // Crear un nuevo integrante en el grupo familiar
   async createIntegrante(titularCredencial: string, integranteData: IntegranteData) {
-    const payload = {
-      ...integranteData,
-      tipoPersona: 'INTEGRANTE',
-      grupoFamiliarId: titularCredencial,
-    } as any;
-
-    const response = await fetch(getApiUrl(`/personas`), {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload),
-    });
-
-    if (!response.ok) {
-      let details = '';
-      try {
-        const ct = response.headers.get('content-type') || '';
-        if (ct.includes('application/json')) {
-          const body = await response.json();
-          details = JSON.stringify(body);
-        } else {
-          details = await response.text();
-        }
-      } catch (e) {
-        details = `Could not parse error body: ${(e as Error).message}`;
+    try {
+      console.log('Buscando titular con credencial:', titularCredencial);
+      
+      // Primero necesitamos obtener el ID del titular usando su credencial
+      const titular = await this.getGrupoFamiliar(titularCredencial);
+      
+      console.log('Titular encontrado:', titular);
+      
+      if (!titular || !titular.id) {
+        throw new Error(`No se pudo encontrar el titular con credencial ${titularCredencial}`);
       }
-      throw new Error(`HTTP error ${response.status}: ${details}`);
-    }
 
-    return response.json();
+      // Preparar el payload limpio para el endpoint específico
+      const payload = {
+        nombre: integranteData.nombre,
+        apellido: integranteData.apellido,
+        tipoDocumento: integranteData.tipoDocumento,
+        numeroDocumento: integranteData.numeroDocumento,
+        fechaNacimiento: integranteData.fechaNacimiento,
+        telefono: integranteData.telefono,
+        email: integranteData.email,
+        parentesco: integranteData.parentesco,
+        fechaAlta: integranteData.fechaAlta,
+        fechaBaja: integranteData.fechaBaja,
+        direccion: integranteData.direccion,
+        situacionesTerapeuticas: integranteData.situacionesTerapeuticas,
+      };
+
+      console.log('Enviando payload para crear integrante:', JSON.stringify(payload, null, 2));
+      console.log('URL del endpoint:', getApiUrl(`/personas/${titular.id}/integrantes`));
+
+      // Usar el endpoint específico para agregar integrantes
+      const response = await fetch(getApiUrl(`/personas/${titular.id}/integrantes`), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        let details = '';
+        try {
+          const ct = response.headers.get('content-type') || '';
+          if (ct.includes('application/json')) {
+            const body = await response.json();
+            details = typeof body === 'object' ? JSON.stringify(body, null, 2) : String(body);
+          } else {
+            details = await response.text();
+          }
+        } catch (e) {
+          details = `Could not parse error body: ${(e as Error).message}`;
+        }
+        throw new Error(`Error ${response.status} al crear integrante: ${details}`);
+      }
+
+      const nuevoIntegrante = await response.json();
+      console.log('Integrante creado exitosamente:', nuevoIntegrante);
+      
+      return nuevoIntegrante;
+      
+    } catch (error) {
+      console.error('Error en createIntegrante:', error);
+      throw error;
+    }
   }
 
   // Obtener un afiliado por ID

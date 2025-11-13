@@ -40,7 +40,7 @@ const SubHeader: React.FC<SubHeaderProps> = ({
       <div className="seccion-header-buttons">
         {statusLabel && (() => {
           const normalized = String(statusLabel).toLowerCase();
-          const estadoClass = normalized.includes('activo') ? 'activo' : 'inactivo';
+          const estadoClass = normalized.includes('inactivo') ? 'inactivo' : 'activo';
           return <span className={`estado-badge ${estadoClass}`}>{statusLabel}</span>;
         })()}
         {onVolver && (

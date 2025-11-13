@@ -2,6 +2,7 @@ import React from "react";
 import { Edit } from "lucide-react";
 import Button from "../genericos/Button";
 import { useNavigate } from "react-router-dom";
+import { esPersonaActiva, getTextoEstadoPersona } from "../../utils/estadoAfiliado";
 import "./ListaAfiliados.css"
 import type { ListaAfiliadosProps } from "../../types/afiliados";
 
@@ -28,25 +29,9 @@ const ListaAfiliados: React.FC<ListaAfiliadosProps> = ({ afiliados, totalAfiliad
         }
     };
 
-    const getEstadoText = (afiliado: any) => {
-        const today = new Date().toISOString().split('T')[0];
-        if (afiliado.fechaAlta && afiliado.fechaAlta > today) {
-            return `Activo a partir de ${afiliado.fechaAlta}`;
-        }
-        if (!afiliado.fechaBaja) return 'Activo';
-
-        if (afiliado.fechaBaja > today) {
-            return `Activo hasta ${afiliado.fechaBaja}`;
-        }
-
-        return 'Inactivo';
-    };
-
-    const isActiveAfiliado = (afiliado: any) => {
-        if (!afiliado.fechaBaja) return true;
-        const today = new Date().toISOString().split('T')[0];
-        return afiliado.fechaBaja > today;
-    };
+    // Usar funciones utilitarias estandarizadas
+    const getEstadoText = (afiliado: any) => getTextoEstadoPersona(afiliado);
+    const isActiveAfiliado = (afiliado: any) => esPersonaActiva(afiliado);
 
     return (
         <div className="lista-estilos">

@@ -7,6 +7,7 @@ import Paginacion from "../components/genericos/Paginacion";
 import SubHeader from "../components/genericos/SubHeader";
 import "../components/genericos/PaginaEstilos.css";
 import { transformarAfiliadosParaLista } from "../utils/transformarAfiliados";
+import { esPersonaActiva } from "../utils/estadoAfiliado";
 import type { Afiliado, AfiliadoListItem } from "../types/afiliados";
 import { getApiUrl } from "../config/env";
 
@@ -172,10 +173,8 @@ const AfiliadosPage: React.FC = () => {
 
   const afiliadosFiltrados = useMemo(() => {
     const q = busqueda.trim().toLowerCase();
-    const today = new Date().toISOString().split("T")[0];
-
     return (afiliadosLista || []).filter((a) => {
-      const isActive = !a.fechaBaja || a.fechaBaja > today;
+      const isActive = esPersonaActiva(a);
       if (!includeInactivos && !isActive) return false;
       if (onlyTitulares && !a.esTitular) return false;
       if (!q) return true;
