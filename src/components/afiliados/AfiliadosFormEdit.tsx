@@ -10,6 +10,7 @@ import SituacionesTerapeuticasInput from "./SituacionesTerapeuticasInput";
 import Modal from "../genericos/Modal";
 import { useModal } from "../../hooks/useModal";
 import { personasService } from "../../services/personasService";
+import { Trash2 } from "lucide-react";
 
 type SituacionTerapeutica = {
   diagnostico: string;
@@ -230,7 +231,12 @@ export default function AfiliadosFormEdit() {
         // Omitir el campo 'depto' en el payload porque la entidad de la DB no lo contiene
         direccion: formData.direccion
           .filter((dir) => dir.calle.trim() !== "")
-          .map((dir) => ({ calle: dir.calle, numero: dir.numero, localidad: dir.localidad, codigoPostal: dir.codigoPostal })),
+          .map((dir) => ({
+            calle: dir.calle,
+            numero: dir.numero,
+            localidad: dir.localidad,
+            codigoPostal: dir.codigoPostal,
+          })),
         situacionesTerapeuticas: formData.situacionesTerapeuticas
           .filter(
             (st) => st.diagnostico.trim() !== "" && st.fechaInicio.trim() !== ""
@@ -243,9 +249,12 @@ export default function AfiliadosFormEdit() {
         planMedico: formData.planMedico,
       };
 
-  // Llamar al servicio para crear el titular (usando createIntegrante para titular)
-  console.log('Payload crear afiliado:', JSON.stringify(datosAfiliado, null, 2));
-  const nuevoAfiliado = await personasService.createAfiliado(datosAfiliado);
+      // Llamar al servicio para crear el titular (usando createIntegrante para titular)
+      console.log(
+        "Payload crear afiliado:",
+        JSON.stringify(datosAfiliado, null, 2)
+      );
+      const nuevoAfiliado = await personasService.createAfiliado(datosAfiliado);
 
       // Mostrar modal de éxito y navegar cuando el usuario confirme
       modal.mostrarModal({
@@ -314,7 +323,6 @@ export default function AfiliadosFormEdit() {
           />
         </div>
 
-
         {/* Nombre */}
         <div className="form-row">
           <label>Nombre *</label>
@@ -350,10 +358,10 @@ export default function AfiliadosFormEdit() {
                 handleInputChange("tipoDocumento", value)
               }
               options={[
-                  { value: "DNI", label: "DNI" },
-                  { value: "LC", label: "LC" },
-                  { value: "LE", label: "LE" },
-                  { value: "PASAPORTE", label: "Pasaporte" }
+                { value: "DNI", label: "DNI" },
+                { value: "LC", label: "LC" },
+                { value: "LE", label: "LE" },
+                { value: "PASAPORTE", label: "Pasaporte" },
               ]}
             />
           </div>
@@ -406,13 +414,44 @@ export default function AfiliadosFormEdit() {
         <div className="form-row">
           <label>Direcciones *</label>
           {formData.direccion.map((direccion, index) => (
-            <div key={index} style={{ marginBottom: "10px" }}>
+            <div
+              key={index}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                marginBottom: "10px",
+              }}
+            >
               <DireccionInput
                 direccion={direccion}
                 onChange={(field, value) =>
                   handleDireccionChange(index, field, value)
                 }
               />
+
+              {/* Botón eliminar dirección */}
+              {formData.direccion.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const updatedDirecciones = formData.direccion.filter(
+                      (_, i) => i !== index
+                    );
+                    setFormData({ ...formData, direccion: updatedDirecciones });
+                  }}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    fontSize: "18px",
+                    color: "#d11a2a",
+                  }}
+                  title="Eliminar dirección"
+                >
+                  <Trash2 size={18} color="#d11a2a" />
+                </button>
+              )}
             </div>
           ))}
           <button
@@ -458,22 +497,62 @@ export default function AfiliadosFormEdit() {
 
         {/* Situaciones Terapéuticas */}
         <>
-          <div className="form-row" style={{ display: "flex", gap: "5px" }}>
+          <div
+            className="form-row"
+            style={{ display: "flex", flexDirection: "column", gap: "10px" }}
+          >
             <label>Situaciones Terapéuticas (opcional)</label>
+
             {formData.situacionesTerapeuticas.map((situacion, index) => (
-              <SituacionesTerapeuticasInput
+              <div
                 key={index}
-                value={situacion}
-                onChange={(field, value) =>
-                  handleSituacionTerapeuticaChange(
-                    index,
-                    field as keyof SituacionTerapeutica,
-                    value
-                  )
-                }
-                listaSituacionesTerapeuticas={listaSituacionesTerapeuticas}
-              />
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                }}
+              >
+                <SituacionesTerapeuticasInput
+                  value={situacion}
+                  onChange={(field, value) =>
+                    handleSituacionTerapeuticaChange(
+                      index,
+                      field as keyof SituacionTerapeutica,
+                      value
+                    )
+                  }
+                  listaSituacionesTerapeuticas={listaSituacionesTerapeuticas}
+                />
+
+                {/* Botón eliminar situación */}
+                {formData.situacionesTerapeuticas.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const nuevasSituaciones =
+                        formData.situacionesTerapeuticas.filter(
+                          (_, i) => i !== index
+                        );
+                      setFormData({
+                        ...formData,
+                        situacionesTerapeuticas: nuevasSituaciones,
+                      });
+                    }}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      cursor: "pointer",
+                      fontSize: "18px",
+                      color: "#d11a2a",
+                    }}
+                    title="Eliminar situación"
+                  >
+                    <Trash2 size={18} color="#d11a2a" />
+                  </button>
+                )}
+              </div>
             ))}
+
             <button
               type="button"
               style={{
