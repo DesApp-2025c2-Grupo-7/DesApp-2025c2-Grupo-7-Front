@@ -11,7 +11,7 @@
     border-radius: 2px;
     padding: 6px 10px;
     cursor: pointer;
-    background-color: #1988cd;
+    background-color: #8196c7;
     color: white;
     font-weight: 500;
     transition: background-color 0.2s;
@@ -19,14 +19,17 @@
 
 .page-btn:hover {
     background-color: #1988cd;
+    color: white;
 }
 
 .page-btn.active {
-    background-color: #35802f;
+    background-color: #2b579c;
+    color: white;
 }
 
 .page-btn.active:hover {
     background-color: #2b579c;
+    color: white;
 }
 
 .arrow-btn {

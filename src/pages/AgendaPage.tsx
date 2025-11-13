@@ -270,13 +270,6 @@ const AgendaPage: React.FC = () => {
           sel.nombreCompleto || sel.nombre
         } tiene direcciones registradas pero no dispone de horarios de atención. Por ese motivo no tiene turnos asociados.`
       );
-    } else if (!anyTurnos) {
-      modal.mostrarAdvertencia(
-        "Sin turnos en el periodo",
-        `El prestador ${
-          sel.nombreCompleto || sel.nombre
-        } no tiene turnos para la fecha seleccionada.`
-      );
     }
   }, [filtroPrestador, prestadores, turnos, currentDate]);
 
