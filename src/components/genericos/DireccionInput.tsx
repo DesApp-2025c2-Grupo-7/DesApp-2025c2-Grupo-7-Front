@@ -30,6 +30,9 @@ export default function DireccionInput({
         onChange={(value) => handleFieldChange("calle", value)}
         className="direccion-calle"
         required
+        validationType="requerido"
+        showValidation={true}
+        hideErrorMessage={true}
       />
       <Input
         type="text"
@@ -39,6 +42,9 @@ export default function DireccionInput({
         onChange={(value) => handleFieldChange("numero", value)}
         className="direccion-numero"
         required
+        validationType="altura"
+        showValidation={true}
+        hideErrorMessage={true}
       />
       <Input
         type="text"
@@ -47,6 +53,7 @@ export default function DireccionInput({
         value={direccion.depto}
         onChange={(value) => handleFieldChange("depto", value)}
         className="direccion-depto"
+        validationType="none"
       />
       <Input
         type="text"
@@ -56,6 +63,9 @@ export default function DireccionInput({
         onChange={(value) => handleFieldChange("localidad", value)}
         className="direccion-localidad"
         required
+        validationType="requerido"
+        showValidation={true}
+        hideErrorMessage={true}
       />
       <Input
         type="text"
@@ -65,6 +75,9 @@ export default function DireccionInput({
         onChange={(value) => handleFieldChange("codigoPostal", value)}
         className="direccion-codigoPostal"
         required
+        validationType="codigoPostal"
+        showValidation={true}
+        hideErrorMessage={true}
       />
     </div>
   );

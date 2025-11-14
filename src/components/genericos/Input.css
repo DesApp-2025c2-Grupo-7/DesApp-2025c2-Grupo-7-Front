@@ -143,14 +143,29 @@
     color: #264f91;
 }
 
-/* Validation states (optional - for future use) */
+/* Validation states */
 .input-error .input-field {
-    border-color: #f44336;
+    border-color: #d32f2f !important;
+    border-width: 2px;
 }
 
 .input-error .input-field:focus {
-    border-color: #f44336;
-    box-shadow: 0 0 0 3px rgba(244, 67, 54, 0.1);
+    border-color: #d32f2f !important;
+    box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.15);
+}
+
+.input-error .input-icon {
+    color: #d32f2f;
+}
+
+/* Error message */
+.input-error-message {
+    display: block;
+    color: #d32f2f;
+    font-size: 0.875rem;
+    margin-top: 4px;
+    font-weight: 500;
+    line-height: 1.4;
 }
 
 .input-success .input-field {
@@ -170,4 +185,85 @@
 
 .input-field:read-only:focus {
     box-shadow: none;
+}
+
+/* Responsive: tablets */
+@media (max-width: 1024px) {
+    .input-wrapper {
+        width: 100%;
+    }
+
+    .input-small { min-width: 180px; }
+    .input-medium { min-width: 250px; }
+    .input-large { min-width: 320px; }
+}
+
+/* Responsive: móviles */
+@media (max-width: 768px) {
+    .input-wrapper {
+        width: 100%;
+    }
+
+    .input-small,
+    .input-medium,
+    .input-large {
+        min-width: 100%;
+        width: 100%;
+    }
+
+    .input-field {
+        font-size: 15px;
+    }
+
+    .input-small .input-field {
+        min-height: 38px;
+        padding: 9px 12px;
+        font-size: 14px;
+    }
+
+    .input-medium .input-field {
+        min-height: 42px;
+        padding: 11px 14px;
+        font-size: 15px;
+    }
+
+    .input-large .input-field {
+        min-height: 48px;
+        padding: 14px 18px;
+        font-size: 16px;
+    }
+
+    .input-error-message {
+        font-size: 0.8rem;
+    }
+}
+
+/* Responsive: móviles pequeños */
+@media (max-width: 480px) {
+    .input-field {
+        font-size: 14px;
+    }
+
+    .input-small .input-field {
+        min-height: 36px;
+        padding: 8px 10px;
+        font-size: 13px;
+    }
+
+    .input-medium .input-field {
+        min-height: 40px;
+        padding: 10px 12px;
+        font-size: 14px;
+    }
+
+    .input-large .input-field {
+        min-height: 44px;
+        padding: 12px 14px;
+        font-size: 15px;
+    }
+
+    .input-error-message {
+        font-size: 0.75rem;
+        margin-top: 3px;
+    }
 }

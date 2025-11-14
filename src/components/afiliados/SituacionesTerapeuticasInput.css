@@ -1,0 +1,86 @@
+/* SituacionesTerapeuticasInput.css */
+.situacion-terapeutica-container {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.situacion-diagnostico {
+  flex: 0 0 250px;
+  min-width: 200px;
+  max-width: 250px;
+}
+
+/* Forzar que el Select dentro respete el ancho del contenedor */
+.situacion-diagnostico .select-wrapper,
+.situacion-diagnostico .select-field {
+  max-width: 100% !important;
+  min-width: 0 !important;
+  width: 100% !important;
+}
+
+.situacion-fechas {
+  display: flex;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.situacion-fecha-input {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Responsive: tablets */
+@media (max-width: 1024px) {
+  .situacion-terapeutica-container {
+    gap: 8px;
+  }
+
+  .situacion-diagnostico {
+    min-width: 150px;
+  }
+
+  .situacion-fecha-input {
+    min-width: 100px;
+  }
+}
+
+/* Responsive: móviles */
+@media (max-width: 768px) {
+  .situacion-terapeutica-container {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .situacion-diagnostico,
+  .situacion-fechas {
+    width: 100%;
+    flex: none;
+    min-width: auto;
+  }
+
+  .situacion-fechas {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .situacion-fecha-input {
+    width: 100%;
+    min-width: auto;
+  }
+}
+
+/* Responsive: móviles pequeños */
+@media (max-width: 480px) {
+  .situacion-terapeutica-container {
+    gap: 6px;
+  }
+
+  .situacion-fechas {
+    gap: 6px;
+  }
+}
+
+/* Made with Bob */

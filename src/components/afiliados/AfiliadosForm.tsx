@@ -83,6 +83,7 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
         fechaNacimiento: afiliado?.fechaNacimiento || '',
         tipoDocumento: afiliado?.tipoDocumento || '',
         numeroDocumento: afiliado?.numeroDocumento || '',
+        planMedico: afiliado?.planMedico || '',
         direccion: {
             calle: afiliado?.direccion?.[0]?.calle || '',
             numero: afiliado?.direccion?.[0]?.numero || '',
@@ -103,6 +104,7 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
                 fechaNacimiento: afiliado.fechaNacimiento || '',
                 tipoDocumento: afiliado.tipoDocumento || '',
                 numeroDocumento: afiliado.numeroDocumento || '',
+                planMedico: afiliado.planMedico || '',
                 direccion: {
                     calle: afiliado.direccion?.[0]?.calle || '',
                     numero: afiliado.direccion?.[0]?.numero || '',
@@ -256,7 +258,7 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
             return input?.value || '';
         };
 
-        // Validar campos obligatorios básicos (lista fija)
+        // Validar campos obligatorios básicos
         if (!getInputValue('parentesco')) errores.push('Parentesco es obligatorio');
         if (!getInputValue('nombre')) errores.push('Nombre es obligatorio');
         if (!getInputValue('apellido')) errores.push('Apellido es obligatorio');
@@ -264,10 +266,10 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
         if (!getInputValue('numeroDocumento')) errores.push('Número de documento es obligatorio');
         if (!getInputValue('fechaNacimiento')) errores.push('Fecha de nacimiento es obligatoria');
 
-        // Validar al menos una dirección válida (desde modalDirecciones)
+        // Validar al menos una dirección válida
         const direccionesValidas = modalDirecciones.filter(d => (d.calle || '').trim() !== '' || (d.numero || '').trim() !== '' || (d.localidad || '').trim() !== '');
         if (direccionesValidas.length === 0) {
-          errores.push('Debe ingresar al menos una dirección con calle, número y localidad');
+          errores.push('Debe ingresar al menos una dirección válida');
         } else {
           const dir = direccionesValidas[0];
           if (!(dir.calle || '').trim()) errores.push('Calle es obligatoria');
@@ -276,91 +278,34 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
           if (!(dir.localidad || '').trim()) errores.push('Localidad es obligatoria');
         }
 
-  // Use modalFechaAlta state (controlled) instead of querying the DOM for more reliable value
-  if (!modalFechaAlta) errores.push('Fecha de alta es obligatoria');
+        if (!modalFechaAlta) errores.push('Fecha de alta es obligatoria');
 
         // Validar fechas del sistema
-  // Use the controlled modal state for fechaAlta
-  const fechaAlta = modalFechaAlta;
-  const fechaNacimiento = getInputValue('fechaNacimiento');
+        const fechaAlta = modalFechaAlta;
+        const fechaNacimiento = getInputValue('fechaNacimiento');
 
         if (fechaNacimiento && fechaAlta && fechaNacimiento > fechaAlta) {
             errores.push('Fecha de alta no puede ser anterior a la fecha de nacimiento');
         }
 
-    // Las altas/bajas diferidas las maneja el backend; permitir cualquier fecha aquí
+        // Validar situaciones terapéuticas
+        situacionesTerapeuticas.forEach((situacion, index) => {
+          const dx = situacion.diagnostico ? situacion.diagnostico.trim() : '';
+          const fi = situacion.fechaInicio ? situacion.fechaInicio.trim() : '';
+          const ff = situacion.fechaFin ? situacion.fechaFin.trim() : '';
 
-    // Validar situaciones terapéuticas (si existen):
-    // - Ignorar filas totalmente vacías (considerarlas no cargadas)
-    // - Si el usuario completó el diagnóstico, exigir fecha de inicio
-    // - Validar que fechaFin no sea anterior a fechaInicio cuando ambas están presentes
-    situacionesTerapeuticas.forEach((situacion, index) => {
-      const dx = situacion.diagnostico ? situacion.diagnostico.trim() : '';
-      const fi = situacion.fechaInicio ? situacion.fechaInicio.trim() : '';
-      const ff = situacion.fechaFin ? situacion.fechaFin.trim() : '';
+          if (!dx && !fi && !ff) return;
 
-      // Si la fila está totalmente vacía, considerarla no cargada y seguir
-      if (!dx && !fi && !ff) return;
-
-      // Si el usuario puso diagnóstico, entonces la fecha de inicio es obligatoria
-      if (dx && !fi) {
-        errores.push(`Fecha de inicio de la situación ${index + 1} es obligatoria`);
-      }
-
-      // Si fecha fin y fecha inicio están presentes, validar orden
-      if (ff && fi && ff < fi) {
-        errores.push(`Fecha de fin no puede ser anterior a fecha de inicio en situación ${index + 1}`);
-      }
-    });
-
-        // Validación dinámica: si en el modal hay labels con '*' considerar esos campos obligatorios
-        try {
-          const dynamicErrors: string[] = [];
-          const labels = Array.from(document.querySelectorAll('.modal-agregar-integrante label')) as HTMLLabelElement[];
-          labels.forEach((label) => {
-            if (!label || !label.textContent) return;
-            if (label.textContent.includes('*')) {
-              // buscar input/select/textarea asociado dentro del mismo contenedor
-              let inputEl: any = null;
-              // Preferir el 'for' si está presente
-              const htmlFor = label.getAttribute('for');
-              if (htmlFor) {
-                inputEl = document.getElementById(htmlFor) as (HTMLInputElement|HTMLSelectElement|HTMLTextAreaElement)|null;
-              }
-
-              const container = label.parentElement;
-              if (!inputEl && container) {
-                inputEl = container.querySelector('input[name], select[name], textarea[name]') as (HTMLInputElement|HTMLSelectElement|HTMLTextAreaElement)|null;
-              }
-              if (!inputEl) {
-                const next = label.nextElementSibling as HTMLElement | null;
-                if (next) {
-                  // si el siguiente elemento contiene el input/select
-                  inputEl = next.querySelector('input[name], select[name], textarea[name]') as (HTMLInputElement|HTMLSelectElement|HTMLTextAreaElement)|null;
-                  if (!inputEl && (next as HTMLInputElement).tagName && ((next as HTMLInputElement).tagName.toLowerCase() === 'input' || (next as HTMLSelectElement).tagName.toLowerCase() === 'select' || (next as HTMLTextAreaElement).tagName.toLowerCase() === 'textarea')) {
-                    inputEl = next as any;
-                  }
-                }
-              }
-
-              const val = inputEl ? String((inputEl).value || '').trim() : '';
-              if (!val) {
-                const labelText = label.textContent.replace('*', '').trim();
-                dynamicErrors.push(`${labelText} es obligatorio`);
-              }
-            }
-          });
-          // merge unique
-          for (const de of dynamicErrors) {
-            if (!errores.includes(de)) errores.push(de);
+          if (dx && !fi) {
+            errores.push(`Fecha de inicio de la situación ${index + 1} es obligatoria`);
           }
-        } catch (e) {
-          // ignore DOM-related errors in non-browser environments
-        }
 
-  // Dedupe final de errores para evitar mensajes repetidos
-  const uniqueErrores = Array.from(new Set(errores));
-  return { esValido: uniqueErrores.length === 0, errores: uniqueErrores };
+          if (ff && fi && ff < fi) {
+            errores.push(`Fecha de fin no puede ser anterior a fecha de inicio en situación ${index + 1}`);
+          }
+        });
+
+        return { esValido: errores.length === 0, errores };
     };
 
     const handleConfirmarAgregarIntegrante = async () => {
@@ -368,8 +313,8 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
         
         if (!validacion.esValido) {
             modal.mostrarError(
-                'Errores en el formulario',
-                'Por favor corrige los siguientes errores:',
+                'Faltan campos requeridos',
+                'Por favor complete todos los campos obligatorios marcados con * y corrija los errores de validación.',
                 validacion.errores
             );
             return;
@@ -645,6 +590,7 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
                 fechaNacimiento: datosEditables.fechaNacimiento,
                 tipoDocumento: datosEditables.tipoDocumento,
                 numeroDocumento: datosEditables.numeroDocumento,
+                planMedico: datosEditables.planMedico,
                 direccion: direcciones
             };
             
@@ -663,6 +609,7 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
                 fechaNacimiento: afiliado.fechaNacimiento || '',
                 tipoDocumento: afiliado.tipoDocumento || '',
                 numeroDocumento: afiliado.numeroDocumento || '',
+                planMedico: afiliado.planMedico || '',
                 direccion: {
                     calle: afiliado.direccion?.[0]?.calle || '',
                     numero: afiliado.direccion?.[0]?.numero || '',
@@ -730,6 +677,36 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
                     true
                 )}
             </div>
+
+            {/* Plan Médico - Editable solo para titulares */}
+            {modoEdicion ? (
+              esTitular() ? (
+                <div className={`form-row ${getFieldClassName()}`}>
+                  <label>Plan Médico *</label>
+                  <Select
+                    value={datosEditables.planMedico}
+                    onChange={(value) => handleCampoChange('planMedico', value)}
+                    options={[
+                      { value: "Bronce", label: "Bronce" },
+                      { value: "Plata", label: "Plata" },
+                      { value: "Oro", label: "Oro" },
+                      { value: "Platino", label: "Platino" }
+                    ]}
+                    placeholder="Seleccionar plan médico"
+                  />
+                </div>
+              ) : (
+                <div className={`form-row ${getFieldClassName(true)}`}>
+                  <label>Plan Médico</label>
+                  {renderFieldWithIcon(<span>{afiliado?.planMedico}</span>, true)}
+                </div>
+              )
+            ) : (
+              <div className={`form-row ${getFieldClassName(true)}`}>
+                <label>Plan Médico</label>
+                {renderFieldWithIcon(<span>{afiliado?.planMedico}</span>, true)}
+              </div>
+            )}
             
             {/* Campos editables según el modo */}
             {modoEdicion ? (
@@ -791,17 +768,8 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
                   />
                 </div>
 
-                {/* Direcciones dinámicas */}
-                <CardDireccionesAfiliados
-                  direcciones={direcciones}
-                  personaId={afiliado?.id || 0}
-                  modoEdicion={modoEdicion}
-                  onDireccionesChange={handleDireccionesChange}
-                />
 
               <div>
-                <h4>Datos de contacto</h4>
-
                 <div className="form-row-double">
                     <div className={`form-row-double-item-left ${getFieldClassName()}`}>
                       <label>Teléfono</label>
@@ -871,6 +839,14 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
                     </div>
                 </div>
               </div>  
+                              {/* Direcciones dinámicas */}
+                <CardDireccionesAfiliados
+                  direcciones={direcciones}
+                  personaId={afiliado?.id || 0}
+                  modoEdicion={modoEdicion}
+                  onDireccionesChange={handleDireccionesChange}
+                />
+
               </>
             ) : (
               <>
@@ -890,14 +866,6 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
                   <label>Fecha de nacimiento</label>
                   <span>{afiliado?.fechaNacimiento}</span>
                 </div>
-
-                <CardDireccionesAfiliados
-                  direcciones={afiliado?.direccion || []}
-                  personaId={afiliado?.id || 0}
-                  modoEdicion={modoEdicion}
-                  onDireccionesChange={handleDireccionesChange}
-                />
-                
                 {/* Datos de Contacto - Visualización alineada */}
                 <div className="form-row-double">
                   <div className={`form-row-double-item-left ${getFieldClassName()}`}>
@@ -909,6 +877,14 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
                     {afiliado?.email.map((e: string, index: number) => <span key={index}>{`${e}`}</span>)}
                   </div>
                 </div>
+                
+                <CardDireccionesAfiliados
+                  direcciones={afiliado?.direccion || []}
+                  personaId={afiliado?.id || 0}
+                  modoEdicion={modoEdicion}
+                  onDireccionesChange={handleDireccionesChange}
+                />
+                
               </>
             )}
           <div className={`form-row ${getFieldClassName(true)}`}>
@@ -1075,11 +1051,23 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
                     <div className="form-row-double">
                       <div className="form-row-double-item-left">
                         <label>Nombre *</label>
-                        <Input type="text" name="nombre" required />
+                        <Input
+                          type="text"
+                          name="nombre"
+                          required
+                          validationType="nombre"
+                          showValidation={true}
+                        />
                       </div>
                       <div className="form-row-double-item-right">
                         <label>Apellido *</label>
-                        <Input type="text" name="apellido" required />
+                        <Input
+                          type="text"
+                          name="apellido"
+                          required
+                          validationType="apellido"
+                          showValidation={true}
+                        />
                       </div>
                     </div>
 
@@ -1098,7 +1086,14 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
                       </div>
                       <div className="form-row-triple-item">
                         <label>Número de documento *</label>
-                        <Input type="text" name="numeroDocumento" required placeholder="12345678" />
+                        <Input
+                          type="text"
+                          name="numeroDocumento"
+                          required
+                          placeholder="12345678"
+                          validationType="dni"
+                          showValidation={true}
+                        />
                       </div>
                       <div className="form-row-triple-item">
                         <label>Fecha de nacimiento *</label>
@@ -1117,9 +1112,16 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
                         <div className="contactos-dinamicos">
                           {modalEmails.map((email, idx) => (
                             <div key={idx} className="contacto-dinamico-row">
-                              <Input type="email" value={email} onChange={(v: string) => {
-                                setModalEmails(prev => prev.map((e,i)=> i===idx? v : e));
-                              }} placeholder="ejemplo@email.com" />
+                              <Input
+                                type="email"
+                                value={email}
+                                onChange={(v: string) => {
+                                  setModalEmails(prev => prev.map((e,i)=> i===idx? v : e));
+                                }}
+                                placeholder="ejemplo@email.com"
+                                validationType="email"
+                                showValidation={true}
+                              />
                               <div>
                                 {modalEmails.length > 1 && (
                                   <Button size="small" variant="danger" icon={Trash2} onClick={() => setModalEmails(prev => prev.filter((_,i)=>i!==idx))} />
@@ -1137,7 +1139,14 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
                         <div className="contactos-dinamicos">
                           {modalTelefonos.map((tel, idx) => (
                             <div key={idx} className="contacto-dinamico-row">
-                              <Input type="tel" value={tel} onChange={(v: string) => setModalTelefonos(prev => prev.map((t,i)=> i===idx? v : t))} placeholder="11-1234-5678" />
+                              <Input
+                                type="tel"
+                                value={tel}
+                                onChange={(v: string) => setModalTelefonos(prev => prev.map((t,i)=> i===idx? v : t))}
+                                placeholder="1112345678"
+                                validationType="telefono"
+                                showValidation={true}
+                              />
                               <div>
                                 {modalTelefonos.length > 1 && (
                                   <Button size="small" variant="danger" icon={Trash2} onClick={() => setModalTelefonos(prev => prev.filter((_,i)=>i!==idx))} />
@@ -1163,11 +1172,29 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
                           <div className="form-row-double">
                             <div className="form-row-double-item-left">
                               <label>Calle *</label>
-                              <Input type="text" name={`calle-${idx}`} value={d.calle} onChange={(v: string) => setModalDirecciones(prev => prev.map((x,i)=> i===idx? {...x, calle: v} : x))} placeholder="Av. Corrientes" />
+                              <Input
+                                type="text"
+                                name={`calle-${idx}`}
+                                value={d.calle}
+                                onChange={(v: string) => setModalDirecciones(prev => prev.map((x,i)=> i===idx? {...x, calle: v} : x))}
+                                placeholder="Av. Corrientes"
+                                required
+                                validationType="requerido"
+                                showValidation={true}
+                              />
                             </div>
                             <div className="form-row-double-item-right">
                               <label>Número *</label>
-                              <Input type="text" name={`numero-${idx}`} value={d.numero} onChange={(v: string) => setModalDirecciones(prev => prev.map((x,i)=> i===idx? {...x, numero: v} : x))} placeholder="1234" />
+                              <Input
+                                type="text"
+                                name={`numero-${idx}`}
+                                value={d.numero}
+                                onChange={(v: string) => setModalDirecciones(prev => prev.map((x,i)=> i===idx? {...x, numero: v} : x))}
+                                placeholder="1234"
+                                required
+                                validationType="altura"
+                                showValidation={true}
+                              />
                             </div>
                           </div>
 
@@ -1178,11 +1205,29 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
                             </div>
                             <div className="form-row-triple-item">
                               <label>Código Postal *</label>
-                              <Input type="text" name={`codigoPostal-${idx}`} value={d.codigoPostal ?? ''} onChange={(v: string) => setModalDirecciones(prev => prev.map((x,i)=> i===idx? {...x, codigoPostal: v} : x))} placeholder="1043" />
+                              <Input
+                                type="text"
+                                name={`codigoPostal-${idx}`}
+                                value={d.codigoPostal ?? ''}
+                                onChange={(v: string) => setModalDirecciones(prev => prev.map((x,i)=> i===idx? {...x, codigoPostal: v} : x))}
+                                placeholder="1043"
+                                required
+                                validationType="codigoPostal"
+                                showValidation={true}
+                              />
                             </div>
                             <div className="form-row-triple-item">
                               <label>Localidad *</label>
-                              <Input type="text" name={`localidad-${idx}`} value={d.localidad} onChange={(v: string) => setModalDirecciones(prev => prev.map((x,i)=> i===idx? {...x, localidad: v} : x))} placeholder="CABA" />
+                              <Input
+                                type="text"
+                                name={`localidad-${idx}`}
+                                value={d.localidad}
+                                onChange={(v: string) => setModalDirecciones(prev => prev.map((x,i)=> i===idx? {...x, localidad: v} : x))}
+                                placeholder="CABA"
+                                required
+                                validationType="requerido"
+                                showValidation={true}
+                              />
                             </div>
                           </div>
 

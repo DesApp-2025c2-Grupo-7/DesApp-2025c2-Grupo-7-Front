@@ -114,3 +114,75 @@
     color: #888;
     font-style: italic;
 }
+
+/* Responsive: tablets */
+@media (max-width: 1024px) {
+    .select-small { min-width: 180px; }
+    .select-medium { min-width: 250px; }
+    .select-large { min-width: 320px; }
+}
+
+/* Responsive: móviles */
+@media (max-width: 768px) {
+    .select-wrapper {
+        width: 100%;
+    }
+
+    .select-small,
+    .select-medium,
+    .select-large {
+        min-width: 100%;
+        width: 100%;
+    }
+
+    .select-field {
+        font-size: 15px;
+    }
+
+    .select-small .select-field {
+        min-height: 38px;
+        padding: 9px 36px 9px 12px;
+        font-size: 14px;
+    }
+
+    .select-medium .select-field {
+        min-height: 42px;
+        padding: 11px 40px 11px 14px;
+        font-size: 15px;
+    }
+
+    .select-large .select-field {
+        min-height: 48px;
+        padding: 14px 44px 14px 18px;
+        font-size: 16px;
+    }
+}
+
+/* Responsive: móviles pequeños */
+@media (max-width: 480px) {
+    .select-field {
+        font-size: 14px;
+    }
+
+    .select-small .select-field {
+        min-height: 36px;
+        padding: 8px 32px 8px 10px;
+        font-size: 13px;
+    }
+
+    .select-medium .select-field {
+        min-height: 40px;
+        padding: 10px 36px 10px 12px;
+        font-size: 14px;
+    }
+
+    .select-large .select-field {
+        min-height: 44px;
+        padding: 12px 40px 12px 14px;
+        font-size: 15px;
+    }
+
+    .select-icon {
+        right: 10px;
+    }
+}

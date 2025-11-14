@@ -2,27 +2,75 @@
   display: flex;
   gap: 10px;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .direccion-calle {
   flex: 2;
+  min-width: 200px;
 }
 
 .direccion-numero {
   flex: 1;
   max-width: 80px;
+  min-width: 60px;
 }
 
 .direccion-depto {
   flex: 1;
   max-width: 100px;
+  min-width: 80px;
 }
 
 .direccion-localidad {
   flex: 2;
+  min-width: 150px;
 }
 
 .direccion-codigoPostal {
   flex: 1;
   max-width: 100px;
+  min-width: 80px;
+}
+
+/* Responsive: tablets */
+@media (max-width: 1024px) {
+  .direccion-input {
+    gap: 8px;
+  }
+
+  .direccion-calle {
+    min-width: 150px;
+  }
+
+  .direccion-localidad {
+    min-width: 120px;
+  }
+}
+
+/* Responsive: móviles */
+@media (max-width: 768px) {
+  .direccion-input {
+    flex-direction: column;
+    gap: 8px;
+    align-items: stretch;
+  }
+
+  .direccion-calle,
+  .direccion-numero,
+  .direccion-depto,
+  .direccion-localidad,
+  .direccion-codigoPostal {
+    flex: 1;
+    max-width: none;
+    min-width: auto;
+    width: 100%;
+  }
+}
+
+/* Responsive: móviles pequeños */
+@media (max-width: 480px) {
+  .direccion-input {
+    gap: 6px;
+  }
 }

@@ -330,8 +330,11 @@ export default function AfiliadosFormEdit() {
             type="text"
             className="input-valor"
             name="nombre"
+            value={formData.nombre}
             onChange={(value: string) => handleInputChange("nombre", value)}
             required
+            validationType="nombre"
+            showValidation={true}
           />
         </div>
 
@@ -342,8 +345,11 @@ export default function AfiliadosFormEdit() {
             type="text"
             className="input-valor"
             name="apellido"
+            value={formData.apellido}
             onChange={(value: string) => handleInputChange("apellido", value)}
             required
+            validationType="apellido"
+            showValidation={true}
           />
         </div>
 
@@ -371,10 +377,13 @@ export default function AfiliadosFormEdit() {
               type="text"
               className="input-valor"
               name="documento"
+              value={formData.numeroDocumento}
               onChange={(value: string) =>
                 handleInputChange("numeroDocumento", value)
               }
               required
+              validationType="dni"
+              showValidation={true}
             />
           </div>
         </div>
