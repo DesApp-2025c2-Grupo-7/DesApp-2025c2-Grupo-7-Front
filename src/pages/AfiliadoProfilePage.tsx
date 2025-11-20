@@ -392,7 +392,7 @@ const AfiliadoProfile: React.FC = () => {
       />
       <div className="admin-content">
         <SubHeader
-          title={`${afiliado?.nombre} ${afiliado?.apellido}`}
+          title={`${afiliadoMostrado?.nombre} ${afiliadoMostrado?.apellido}`}
           subtitle={
             ((afiliadoMostrado as any)?.tipoPersona === "AFILIADO") || (afiliadoMostrado?.parentesco === "Titular")
               ? ''

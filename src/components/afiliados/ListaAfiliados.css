@@ -613,7 +613,27 @@
 }
 
 /* Responsive para el formulario */
+@media (max-width: 1024px) {
+    .modal-agregar-integrante {
+        width: 90%;
+    }
+
+    .form-row-triple {
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+
+    .modal-form {
+        padding: 20px;
+    }
+}
+
 @media (max-width: 768px) {
+    .modal-agregar-integrante {
+        width: 95%;
+        max-height: 95vh;
+    }
+
     .form-row-triple {
         grid-template-columns: 1fr;
         gap: 12px;
@@ -622,12 +642,78 @@
     .form-row-double {
         flex-direction: column;
         gap: 12px;
+        display: grid;
     }
 
     .section-header-with-button {
         flex-direction: column;
         gap: 12px;
         align-items: flex-start;
+    }
+
+    .modal-header {
+        padding: 20px 16px 12px;
+    }
+
+    .modal-header h3 {
+        font-size: 18px;
+    }
+
+    .modal-form {
+        padding: 16px;
+    }
+
+    .modal-actions {
+        padding: 12px 16px 16px;
+        flex-direction: column;
+        gap: 12px;
+        align-items: stretch;
+    }
+
+    .modal-buttons {
+        width: 100%;
+        flex-direction: column;
+    }
+
+    .modal-buttons button {
+        width: 100%;
+    }
+
+    .campos-requeridos-info {
+        text-align: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .modal-agregar-integrante {
+        width: 100%;
+        max-height: 100vh;
+        border-radius: 0;
+    }
+
+    .modal-header h3 {
+        font-size: 16px;
+    }
+
+    .modal-header p {
+        font-size: 13px;
+    }
+
+    .section-title {
+        font-size: 14px;
+    }
+
+    .form-row-triple {
+        gap: 10px;
+    }
+
+    .modal-form {
+        padding: 12px;
+    }
+
+    .form-section {
+        margin-bottom: 24px;
+        padding-bottom: 16px;
     }
 }
 

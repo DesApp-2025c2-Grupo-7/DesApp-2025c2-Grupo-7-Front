@@ -7,25 +7,39 @@
   display: grid;
   grid-template-columns: 1fr 1fr; /* dos columnas */
   gap: 1.2rem 2rem;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 /* Cada campo: label arriba, valor abajo */
 .form-row {
   display: flex;
   flex-direction: column;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.form-row > * {
+  max-width: 100%;
+  min-width: 0;
 }
 
 .form-row-double {
   display: flex;
   flex-direction: row;
+  gap: 1rem;
+  width: 100%;
 }
 
 .form-row-double-item-left{
-  margin-right: 1rem;
-  width: -webkit-fill-available;
+  flex: 1;
+  min-width: 0;
+  max-width: 100%;
 }
 .form-row-double-item-right{
-  width: -webkit-fill-available;
+  flex: 1;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .form-row label,.form-row-double-item-left label, .form-row-double-item-right label {
@@ -93,10 +107,47 @@
   flex: 1;
 }
 
+/* Responsive: tablets */
+@media (max-width: 1024px) {
+  .afiliado-form {
+    padding: 1.2rem;
+    gap: 1rem 1.5rem;
+  }
+
+  .form-row-double {
+    gap: 0.8rem;
+  }
+  
+}
+
 /* Responsive: en mobile pasa a 1 columna */
 @media (max-width: 768px) {
   .afiliado-form {
     grid-template-columns: 1fr;
+    padding: 1rem;
+    gap: 0.8rem;
+  }
+
+  .form-row-double {
+    flex-direction: column;
+    gap: 0.8rem;
+      display: grid !important;
+
+  }
+
+  .form-row-double-item-left,
+  .form-row-double-item-right {
+    width: 100% !important;
+    flex: none !important;
+    margin-right: 0 !important;
+  }
+
+  /* Asegurar que los inputs dentro también ocupen 100% */
+  .form-row-double-item-left .input-wrapper,
+  .form-row-double-item-right .input-wrapper,
+  .form-row-double-item-left .select-wrapper,
+  .form-row-double-item-right .select-wrapper {
+    width: 100% !important;
   }
 
   .form-row:last-child {
@@ -106,6 +157,54 @@
 
   .form-row:last-child span {
     width: 100%;
+  }
+
+  .form-row:last-child label {
+    min-width: auto;
+  }
+
+  /* Contenedores de direcciones y situaciones terapéuticas */
+  .form-row > div[style*="display: flex"] {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  /* Botones de eliminar en móviles */
+  .form-row button[title*="Eliminar"] {
+    align-self: flex-end;
+    margin-top: 0.5rem;
+  }
+}
+
+/* Responsive: móviles pequeños */
+@media (max-width: 480px) {
+  .afiliado-form {
+    padding: 0.8rem;
+    gap: 0.6rem;
+  }
+
+  .form-row label,
+  .form-row-double-item-left label,
+  .form-row-double-item-right label {
+    font-size: 0.8rem;
+  }
+
+  .form-row > span:not(.btn-text),
+  .form-row-double-item-left > span:not(.btn-text),
+  .form-row-double-item-right > span:not(.btn-text) {
+    font-size: 0.9rem;
+    padding: 0.5rem 0.8rem;
+    min-height: 38px;
+  }
+
+  .form-row-double {
+      display: grid !important;
+    gap: 0.6rem;
+  }
+
+  /* Ajustar botones de agregar */
+  .form-row button[style*="textAlign"] {
+    font-size: 0.85rem;
   }
 }
 

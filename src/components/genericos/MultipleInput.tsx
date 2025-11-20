@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Input from "./Input";
 import { Trash2 } from "lucide-react";
+import type { TipoValidacion } from "../../utils/validaciones";
 
 type MultipleInputProps = {
   name: string;
@@ -44,6 +45,13 @@ export default function MultipleInput({
     onChange?.(updatedValues);
   };
 
+  // Determinar el tipo de validación según el tipo de input
+  const getValidationType = (): TipoValidacion => {
+    if (type === "email") return "email";
+    if (type === "tel") return "telefono";
+    return "requerido";
+  };
+
   return (
     <div>
       {values.map((value, index) => (
@@ -64,6 +72,8 @@ export default function MultipleInput({
             value={value}
             onChange={(val: string) => handleInputChange(index, val)}
             required
+            validationType={getValidationType()}
+            showValidation={true}
           />
 
           {values.length > 1 && (
