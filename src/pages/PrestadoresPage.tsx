@@ -26,7 +26,8 @@ const PrestadoresPage: React.FC = () => {
 
   // Paginación
   const [currentPage, setCurrentPage] = useState(1);
-  const prestadoresPerPage = 10;
+  const prestadoresPerPage = 6
+  ;
 
   const navigate = useNavigate();
   const location = useLocation();

@@ -373,7 +373,7 @@ const PrestadoresFormEdit: React.FC<PrestadoresFormEditProps> = ({ prestador }) 
       const data = await res.json();
 
       for (const dir of listaDirecciones) {
-        const { id, esTemporal, ...dirParaBackend } = dir;
+        const { id, esTemporal, horariosAtencion, ...dirParaBackend } = dir;
         const dirUrl = prestador
           ? getApiUrl(`/prestadores/${prestador.id}/direcciones${dir.esTemporal ? "" : `/${id}`}`)
           : getApiUrl(`/prestadores/${data.id}/direcciones`);

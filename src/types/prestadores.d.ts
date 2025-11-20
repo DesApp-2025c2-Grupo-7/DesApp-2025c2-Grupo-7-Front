@@ -10,6 +10,12 @@ export interface HorarioAtencion {
     
     /** Objeto especialidad completo (viene del backend con eager: true) */
     especialidad?: Especialidad;
+    
+    /** ID del profesional asignado a este horario (cuando es centro médico) */
+    profesionalId?: number;
+    
+    /** Objeto profesional completo (viene del backend con eager: true) */
+    profesional?: Prestador;
 }
 
 export interface Direccion {
