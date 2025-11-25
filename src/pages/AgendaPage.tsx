@@ -17,6 +17,7 @@ import { format, parse, startOfWeek, getDay } from "date-fns";
 import { es } from "date-fns/locale";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import Select from "../components/genericos/Select";
+import Button from "../components/genericos/Button";
 
 type Turno = {
   id?: number;
@@ -531,6 +532,13 @@ const AgendaPage: React.FC = () => {
             <p>
               <strong>Especialidad:</strong> {specs}
             </p>
+            <Button
+              onClick={() => {
+                navigate("/prestadores/" + p.id);
+              }}
+            >
+              Ver más
+            </Button>
           </div>
         ),
         soloInformacion: true,
@@ -1023,6 +1031,8 @@ const AgendaPage: React.FC = () => {
     );
   };
 
+  console.log(prestadores);
+  console.log(prestadoresFiltrados);
   return (
     <>
       <div className="admin-page">
