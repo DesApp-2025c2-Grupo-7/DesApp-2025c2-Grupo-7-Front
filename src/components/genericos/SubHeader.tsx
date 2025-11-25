@@ -13,6 +13,7 @@ interface SubHeaderProps {
   buttonText?: string;
   typeTag?: string;
   statusLabel?: string;
+  buttonIcon?: any;
 }
 
 const SubHeader: React.FC<SubHeaderProps> = ({
@@ -24,6 +25,7 @@ const SubHeader: React.FC<SubHeaderProps> = ({
   buttonText,
   typeTag,
   statusLabel,
+  buttonIcon,
 }) => {
   return (
     <div className="seccion-header">
@@ -38,11 +40,18 @@ const SubHeader: React.FC<SubHeaderProps> = ({
         )}
       </div>
       <div className="seccion-header-buttons">
-        {statusLabel && (() => {
-          const normalized = String(statusLabel).toLowerCase();
-          const estadoClass = normalized.includes('inactivo') ? 'inactivo' : 'activo';
-          return <span className={`estado-badge ${estadoClass}`}>{statusLabel}</span>;
-        })()}
+        {statusLabel &&
+          (() => {
+            const normalized = String(statusLabel).toLowerCase();
+            const estadoClass = normalized.includes("inactivo")
+              ? "inactivo"
+              : "activo";
+            return (
+              <span className={`estado-badge ${estadoClass}`}>
+                {statusLabel}
+              </span>
+            );
+          })()}
         {onVolver && (
           <Button variant="back" icon={ArrowLeft} onClick={onVolver}>
             Volver al menú
@@ -50,7 +59,11 @@ const SubHeader: React.FC<SubHeaderProps> = ({
         )}
 
         {onAlta && (
-          <Button variant="primary" icon={UserPlus} onClick={onAlta}>
+          <Button
+            variant="primary"
+            icon={buttonIcon ? buttonIcon : UserPlus}
+            onClick={onAlta}
+          >
             {buttonText}
           </Button>
         )}

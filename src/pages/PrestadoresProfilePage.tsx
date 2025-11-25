@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Header from "../components/genericos/Header";
-import HeaderPrestador from "../components/prestadores/HeaderPrestadores";
+import SubHeader from "../components/genericos/SubHeader";
 import PrestadoresFormEdit from "../components/prestadores/PrestadoresFormEdit";
 import "./PrestadorProfile.css";
 import type { Prestador } from "../types/prestadores";
 import { getApiUrl } from "../config/env";
+import { Calendar } from "lucide-react";
 
 const PrestadorProfilePage: React.FC = () => {
   const [prestador, setPrestador] = useState<Prestador | null>(null);
@@ -46,7 +47,12 @@ const PrestadorProfilePage: React.FC = () => {
           subtitle="Prestador - Información y estado"
         />
         <div className="admin-content">
-          <HeaderPrestador onVolver={handleVolver} />
+          <SubHeader
+            onVolver={handleVolver}
+            title="Gestión de prestadores"
+            buttonText="Ver agenda de turnos"
+            onAlta={() => navigate("/agenda")}
+          />
           <div className="prestador-form">
             {Array.from({ length: 10 }).map((_, i) => (
               <div className="form-row" key={i}>
@@ -67,7 +73,13 @@ const PrestadorProfilePage: React.FC = () => {
         subtitle="Prestador - Información y estado"
       />
       <div className="admin-content">
-        <HeaderPrestador onVolver={handleVolver} mostrarAlta={false} />
+        <SubHeader
+          onVolver={handleVolver}
+          title="Gestión de prestadores"
+          buttonText="Ver agenda de turnos"
+          buttonIcon={Calendar}
+          onAlta={() => navigate("/agenda")}
+        />
         {prestador ? (
           <PrestadoresFormEdit prestador={prestador} />
         ) : (
