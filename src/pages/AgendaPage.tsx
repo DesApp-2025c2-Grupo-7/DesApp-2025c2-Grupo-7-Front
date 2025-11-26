@@ -1037,8 +1037,8 @@ const AgendaPage: React.FC = () => {
     <>
       <div className="admin-page">
         <Header
-          title="Panel de Administración"
-          subtitle="Medicina Prepaga - Administración de agenda de turnos"
+          title="MedIntegral - Panel de Administración"
+          subtitle="Administración de agenda de turnos"
         />
         <div className="admin-content">
           <SubHeader

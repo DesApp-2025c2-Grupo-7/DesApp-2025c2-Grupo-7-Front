@@ -5,9 +5,11 @@ import CardDashboard from "../components/genericos/CardDashboard";
 import { Users, UserCheck, Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import PageHeader from "../components/genericos/PageHeader";
-import type { Afiliado } from "../types/afiliados";
+import type { Afiliado, SituacionTerapeutica } from "../types/afiliados";
 import type { Prestador } from "../types/prestadores";
 import { getApiUrl } from "../config/env";
+import GraficoSituacionesTerapeuticas from "../components/dashboard/GraficoSituacionesTerapeuticas";
+import GraficoPrestadoresPorEspecialidad from "../components/dashboard/GraficoPrestadoresPorEspecialidad";
 
 const CACHE_KEY = "dashboardData";
 const CACHE_DURATION_HOURS = 0.02; // tiempo de validez del cache
@@ -150,12 +152,35 @@ const Dashboard: React.FC = () => {
     }
   };
 
+  // Recolectar todas las situaciones terapéuticas de todos los afiliados
+  const recolectarSituacionesTerapeuticas = (): SituacionTerapeutica[] => {
+    const situaciones: SituacionTerapeutica[] = [];
+    
+    afiliados.forEach((afiliado) => {
+      // Situaciones del titular
+      if (afiliado.situacionesTerapeuticas) {
+        situaciones.push(...afiliado.situacionesTerapeuticas);
+      }
+      
+      // Situaciones de los integrantes del grupo familiar
+      if (afiliado.grupoFamiliar) {
+        afiliado.grupoFamiliar.forEach((integrante: any) => {
+          if (integrante.situacionesTerapeuticas) {
+            situaciones.push(...integrante.situacionesTerapeuticas);
+          }
+        });
+      }
+    });
+    
+    return situaciones;
+  };
+
   return (
     <div className="admin-page">
       {/* Header superior */}
       <Header 
-        title="Panel de Administración" 
-        subtitle="Medicina Prepaga - Administración de prestadores médicos y centros de salud"
+        title="MedIntegral - Panel de Administración" 
+        subtitle="Administración de prestadores médicos y centros de salud"
       />
 
       <div className="admin-content">
@@ -186,6 +211,19 @@ const Dashboard: React.FC = () => {
             icon={Clock}
             />
         </div>
+
+        {/* Gráficos */}
+        {!loading && (
+          <div className="dashboard-graficos">
+            <GraficoSituacionesTerapeuticas 
+              situaciones={recolectarSituacionesTerapeuticas()} 
+              topN={10}
+            />
+            <GraficoPrestadoresPorEspecialidad 
+              prestadores={prestadores}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

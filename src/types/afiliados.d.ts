@@ -12,6 +12,7 @@ export interface SituacionTerapeutica {
     diagnostico: string | null;
     fechaInicio: string | null;
     fechaFin: string | null;
+    personaId?: number;
 }
 
 interface Persona {
@@ -97,6 +98,17 @@ interface GrupoFamiliar {
 export interface ListaAfiliadosProps {
     afiliados: AfiliadoListItem[];
     totalAfiliados?: number; // Total de afiliados filtrados (independiente de la paginación)
+}
+
+export interface ReporteSituacionFamiliar {
+  titular: Persona;
+  integrantes: Persona[];
+  situacionesPorIntegrante: {
+    integrante: Persona;
+    situaciones: SituacionTerapeutica[];
+  }[];
+  totalSituaciones: number;
+  situacionesActivas: number;
 }
 
 export { Direccion, SituacionTerapeutica, Persona, Integrante, Afiliado, AfiliadoListItem, ListaAfiliadosProps, GrupoFamiliar};

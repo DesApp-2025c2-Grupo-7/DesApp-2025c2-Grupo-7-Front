@@ -361,7 +361,7 @@ const AfiliadoProfile: React.FC = () => {
   if (loading) {
     return (
       <div className="admin-page">
-        <Header title="Panel de Administración" subtitle="Afiliado - Información personal y estado" />
+        <Header title="MedIntegral - Panel de Administración" subtitle="Afiliado - Información personal y estado" />
         <div className="admin-content">
           <SubHeader
             title="Afiliado"
@@ -387,7 +387,7 @@ const AfiliadoProfile: React.FC = () => {
   return (
     <div className="admin-page">
       <Header
-        title="Panel de Administración"
+        title="MedIntegral - Panel de Administración"
         subtitle="Afiliado - Información personal y estado"
       />
       <div className="admin-content">

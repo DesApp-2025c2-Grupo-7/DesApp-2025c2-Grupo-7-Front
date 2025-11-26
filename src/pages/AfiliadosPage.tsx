@@ -5,6 +5,10 @@ import BarraBusqueda from "../components/genericos/BarraBusqueda";
 import ListaAfiliados from "../components/afiliados/ListaAfiliados";
 import Paginacion from "../components/genericos/Paginacion";
 import SubHeader from "../components/genericos/SubHeader";
+import TabsAfiliados from "../components/afiliados/TabsAfiliados";
+import SubTabsReportes from "../components/afiliados/reportes/SubTabsReportes";
+import ReporteSituacionesTerapeuticas from "../components/afiliados/reportes/ReporteSituacionesTerapeuticas";
+import ReporteAltasPeriodo from "../components/afiliados/reportes/ReporteAltasPeriodo";
 import "../components/genericos/PaginaEstilos.css";
 import { transformarAfiliadosParaLista } from "../utils/transformarAfiliados";
 import { esPersonaActiva } from "../utils/estadoAfiliado";
@@ -15,6 +19,8 @@ const CACHE_KEY = "afiliados_cache";
 const CACHE_DURATION_HOURS = 0.02; // ~3 minutos
 
 const AfiliadosPage: React.FC = () => {
+  const [activeTab, setActiveTab] = useState<"lista" | "reportes">("lista");
+  const [activeSubTab, setActiveSubTab] = useState<"situaciones" | "altasPeriodo">("situaciones");
   const [busqueda, setBusqueda] = useState("");
   const [searchByNombre, setSearchByNombre] = useState(true);
   const [searchByApellido, setSearchByApellido] = useState(true);
@@ -222,8 +228,8 @@ const AfiliadosPage: React.FC = () => {
   return (
     <div className="admin-page">
       <Header
-        title="Panel de Administración"
-        subtitle="Afiliados - Administración de prestadores médicos y centros de salud"
+        title="MedIntegral - Panel de Administración"
+        subtitle="Afiliados - Administración de afiliados y grupos familiares"
       />
 
       <div className="admin-content">
@@ -234,40 +240,59 @@ const AfiliadosPage: React.FC = () => {
           buttonText="Dar de alta afiliado"
         />
 
-        <BarraBusqueda
-          mode="afiliados"
-          busqueda={busqueda}
-          setBusqueda={setBusqueda}
-          searchByNombre={searchByNombre}
-          setSearchByNombre={setSearchByNombre}
-          searchByApellido={searchByApellido}
-          setSearchByApellido={setSearchByApellido}
-          searchByCredencial={searchByCredencial}
-          setSearchByCredencial={setSearchByCredencial}
-          searchByDni={searchByDni}
-          setSearchByDni={setSearchByDni}
-          onlyTitulares={onlyTitulares}
-          setOnlyTitulares={setOnlyTitulares}
-          includeInactivos={includeInactivos}
-          setIncludeInactivos={setIncludeInactivos}
-        />
+        <TabsAfiliados activeTab={activeTab} onTabChange={setActiveTab} />
 
-        {loading ? (
-          <p>Cargando afiliados...</p>
-        ) : afiliadosVisibles.length > 0 ? (
+        {activeTab === "lista" ? (
           <>
-            <ListaAfiliados
-              afiliados={afiliadosVisibles}
-              totalAfiliados={afiliadosFiltrados.length}
+            <BarraBusqueda
+              mode="afiliados"
+              busqueda={busqueda}
+              setBusqueda={setBusqueda}
+              searchByNombre={searchByNombre}
+              setSearchByNombre={setSearchByNombre}
+              searchByApellido={searchByApellido}
+              setSearchByApellido={setSearchByApellido}
+              searchByCredencial={searchByCredencial}
+              setSearchByCredencial={setSearchByCredencial}
+              searchByDni={searchByDni}
+              setSearchByDni={setSearchByDni}
+              onlyTitulares={onlyTitulares}
+              setOnlyTitulares={setOnlyTitulares}
+              includeInactivos={includeInactivos}
+              setIncludeInactivos={setIncludeInactivos}
             />
-            <Paginacion
-              totalPages={totalPages}
-              currentPage={currentPage}
-              onPageChange={setCurrentPage}
-            />
+
+            {loading ? (
+              <p>Cargando afiliados...</p>
+            ) : afiliadosVisibles.length > 0 ? (
+              <>
+                <ListaAfiliados
+                  afiliados={afiliadosVisibles}
+                  totalAfiliados={afiliadosFiltrados.length}
+                />
+                <Paginacion
+                  totalPages={totalPages}
+                  currentPage={currentPage}
+                  onPageChange={setCurrentPage}
+                />
+              </>
+            ) : (
+              <p>No se encontraron afiliados</p>
+            )}
           </>
         ) : (
-          <p>No se encontraron afiliados</p>
+          <>
+            <SubTabsReportes 
+              activeSubTab={activeSubTab} 
+              onSubTabChange={setActiveSubTab} 
+            />
+            
+            {activeSubTab === "situaciones" ? (
+              <ReporteSituacionesTerapeuticas />
+            ) : (
+              <ReporteAltasPeriodo />
+            )}
+          </>
         )}
       </div>
     </div>

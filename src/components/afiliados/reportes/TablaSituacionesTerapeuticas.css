@@ -1,0 +1,166 @@
+.tabla-situaciones-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.integrante-section {
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  overflow: hidden;
+  background: white;
+  transition: box-shadow 0.2s;
+}
+
+.integrante-section:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.integrante-header {
+  padding: 1rem 1.25rem;
+  background: linear-gradient(to right, #f8f9fa, #ffffff);
+  cursor: pointer;
+  transition: background-color 0.2s;
+  user-select: none;
+}
+
+.integrante-header:hover {
+  background: linear-gradient(to right, #e9ecef, #f8f9fa);
+}
+
+.integrante-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.toggle-icon {
+  font-size: 0.875rem;
+  color: #6c757d;
+  transition: transform 0.2s;
+}
+
+.integrante-nombre {
+  font-weight: 600;
+  color: #212529;
+  font-size: 1rem;
+}
+
+.integrante-parentesco {
+  color: #6c757d;
+  font-size: 0.875rem;
+  font-style: italic;
+}
+
+.situaciones-count {
+  color: #495057;
+  font-size: 0.875rem;
+}
+
+.badge-activas {
+  background: #d4edda;
+  color: #155724;
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.integrante-content {
+  padding: 1rem 1.25rem;
+  background: #ffffff;
+  border-top: 1px solid #e9ecef;
+}
+
+.situaciones-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.situaciones-table thead {
+  background: #f8f9fa;
+}
+
+.situaciones-table th {
+  padding: 0.75rem;
+  text-align: left;
+  font-weight: 600;
+  color: #495057;
+  border-bottom: 2px solid #dee2e6;
+}
+
+.situaciones-table td {
+  padding: 0.75rem;
+  border-bottom: 1px solid #e9ecef;
+  color: #212529;
+}
+
+.situaciones-table tr:last-child td {
+  border-bottom: none;
+}
+
+.situaciones-table tr.activa {
+  background: #f0f9ff;
+}
+
+.situaciones-table tr:hover {
+  background: #f8f9fa;
+}
+
+.diagnostico {
+  font-weight: 500;
+}
+
+.estado-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.estado-activa {
+  background: #d4edda;
+  color: #155724;
+}
+
+.estado-finalizada {
+  background: #f8f9fa;
+  color: #6c757d;
+}
+
+.sin-situaciones {
+  text-align: center;
+  color: #6c757d;
+  font-style: italic;
+  padding: 2rem;
+  margin: 0;
+}
+
+.sin-datos {
+  text-align: center;
+  color: #6c757d;
+  padding: 3rem;
+  font-size: 1rem;
+}
+
+@media (max-width: 768px) {
+  .situaciones-table {
+    font-size: 0.75rem;
+  }
+
+  .situaciones-table th,
+  .situaciones-table td {
+    padding: 0.5rem;
+  }
+
+  .integrante-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+}

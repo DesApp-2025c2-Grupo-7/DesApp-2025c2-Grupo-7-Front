@@ -9,7 +9,7 @@ export function PrestadorDarDeAlta() {
   return (
     <div className="admin-page">
       <Header
-        title="Panel de Administración"
+        title="MedIntegral - Panel de Administración"
         subtitle="Prestador - Dar de alta"
       />
       <div className="admin-content">

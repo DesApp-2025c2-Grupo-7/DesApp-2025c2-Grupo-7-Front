@@ -8,7 +8,7 @@ export function AfiliadoDarDeAlta() {
   return (
     <div className="admin-page">
       <Header
-        title="Panel de Administración"
+        title="MedIntegral - Panel de Administración"
         subtitle="Afiliado - Dar de alta afiliado"
       />
       <div className="admin-content">
