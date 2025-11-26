@@ -136,7 +136,7 @@ const PrestadoresPage: React.FC = () => {
   return (
     <div className="admin-page">
       <Header
-        title="Panel de Administración"
+        title="MedIntegral - Panel de Administración"
         subtitle="Prestadores - Administración de prestadores médicos y especialistas"
       />
 

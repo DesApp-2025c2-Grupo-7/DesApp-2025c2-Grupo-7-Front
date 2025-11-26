@@ -2,12 +2,12 @@
     background-color: #f4f5ff;
     border: 1px solid #4B81D8;
     border-radius: 12px;
-    padding: 20px;
+    padding: 16px;
     position: relative;
 
     /* Para que sea más cuadrada */
     width: 320px;
-    height: 220px;
+    height: 160px;
     /* Centramos contenido verticalmente si hace falta */
     display: flex;
     flex-direction: column;
@@ -37,7 +37,7 @@
     display: flex;
     align-items: center;
     gap: 12px;
-    margin-bottom: 16px;
+    margin-bottom: 12px;
 }
 
 .card-dashboard-icon {

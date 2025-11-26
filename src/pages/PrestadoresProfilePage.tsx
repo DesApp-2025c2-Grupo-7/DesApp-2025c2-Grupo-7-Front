@@ -42,7 +42,7 @@ const PrestadorProfilePage: React.FC = () => {
     return (
       <div className="admin-page">
         <Header
-          title="Panel de Administración"
+          title="MedIntegral - Panel de Administración"
           subtitle="Prestador - Información y estado"
         />
         <div className="admin-content">
@@ -63,7 +63,7 @@ const PrestadorProfilePage: React.FC = () => {
   return (
     <div className="admin-page">
       <Header
-        title="Panel de Administración"
+        title="MedIntegral - Panel de Administración"
         subtitle="Prestador - Información y estado"
       />
       <div className="admin-content">

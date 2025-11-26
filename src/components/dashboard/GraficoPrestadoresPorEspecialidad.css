@@ -1,0 +1,51 @@
+.grafico-pie-container {
+  background: white;
+  border-radius: 12px;
+  padding: 1rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 1.5rem;
+}
+
+.grafico-pie-header {
+  margin-bottom: 1rem;
+}
+
+.grafico-pie-header h3 {
+  margin: 0 0 0.5rem 0;
+  color: #424242;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.grafico-pie-descripcion {
+  margin: 0;
+  color: #606060;
+  font-size: 0.9rem;
+}
+
+.grafico-pie-content {
+  min-height: 320px;
+}
+
+.grafico-sin-datos {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px;
+  color: #606060;
+  font-size: 1rem;
+}
+
+@media (max-width: 768px) {
+  .grafico-pie-container {
+    padding: 1rem;
+  }
+
+  .grafico-pie-header h3 {
+    font-size: 1.1rem;
+  }
+
+  .grafico-pie-content {
+    min-height: 350px;
+  }
+}
