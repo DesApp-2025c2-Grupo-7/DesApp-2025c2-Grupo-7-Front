@@ -5,6 +5,10 @@
   --surface: #f7faf9;
 }
 
+.agenda-calendar{
+  height: fit-content;
+}
+
 .agenda-calendar .rbc-toolbar {
   display: none; /* hide default toolbar since we use custom */
 }
@@ -64,10 +68,15 @@
 
 /* Day cards view styles */
 .day-cards-view{
-  display:flex;gap:12px;flex-wrap:wrap;padding:12px;
+    display: flex;
+    flex-wrap: wrap;
+    padding: 32px;
+    gap: 28px;
+    justify-content: normal;
 }
 .prestador-card{
-  background:var(--card-bg);border:1px solid #e8f3ef;padding:12px;border-radius:8px;width:220px;box-shadow:0 1px 2px rgba(0,0,0,0.04)
+  background:var(--card-bg);border:1px solid #e8f3ef;padding:12px;border-radius:8px;width:220px;box-shadow:0 1px 2px rgba(0,0,0,0.04);
+    min-height: 196px !important;
 }
 .prestador-card h4{margin:0 0 8px 0;color:var(--brand-green)}
 .muted{color:var(--muted)}

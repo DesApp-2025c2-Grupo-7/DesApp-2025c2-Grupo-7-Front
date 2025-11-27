@@ -5,8 +5,10 @@ import "./AgendaPage.css";
 import Modal from "../components/genericos/Modal";
 import { useModal } from "../hooks/useModal";
 import { agendaService } from "../services/agendaService";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import SubHeader from "../components/genericos/SubHeader";
+import Paginacion from "../components/genericos/Paginacion";
+import ReporteCentrosSinHorarios from "../components/prestadores/reportes/ReporteCentrosSinHorarios";
 
 import {
   Calendar as RBCalendar,
@@ -114,6 +116,7 @@ const generateTurnos = (prestadoresList: any[], date: Date): Turno[] => {
 };
 
 const AgendaPage: React.FC = () => {
+  const location = useLocation();
   const [prestadores, setPrestadores] = useState<any[]>([]);
   const [especialidades, setEspecialidades] = useState<string[]>([]);
   const [filtroEspecialidad, setFiltroEspecialidad] = useState<string>("");
@@ -125,6 +128,13 @@ const AgendaPage: React.FC = () => {
   const [turnos, setTurnos] = useState<Turno[]>([]);
   const [events, setEvents] = useState<any[]>([]);
 
+  // Paginación para vista día
+  const [currentPageDay, setCurrentPageDay] = useState(1);
+  const cardsPerPage = 6;
+
+  // Estado para el reporte de centros sin horarios
+  const [mostrarReporteCentros, setMostrarReporteCentros] = useState(false);
+
   const modal = useModal();
   const navigate = useNavigate();
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
@@ -132,6 +142,21 @@ const AgendaPage: React.FC = () => {
   useEffect(() => {
     currentDateRef.current = currentDate;
   }, [currentDate]);
+
+  // Aplicar prestador pre-seleccionado si viene desde navegación
+  useEffect(() => {
+    const state = location.state as { prestadorSeleccionado?: any } | null;
+    if (state?.prestadorSeleccionado) {
+      setFiltroPrestador(String(state.prestadorSeleccionado.id));
+      // Limpiar el state para evitar que se reaplique en futuros renders
+      window.history.replaceState({}, document.title);
+    }
+  }, [location]);
+
+  // Reiniciar página cuando cambian filtros o fecha
+  useEffect(() => {
+    setCurrentPageDay(1);
+  }, [filtroEspecialidad, filtroPrestador, onlyCentros, onlyIndependientes, currentDate, view]);
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -570,18 +595,45 @@ const AgendaPage: React.FC = () => {
     };
 
     return (
-      <div className="agenda-calendar" style={{ height: 650 }}>
+      <div className="agenda-calendar">
         {view === "day" ? (
           <div>
             <CustomToolbar onView={(v: any) => setView(v)} view={"day"} />
-            <div className="day-cards-view">
-              {(() => {
-                const dayKey = formatDateLocal(currentDate);
-                const presToShow = prestadoresFiltrados;
-                if (!presToShow || presToShow.length === 0)
-                  return <div className="muted">No hay prestadores</div>;
+            {(() => {
+              const dayKey = formatDateLocal(currentDate);
+              const presToShow = prestadoresFiltrados;
+              
+              if (!presToShow || presToShow.length === 0) {
+                // Construir mensaje de filtros aplicados
+                const filtrosAplicados = [];
+                if (filtroEspecialidad) {
+                  const especialidadNombre = especialidades.find(e => e === filtroEspecialidad) || filtroEspecialidad;
+                  filtrosAplicados.push(`Especialidad: ${especialidadNombre}`);
+                }
+                if (filtroPrestador) {
+                  const prestadorSeleccionado = prestadores.find(p => String(p.id) === String(filtroPrestador));
+                  filtrosAplicados.push(`Prestador: ${prestadorSeleccionado?.nombreCompleto || prestadorSeleccionado?.nombre || filtroPrestador}`);
+                }
+                if (onlyCentros) {
+                  filtrosAplicados.push("Solo centros médicos");
+                }
+                if (onlyIndependientes) {
+                  filtrosAplicados.push("Solo profesionales independientes");
+                }
 
-                return presToShow.flatMap((p: any) => {
+                const mensaje = filtrosAplicados.length > 0 
+                  ? `No hay prestadores que coincidan con el filtro aplicado: ${filtrosAplicados.join(" - ")}`
+                  : "No hay prestadores";
+
+                return (
+                  <div className="day-cards-view" style={{ justifyContent: "center" }}>
+                    <div className="muted">{mensaje}</div>
+                  </div>
+                );
+              }
+
+              // Generar todas las cards antes de paginar
+              const allCards = presToShow.flatMap((p: any) => {
                   // Obtener los turnos del prestador en el día actual
                   const myTurnos = (turnos || [])
                     .filter(
@@ -593,6 +645,11 @@ const AgendaPage: React.FC = () => {
                       (a: any, b: any) =>
                         horaAMinutos(a.hora) - horaAMinutos(b.hora)
                     );
+
+                  // Si no hay turnos para este prestador, no mostrar nada
+                  if (myTurnos.length === 0) {
+                    return [];
+                  }
 
                   // Agrupar por especialidad
                   const groups: { [k: string]: any[] } = {};
@@ -691,25 +748,65 @@ const AgendaPage: React.FC = () => {
                           className="single-globo"
                           style={{
                             display: "flex",
-                            alignItems: "center",
+                            flexDirection: "column",
                             gap: 12,
                           }}
                         >
-                          <div style={{ flex: 1 }}>
-                            <div style={{ fontSize: 14, fontWeight: 700 }}>
-                              {rangeText}
+                          <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+                            <div>
+                              <div style={{ fontSize: 12, color: "#606060", marginBottom: 4 }}>
+                                <strong>Especialidad:</strong>
+                              </div>
+                              <div style={{ fontSize: 14, fontWeight: 600 }}>
+                                {esp}
+                              </div>
                             </div>
-                            <div style={{ fontSize: 13, color: "#333" }}>
-                              {durText} • {arr.length} turno
-                              {arr.length !== 1 ? "s" : ""}
+                            <div>
+                              <div style={{ fontSize: 12, color: "#606060", marginBottom: 4 }}>
+                                <strong>Horario:</strong>
+                              </div>
+                              <div style={{ fontSize: 14, fontWeight: 700 }}>
+                                {rangeText}
+                              </div>
+                            </div>
+                            <div>
+                              <div style={{ fontSize: 12, color: "#606060", marginBottom: 4 }}>
+                                <strong>Duración:</strong>
+                              </div>
+                              <div style={{ fontSize: 14 }}>
+                                {durText}
+                              </div>
+                            </div>
+                            <div>
+                              <div style={{ fontSize: 12, color: "#606060", marginBottom: 4 }}>
+                                <strong>Turnos:</strong>
+                              </div>
+                              <div style={{ fontSize: 14 }}>
+                                {arr.length} turno{arr.length !== 1 ? "s" : ""}
+                              </div>
                             </div>
                           </div>
-                          <div style={{ display: "flex", gap: 8 }}>
+                          <div>
+                            <div style={{ fontSize: 12, color: "#606060", marginBottom: 4 }}>
+                              <strong>Dirección:</strong>
+                            </div>
+                            <div style={{ fontSize: 13, color: "#333" }}>
+                              {p && Array.isArray(p.direccion) && p.direccion.length > 0
+                                ? p.direccion
+                                    .map((d: any) =>
+                                      `${d.calle || ""} ${d.numero || ""} ${d.localidad || ""}`.trim()
+                                    )
+                                    .filter(Boolean)
+                                    .join(" — ")
+                                : "No registrada"}
+                            </div>
+                          </div>
+                          <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
                             <button
                               className="rbc-btn"
-                              onClick={() => showDetalleTurno(p, arr)}
+                              onClick={() => navigate("/prestadores/" + p.id)}
                             >
-                              Detalle
+                              + Más Info
                             </button>
                           </div>
                         </div>
@@ -717,8 +814,55 @@ const AgendaPage: React.FC = () => {
                     );
                   });
                 });
-              })()}
-            </div>
+
+              // Si no hay ninguna card con turnos, mostrar mensaje
+              if (allCards.length === 0) {
+                // Construir mensaje de filtros aplicados
+                const filtrosAplicados = [];
+                if (filtroEspecialidad) {
+                  const especialidadNombre = especialidades.find(e => e === filtroEspecialidad) || filtroEspecialidad;
+                  filtrosAplicados.push(`Especialidad: ${especialidadNombre}`);
+                }
+                if (filtroPrestador) {
+                  const prestadorSeleccionado = prestadores.find(p => String(p.id) === String(filtroPrestador));
+                  filtrosAplicados.push(`Prestador: ${prestadorSeleccionado?.nombreCompleto || prestadorSeleccionado?.nombre || filtroPrestador}`);
+                }
+                if (onlyCentros) {
+                  filtrosAplicados.push("Solo centros médicos");
+                }
+                if (onlyIndependientes) {
+                  filtrosAplicados.push("Solo profesionales independientes");
+                }
+
+                const mensajeFiltros = filtrosAplicados.length > 0 
+                  ? ` para el filtro aplicado. (${filtrosAplicados.join(" - ")})`
+                  : "";
+
+                return (
+                  <div className="day-cards-view" style={{ justifyContent: "center" }}>
+                    <div className="muted">No hay turnos disponibles para este día{mensajeFiltros}</div>
+                  </div>
+                );
+              }
+
+              // Calcular paginación
+              const totalPages = Math.ceil(allCards.length / cardsPerPage) || 1;
+              const startIndex = (currentPageDay - 1) * cardsPerPage;
+              const visibleCards = allCards.slice(startIndex, startIndex + cardsPerPage);
+
+              return (
+                <>
+                  <div className="day-cards-view">
+                    {visibleCards}
+                  </div>
+                  <Paginacion
+                    totalPages={totalPages}
+                    currentPage={currentPageDay}
+                    onPageChange={setCurrentPageDay}
+                  />
+                </>
+              );
+            })()}
           </div>
         ) : view === "week" ? (
           <div>
@@ -1146,8 +1290,29 @@ const AgendaPage: React.FC = () => {
           </div>
 
           <div>{renderCalendar()}</div>
+
+          <div style={{ marginTop: "20px", display: "flex", justifyContent: "center" }}>
+            <button
+              className="rbc-btn"
+              onClick={() => setMostrarReporteCentros(true)}
+              style={{ 
+                fontSize: "14px", 
+                padding: "12px 24px",
+                background: "#4B81D8",
+                color: "white",
+                border: "none",
+                fontWeight: "600"
+              }}
+            >
+              Ver reporte: Centros sin Agendas
+            </button>
+          </div>
         </div>
       </div>
+
+      {mostrarReporteCentros && (
+        <ReporteCentrosSinHorarios onClose={() => setMostrarReporteCentros(false)} />
+      )}
 
       <Modal
         isOpen={modal.isOpen}
