@@ -8,7 +8,7 @@ import PageHeader from "../components/genericos/PageHeader";
 import type { Afiliado, SituacionTerapeutica } from "../types/afiliados";
 import type { Prestador } from "../types/prestadores";
 import { getApiUrl } from "../config/env";
-import GraficoSituacionesTerapeuticas from "../components/dashboard/GraficoSituacionesTerapeuticas";
+import GraficoPrestadoresPorCodigoPostal from "../components/dashboard/GraficoSituacionesTerapeuticas";
 import GraficoPrestadoresPorEspecialidad from "../components/dashboard/GraficoPrestadoresPorEspecialidad";
 
 const CACHE_KEY = "dashboardData";
@@ -215,7 +215,7 @@ const Dashboard: React.FC = () => {
         {/* Gráficos */}
         {!loading && (
           <div className="dashboard-graficos">
-            <GraficoSituacionesTerapeuticas 
+            <GraficoPrestadoresPorCodigoPostal 
               situaciones={recolectarSituacionesTerapeuticas()} 
               topN={10}
             />
