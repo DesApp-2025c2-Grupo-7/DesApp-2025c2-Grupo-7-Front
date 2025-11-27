@@ -1,7 +1,7 @@
 import React from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import type { SituacionTerapeutica } from '../../types/afiliados';
-import './GraficoSituacionesTerapeuticas.css';
+import './GraficoPrestadoresPorCodigoPostal.css';
 
 interface Props {
   situaciones: SituacionTerapeutica[];

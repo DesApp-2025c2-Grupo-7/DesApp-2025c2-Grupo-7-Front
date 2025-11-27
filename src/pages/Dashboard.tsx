@@ -8,7 +8,7 @@ import PageHeader from "../components/genericos/PageHeader";
 import type { Afiliado, SituacionTerapeutica } from "../types/afiliados";
 import type { Prestador } from "../types/prestadores";
 import { getApiUrl } from "../config/env";
-import GraficoPrestadoresPorCodigoPostal from "../components/dashboard/GraficoSituacionesTerapeuticas";
+import GraficoPrestadoresPorCodigoPostal from "../components/dashboard/GraficoPrestadoresPorCodigoPostal";
 import GraficoPrestadoresPorEspecialidad from "../components/dashboard/GraficoPrestadoresPorEspecialidad";
 
 const CACHE_KEY = "dashboardData";
