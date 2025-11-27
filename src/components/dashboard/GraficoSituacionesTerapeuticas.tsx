@@ -1,5 +1,5 @@
 import React from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import type { SituacionTerapeutica } from '../../types/afiliados';
 import './GraficoSituacionesTerapeuticas.css';
 
@@ -20,15 +20,39 @@ const GraficoSituacionesTerapeuticas: React.FC<Props> = ({ situaciones, topN = 1
 
     // Convertir a array y ordenar por frecuencia
     return Array.from(conteo.entries())
-      .map(([nombre, cantidad]) => ({ nombre, cantidad }))
-      .sort((a, b) => b.cantidad - a.cantidad)
+      .map(([nombre, value]) => ({ nombre, value }))
+      .sort((a, b) => b.value - a.value)
       .slice(0, topN);
   };
 
   const data = contarDiagnosticos();
 
-  // Colores para las barras
-  const colors = ['#4B81D8', '#8196c7', '#ff9d0a', '#5cb85c', '#f0ad4e', '#d9534f', '#5bc0de', '#292b2c', '#0275d8', '#5cb85c'];
+  // Colores para el gráfico
+  const colors = ['#4B81D8', '#8196c7', '#ff9d0a', '#5cb85c', '#f0ad4e', '#d9534f', '#5bc0de', '#292b2c', '#0275d8', '#5a6268'];
+
+  // Custom label para mostrar porcentaje
+  const renderCustomLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }: any) => {
+    if (percent < 0.05) return null; // No mostrar label si es menos del 5%
+    
+    const RADIAN = Math.PI / 180;
+    const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+    const x = cx + radius * Math.cos(-midAngle * RADIAN);
+    const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
+    return (
+      <text 
+        x={x} 
+        y={y} 
+        fill="white" 
+        textAnchor={x > cx ? 'start' : 'end'} 
+        dominantBaseline="central"
+        fontSize="14"
+        fontWeight="600"
+      >
+        {`${(percent * 100).toFixed(0)}%`}
+      </text>
+    );
+  };
 
   if (data.length === 0) {
     return (
@@ -52,23 +76,22 @@ const GraficoSituacionesTerapeuticas: React.FC<Props> = ({ situaciones, topN = 1
       </div>
       <div className="grafico-content">
         <ResponsiveContainer width="100%" height={320}>
-          <BarChart 
-            data={data}
-            margin={{ top: 5, right: 10, left: 5, bottom: 70 }}
-          >
-            <CartesianGrid strokeDasharray="3 3" stroke="#dee2e6" />
-            <XAxis 
-              dataKey="nombre" 
-              angle={-45}
-              textAnchor="end"
-              height={120}
-              interval={0}
-              tick={{ fill: '#606060', fontSize: 12 }}
-            />
-            <YAxis 
-              tick={{ fill: '#606060', fontSize: 12 }}
-              label={{ value: 'Cantidad', angle: -90, position: 'insideLeft', fill: '#424242' }}
-            />
+          <PieChart>
+            <Pie
+              data={data}
+              cx="50%"
+              cy="50%"
+              labelLine={false}
+              label={renderCustomLabel}
+              outerRadius={110}
+              fill="#8884d8"
+              dataKey="value"
+              nameKey="nombre"
+            >
+              {data.map((_, index) => (
+                <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
+              ))}
+            </Pie>
             <Tooltip 
               contentStyle={{ 
                 backgroundColor: 'white', 
@@ -76,19 +99,17 @@ const GraficoSituacionesTerapeuticas: React.FC<Props> = ({ situaciones, topN = 1
                 borderRadius: '8px',
                 boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
               }}
-              labelStyle={{ color: '#424242', fontWeight: 600 }}
               itemStyle={{ color: '#606060' }}
+              formatter={(value: number, name: string) => [value, name]}
             />
-            <Bar 
-              dataKey="cantidad" 
-              radius={[8, 8, 0, 0]}
-              maxBarSize={80}
-            >
-              {data.map((_, index) => (
-                <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
-              ))}
-            </Bar>
-          </BarChart>
+            <Legend 
+              verticalAlign="bottom" 
+              height={36}
+              wrapperStyle={{ paddingTop: '20px' }}
+              iconType="circle"
+              formatter={(value: string) => <span style={{ color: '#424242', fontSize: '0.9rem' }}>{value}</span>}
+            />
+          </PieChart>
         </ResponsiveContainer>
       </div>
       <div className="grafico-footer">
