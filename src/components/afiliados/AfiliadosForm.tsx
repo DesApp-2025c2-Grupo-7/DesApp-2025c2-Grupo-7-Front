@@ -61,6 +61,7 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
   const [modalDirecciones, setModalDirecciones] = useState<NewDireccion[]>([
     { calle: '', numero: '', localidad: '', codigoPostal: '', depto: '' }
   ]);
+  const [usarDireccionTitular, setUsarDireccionTitular] = useState<boolean>(false);
     const [modalFechaAlta, setModalFechaAlta] = useState<string>(new Date().toISOString().split('T')[0]);
     // Lista de diagnósticos (actualmente hardcodeada en frontend)
     const [listaSituacionesTerapeuticas] = useState([
@@ -128,6 +129,7 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
         setModalDirecciones([{ calle: '', numero: '', localidad: '', codigoPostal: '', depto: '' }]);
         setSituacionesTerapeuticas([{ diagnostico: '', fechaInicio: '', fechaFin: '' }]);
         setModalFechaAlta(new Date().toISOString().split('T')[0]);
+        setUsarDireccionTitular(false);
         setMostrarModalAgregarIntegrante(true);
       }
         };
@@ -221,8 +223,39 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
     setModalDirecciones([{ calle: '', numero: '', localidad: '', codigoPostal: '', depto: '' }]);
     setSituacionesTerapeuticas([{ diagnostico: '', fechaInicio: '', fechaFin: '' }]);
       setModalFechaAlta(new Date().toISOString().split('T')[0]);
+      setUsarDireccionTitular(false);
       setMostrarModalAgregarIntegrante(true);
     };
+
+  const handleToggleDireccionTitular = (checked: boolean) => {
+    setUsarDireccionTitular(checked);
+    
+    if (checked) {
+      // Copiar direcciones del titular
+      const titular = afiliadoTitular || afiliado;
+      if (titular?.direccion && titular.direccion.length > 0) {
+        const direccionesTitular = titular.direccion.map(d => ({
+          calle: d.calle || '',
+          numero: d.numero || '',
+          localidad: d.localidad || '',
+          codigoPostal: d.codigoPostal || '',
+          depto: d.depto || ''
+        }));
+        setModalDirecciones(direccionesTitular);
+      }
+    } else {
+      // Resetear a una dirección vacía
+      setModalDirecciones([{ calle: '', numero: '', localidad: '', codigoPostal: '', depto: '' }]);
+    }
+  };
+
+  const handleModalDireccionChange = (idx: number, field: keyof NewDireccion, value: string) => {
+    setModalDirecciones(prev => prev.map((x, i) => i === idx ? { ...x, [field]: value } : x));
+    // Si el usuario edita manualmente, desmarcar el checkbox
+    if (usarDireccionTitular) {
+      setUsarDireccionTitular(false);
+    }
+  };
 
   const handleCerrarModalAgregarIntegrante = () => {
     // Confirmar si hay datos en el formulario (revisar estados del modal)
@@ -247,6 +280,7 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
     setModalTelefonos(['']);
     setModalDirecciones([{ calle: '', numero: '', localidad: '', codigoPostal: '', depto: '' }]);
     setModalFechaAlta(new Date().toISOString().split('T')[0]);
+    setUsarDireccionTitular(false);
   };
 
     const validarFormularioIntegrante = (): { esValido: boolean; errores: string[] } => {
@@ -423,6 +457,10 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
         
         setMostrarModalAgregarIntegrante(false);
         setSituacionesTerapeuticas([{ diagnostico: '', fechaInicio: '', fechaFin: '' }]); // Resetear a uno vacío
+        setModalEmails(['']);
+        setModalTelefonos(['']);
+        setModalDirecciones([{ calle: '', numero: '', localidad: '', codigoPostal: '', depto: '' }]);
+        setUsarDireccionTitular(false);
     };
 
 
@@ -1166,6 +1204,22 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
                   <div className="form-section">
                     <h4 className="section-title">Dirección de Residencia</h4>
                     
+                    {/* Checkbox para usar dirección del titular */}
+                    <div style={{ marginBottom: '16px', padding: '12px', backgroundColor: '#f8f9fa', borderRadius: '8px', border: '1px solid #e1e4e8' }}>
+                      <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', fontSize: '14px' }}>
+                        <input
+                          type="checkbox"
+                          checked={usarDireccionTitular}
+                          onChange={(e) => handleToggleDireccionTitular(e.target.checked)}
+                          style={{ marginRight: '8px', cursor: 'pointer', width: '16px', height: '16px' }}
+                        />
+                        <span>Usar misma dirección que el titular</span>
+                      </label>
+                      <small style={{ display: 'block', marginLeft: '24px', marginTop: '4px', color: '#606060', fontSize: '12px' }}>
+                        Puede agregar direcciones adicionales después
+                      </small>
+                    </div>
+                    
                     <div className="direcciones-dinamicas">
                       {modalDirecciones.map((d, idx) => (
                         <div key={idx} className="direccion-item">
@@ -1176,7 +1230,7 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
                                 type="text"
                                 name={`calle-${idx}`}
                                 value={d.calle}
-                                onChange={(v: string) => setModalDirecciones(prev => prev.map((x,i)=> i===idx? {...x, calle: v} : x))}
+                                onChange={(v: string) => handleModalDireccionChange(idx, 'calle', v)}
                                 placeholder="Av. Corrientes"
                                 required
                                 validationType="requerido"
@@ -1189,7 +1243,7 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
                                 type="text"
                                 name={`numero-${idx}`}
                                 value={d.numero}
-                                onChange={(v: string) => setModalDirecciones(prev => prev.map((x,i)=> i===idx? {...x, numero: v} : x))}
+                                onChange={(v: string) => handleModalDireccionChange(idx, 'numero', v)}
                                 placeholder="1234"
                                 required
                                 validationType="altura"
@@ -1201,7 +1255,7 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
                           <div className="form-row-triple">
                             <div className="form-row-triple-item">
                               <label>Departamento</label>
-                              <Input type="text" name={`depto-${idx}`} value={d.depto ?? ''} onChange={(v: string) => setModalDirecciones(prev => prev.map((x,i)=> i===idx? {...x, depto: v} : x))} placeholder="1A" />
+                              <Input type="text" name={`depto-${idx}`} value={d.depto ?? ''} onChange={(v: string) => handleModalDireccionChange(idx, 'depto', v)} placeholder="1A" />
                             </div>
                             <div className="form-row-triple-item">
                               <label>Código Postal *</label>
@@ -1209,7 +1263,7 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
                                 type="text"
                                 name={`codigoPostal-${idx}`}
                                 value={d.codigoPostal ?? ''}
-                                onChange={(v: string) => setModalDirecciones(prev => prev.map((x,i)=> i===idx? {...x, codigoPostal: v} : x))}
+                                onChange={(v: string) => handleModalDireccionChange(idx, 'codigoPostal', v)}
                                 placeholder="1043"
                                 required
                                 validationType="codigoPostal"
@@ -1222,7 +1276,7 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
                                 type="text"
                                 name={`localidad-${idx}`}
                                 value={d.localidad}
-                                onChange={(v: string) => setModalDirecciones(prev => prev.map((x,i)=> i===idx? {...x, localidad: v} : x))}
+                                onChange={(v: string) => handleModalDireccionChange(idx, 'localidad', v)}
                                 placeholder="CABA"
                                 required
                                 validationType="requerido"

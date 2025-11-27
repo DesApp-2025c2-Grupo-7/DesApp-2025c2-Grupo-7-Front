@@ -208,6 +208,23 @@
   gap: 0.5rem;
 }
 
+.situaciones-por-persona {
+  margin-bottom: 1.5rem;
+}
+
+.situaciones-por-persona:last-child {
+  margin-bottom: 0;
+}
+
+.nombre-persona {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #424242;
+  margin: 0 0 0.75rem 0;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #dee2e6;
+}
+
 .lista-situaciones-preview li {
   display: flex;
   align-items: center;
@@ -324,6 +341,41 @@
 .btn-descargar svg {
   width: 16px;
   height: 16px;
+}
+
+.acciones-grupo-familiar {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #dee2e6;
+}
+
+.btn-descargar-small {
+  padding: 0.4rem 0.8rem;
+  background: #4B81D8;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.btn-descargar-small:hover {
+  background: #3d6fb8;
+  box-shadow: 0 2px 4px rgba(75, 129, 216, 0.3);
+}
+
+.btn-descargar-small svg {
+  width: 14px;
+  height: 14px;
 }
 
 .acciones-resultados {
