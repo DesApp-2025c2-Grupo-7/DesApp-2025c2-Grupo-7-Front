@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { UserX, AlertTriangle } from "lucide-react";
+import { UserX, AlertTriangle, Calendar } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Button from "../genericos/Button";
 import ModalConfirmacion from "../genericos/ModalConfirmacion";
@@ -39,6 +39,18 @@ const ListaPrestadores: React.FC<ListaPrestadoresProps> = ({ prestadores }) => {
     }
 
     return true;
+  };
+
+  // Verificar si tiene baja programada (fecha futura)
+  const tieneBajaProgramada = (prestador: Prestador): boolean => {
+    if (!prestador.fechaBaja) return false;
+    
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    const fechaBaja = new Date(prestador.fechaBaja);
+    fechaBaja.setHours(0, 0, 0, 0);
+    
+    return fechaBaja > hoy;
   };
 
   // Navegar al perfil
@@ -114,6 +126,7 @@ const ListaPrestadores: React.FC<ListaPrestadoresProps> = ({ prestadores }) => {
         <div className="cards-grid">
           {prestadores.map((prestador) => {
             const activo = estaActivo(prestador);
+            const bajaProgramada = tieneBajaProgramada(prestador);
 
             return (
               <div 
@@ -122,7 +135,7 @@ const ListaPrestadores: React.FC<ListaPrestadoresProps> = ({ prestadores }) => {
                   prestador.esProfesionalIndependiente 
                     ? 'profesional-independiente' 
                     : 'centro-medico'
-                } ${!activo ? 'prestador-inactivo' : ''}`}
+                } ${!activo ? 'prestador-inactivo' : ''} ${bajaProgramada ? 'baja-programada' : ''}`}
               >
                 <span className={`prestador-tipo-badge ${
                   prestador.esProfesionalIndependiente ? 'profesional' : 'centro'
@@ -133,6 +146,13 @@ const ListaPrestadores: React.FC<ListaPrestadoresProps> = ({ prestadores }) => {
                 {!activo && (
                   <span className="badge-inactivo">
                     {prestador.fechaBaja ? "Dado de baja" : "Pendiente de alta"}
+                  </span>
+                )}
+
+                {bajaProgramada && (
+                  <span className="badge-baja-programada">
+                    <Calendar size={14} />
+                    Baja programada: {new Date(prestador.fechaBaja).toLocaleDateString()}
                   </span>
                 )}
 
@@ -150,7 +170,7 @@ const ListaPrestadores: React.FC<ListaPrestadoresProps> = ({ prestadores }) => {
                   </div>
                 </div>
 
-                {prestador.fechaBaja && (
+                {prestador.fechaBaja && !activo && (
                   <div className="prestador-info">
                     <p>
                       <strong>Fecha de baja:</strong>{" "}
@@ -222,6 +242,7 @@ const ListaPrestadores: React.FC<ListaPrestadoresProps> = ({ prestadores }) => {
                 type="date"
                 value={fechaBajaSeleccionada}
                 onChange={(e) => setFechaBajaSeleccionada(e.target.value)}
+                min={new Date(Date.now() + 86400000).toISOString().split("T")[0]}
                 style={{
                   width: "100%",
                   padding: "0.5rem",

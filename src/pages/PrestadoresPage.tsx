@@ -26,8 +26,7 @@ const PrestadoresPage: React.FC = () => {
 
   // Paginación
   const [currentPage, setCurrentPage] = useState(1);
-  const prestadoresPerPage = 6
-  ;
+  const prestadoresPerPage = 6;
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -62,14 +61,37 @@ const PrestadoresPage: React.FC = () => {
   const handleVolver = () => navigate("/");
   const handleAlta = () => navigate("/prestadores/alta");
 
+  // Función auxiliar para verificar si un prestador está activo
+  const estaActivo = (prestador: Prestador): boolean => {
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+
+    // Si tiene fecha de baja y ya pasó, está inactivo
+    if (prestador.fechaBaja) {
+      const fechaBaja = new Date(prestador.fechaBaja);
+      fechaBaja.setHours(0, 0, 0, 0);
+      if (fechaBaja <= hoy) return false;
+    }
+
+    // Si tiene fecha de alta futura, está inactivo
+    if (prestador.fechaAlta) {
+      const fechaAlta = new Date(prestador.fechaAlta);
+      fechaAlta.setHours(0, 0, 0, 0);
+      if (fechaAlta > hoy) return false;
+    }
+
+    return true;
+  };
+
   // Filtrado de prestadores
   const prestadoresFiltrados = prestadores.filter((prestador) => {
     // Filtro por tipo de prestador
     if (onlyProfesionales && !prestador.esProfesionalIndependiente) return false;
     if (onlyCentros && prestador.esProfesionalIndependiente) return false;
 
-    // Filtro por estado (bajas)
-    if (!includeBajas && prestador.fechaBaja) return false;
+    // Filtro por estado (bajas) - CORREGIDO
+    // Solo excluir si NO se incluyen bajas Y el prestador está realmente inactivo
+    if (!includeBajas && !estaActivo(prestador)) return false;
 
     // Si no hay búsqueda, mostrar todos los que pasaron los filtros anteriores
     if (!busqueda.trim()) return true;
