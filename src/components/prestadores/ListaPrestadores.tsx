@@ -170,6 +170,118 @@ const ListaPrestadores: React.FC<ListaPrestadoresProps> = ({ prestadores }) => {
                   </div>
                 </div>
 
+                {/* Información adicional del prestador */}
+                <div className="prestador-info-extra">
+                  {/* Contacto */}
+                  {(prestador.telefono || prestador.email) && (
+                    <div className="info-item">
+                      <span className="info-label">📞 Contacto:</span>
+                      <span className="info-value">
+                        {prestador.telefono && <span>{prestador.telefono}</span>}
+                        {prestador.telefono && prestador.email && " • "}
+                        {prestador.email && <span>{prestador.email}</span>}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Para profesionales independientes: Centro médico asociado */}
+                  {prestador.esProfesionalIndependiente && prestador.centroMedicoAsociado && (
+                    <div className="info-item">
+                      <span className="info-label">🏥 Centro:</span>
+                      <span className="info-value">{prestador.centroMedicoAsociado.nombreCompleto}</span>
+                    </div>
+                  )}
+
+                  {/* Días y horarios de atención */}
+                  {prestador.direccion && prestador.direccion.some(d => d.horariosAtencion?.length > 0) && (
+                    <div className="info-item">
+                      <span className="info-label">🕐 Horarios:</span>
+                      <div className="info-value horarios-lista">
+                        {(() => {
+                          // Orden de los días
+                          const ordenDias: Record<string, number> = {
+                            'Lunes': 1,
+                            'Martes': 2,
+                            'Miércoles': 3,
+                            'Jueves': 4,
+                            'Viernes': 5,
+                            'Sábado': 6,
+                            'Domingo': 7
+                          };
+
+                          // Mapeo de días a abreviaturas
+                          const diasAbrev: Record<string, string> = {
+                            'Lunes': 'L',
+                            'Martes': 'M',
+                            'Miércoles': 'X',
+                            'Jueves': 'J',
+                            'Viernes': 'V',
+                            'Sábado': 'S',
+                            'Domingo': 'D'
+                          };
+
+                          // Agrupar horarios por día y encontrar min/max
+                          const horariosPorDia = new Map<string, { desde: string, hasta: string }[]>();
+                          
+                          prestador.direccion.forEach(dir => {
+                            dir.horariosAtencion?.forEach(horario => {
+                              if (!horariosPorDia.has(horario.dia)) {
+                                horariosPorDia.set(horario.dia, []);
+                              }
+                              horariosPorDia.get(horario.dia)?.push({
+                                desde: horario.desde,
+                                hasta: horario.hasta
+                              });
+                            });
+                          });
+
+                          // Calcular rango completo por día
+                          const rangosPorDia = Array.from(horariosPorDia.entries()).map(([dia, horarios]) => {
+                            const horasDesde = horarios.map(h => h.desde).sort();
+                            const horasHasta = horarios.map(h => h.hasta).sort();
+                            return {
+                              dia,
+                              desde: horasDesde[0],
+                              hasta: horasHasta[horasHasta.length - 1]
+                            };
+                          });
+
+                          // Ordenar por día de la semana
+                          rangosPorDia.sort((a, b) => ordenDias[a.dia] - ordenDias[b.dia]);
+
+                          // Agrupar días con mismo horario
+                          const horariosAgrupados: { dias: string[], rango: string }[] = [];
+                          rangosPorDia.forEach(item => {
+                            const rango = `${item.desde} - ${item.hasta}`;
+                            const ultimoGrupo = horariosAgrupados[horariosAgrupados.length - 1];
+                            
+                            if (ultimoGrupo && ultimoGrupo.rango === rango) {
+                              ultimoGrupo.dias.push(item.dia);
+                            } else {
+                              horariosAgrupados.push({ dias: [item.dia], rango });
+                            }
+                          });
+
+                          // Mostrar máximo 2 grupos
+                          return horariosAgrupados.slice(0, 2).map((grupo, idx) => {
+                            const diasText = grupo.dias.map(d => diasAbrev[d]).join(' y ');
+                            return (
+                              <span key={idx} className="horario-grupo">
+                                {diasText} de {grupo.rango}
+                              </span>
+                            );
+                          });
+                        })()}
+                        {prestador.direccion.reduce((total, dir) => 
+                          total + (dir.horariosAtencion?.length || 0), 0
+                        ) > 2 && (
+                          <span className="horarios-extra">+más horarios</span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
                 {prestador.fechaBaja && !activo && (
                   <div className="prestador-info">
                     <p>
