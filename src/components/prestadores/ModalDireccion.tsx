@@ -347,105 +347,146 @@ const ModalDireccion: React.FC<ModalDireccionProps> = ({
   };
 
   const handleSave = async () => {
-    // Validar que no haya campos vacíos en los horarios
-    const tieneHorariosIncompletos = form.horariosAtencion.some(
-      h => !h.dia || !h.desde || !h.hasta || !h.duracionTurno
+  // 1️⃣ Validar campos de dirección
+  if (!form.calle || !form.numero || !form.localidad) {
+    alert("Debes completar al menos: Calle, Número y Localidad");
+    return;
+  }
+
+  // 2️⃣ Validar que no haya campos vacíos en los horarios
+  const tieneHorariosIncompletos = form.horariosAtencion.some(
+    h => !h.dia || !h.desde || !h.hasta || !h.duracionTurno
+  );
+
+  if (tieneHorariosIncompletos) {
+    alert("Todos los horarios deben tener día, hora de inicio, hora de fin y duración completados");
+    return;
+  }
+
+  // 3️⃣ Verificar errores críticos
+  if (Object.keys(errores).length > 0) {
+    alert("Corrige los errores antes de guardar");
+    return;
+  }
+
+  // 4️⃣ Si hay advertencias, pedir confirmación
+  if (Object.keys(advertencias).length > 0) {
+    const confirmar = window.confirm(
+      "Se detectaron advertencias en los horarios. ¿Deseas continuar de todas formas?"
     );
+    if (!confirmar) return;
+  }
 
-    if (tieneHorariosIncompletos) {
-      alert("Todos los horarios deben tener día, hora de inicio, hora de fin y duración completados");
-      return;
+  // 5️⃣ Confirmación final
+  if (!window.confirm("¿Deseas guardar los cambios realizados?")) return;
+
+  // 6️⃣ Si no hay prestadorId válido, guardar temporal
+  if (!prestadorId || prestadorId === 0) {
+    console.log("Guardando dirección temporal (sin prestadorId)");
+    onSave({ ...form, esTemporal: true });
+    onClose();
+    return;
+  }
+
+  try {
+    // 7️⃣ Determinar si es nueva dirección
+    const esIdTemporal = form.id >= 1000000;
+    const esNuevaDireccion = form.id === 0 || esIdTemporal || form.esTemporal === true;
+
+    console.log("Guardando dirección:", {
+      prestadorId,
+      direccionId: form.id,
+      esNuevaDireccion,
+      esIdTemporal
+    });
+
+    // 8️⃣ Guardar/actualizar dirección
+    const method = esNuevaDireccion ? "POST" : "PUT";
+    const url = esNuevaDireccion
+      ? getApiUrl(`/prestadores/${prestadorId}/direcciones`)
+      : getApiUrl(`/prestadores/${prestadorId}/direcciones/${form.id}`);
+
+    console.log(`${method} ${url}`);
+
+    const resDir = await fetch(url, {
+      method,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        calle: form.calle,
+        numero: form.numero,
+        localidad: form.localidad,
+        codigoPostal: form.codigoPostal,
+      }),
+    });
+
+    if (!resDir.ok) {
+      const errorText = await resDir.text();
+      console.error("Error del servidor:", errorText);
+      throw new Error(`Error al guardar dirección: ${resDir.status} - ${errorText}`);
     }
 
-    if (Object.keys(errores).length > 0) {
-      alert("Corrige los errores antes de guardar");
-      return;
-    }
+    const dirGuardada: Direccion = await resDir.json();
+    console.log("Dirección guardada:", dirGuardada);
 
-    // Si hay advertencias, pedir confirmación
-    if (Object.keys(advertencias).length > 0) {
-      const confirmar = window.confirm(
-        "Se detectaron advertencias en los horarios. ¿Deseas continuar de todas formas?"
-      );
-      if (!confirmar) return;
-    }
+    // 9️⃣ Guardar/actualizar horarios
+    const horariosActualizados: HorarioAtencion[] = [];
 
-    if (!window.confirm("¿Deseas guardar los cambios realizados?")) return;
+    for (const hor of form.horariosAtencion) {
+      const horData = {
+        dia: hor.dia,
+        desde: normalizarHora(hor.desde),
+        hasta: normalizarHora(hor.hasta),
+        duracionTurno: normalizarHora(hor.duracionTurno),
+        especialidadId: hor.especialidadId || null,
+      };
 
-    if (!prestadorId || prestadorId === 0) {
-      onSave({ ...form, esTemporal: true });
-      onClose();
-      return;
-    }
+      const esHorarioTemporal = !hor.id || hor.id === 0 || hor.id >= 1000000;
+      const methodHorario = esHorarioTemporal ? "POST" : "PUT";
+      const endpoint = esHorarioTemporal
+        ? getApiUrl(`/prestadores/${prestadorId}/direcciones/${dirGuardada.id}/horarios`)
+        : getApiUrl(`/prestadores/${prestadorId}/direcciones/${dirGuardada.id}/horarios/${hor.id}`);
 
-    try {
-      const esIdTemporal = form.id > 1000000;
-      const esNuevaDireccion =
-        form.id === 0 || esIdTemporal || form.esTemporal === true;
+      console.log(`${methodHorario} ${endpoint}`, horData);
 
-      const method = esNuevaDireccion ? "POST" : "PUT";
-      const url = esNuevaDireccion
-        ? `${getApiUrl(`/prestadores/${prestadorId}/direcciones`)}`
-        : `${getApiUrl(
-            `/prestadores/${prestadorId}/direcciones/${form.id}`
-          )}`;
-
-      const resDir = await fetch(url, {
-        method,
+      const resHor = await fetch(endpoint, {
+        method: methodHorario,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          calle: form.calle,
-          numero: form.numero,
-          localidad: form.localidad,
-          codigoPostal: form.codigoPostal,
-        }),
+        body: JSON.stringify(horData),
       });
 
-      if (!resDir.ok) throw new Error("Error al guardar dirección");
-      const dirGuardada: Direccion = await resDir.json();
-
-      const horariosActualizados: HorarioAtencion[] = [];
-
-      for (const hor of form.horariosAtencion) {
-        const horData = {
-          dia: hor.dia,
-          desde: normalizarHora(hor.desde),
-          hasta: normalizarHora(hor.hasta),
-          duracionTurno: normalizarHora(hor.duracionTurno),
-          especialidadId: hor.especialidadId || null,
-        };
-
-        const esHorarioTemporal = !hor.id || hor.id === 0 || hor.id > 1000000;
-
-        const endpoint = esHorarioTemporal
-          ? `${getApiUrl(
-              `/prestadores/${prestadorId}/direcciones/${dirGuardada.id}/horarios`
-            )}`
-          : `${getApiUrl(
-              `/prestadores/${prestadorId}/direcciones/${dirGuardada.id}/horarios/${hor.id}`
-            )}`;
-
-        const resHor = await fetch(endpoint, {
-          method: esHorarioTemporal ? "POST" : "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(horData),
-        });
-
-        if (!resHor.ok) {
-          const errorText = await resHor.text();
-          throw new Error(`Error al guardar horario: ${errorText}`);
-        }
-        const dataHor = await resHor.json();
-        horariosActualizados.push({ ...hor, id: dataHor.id });
+      if (!resHor.ok) {
+        const errorText = await resHor.text();
+        console.error("Error guardando horario:", errorText);
+        throw new Error(`Error al guardar horario: ${resHor.status} - ${errorText}`);
       }
 
-      onSave({ ...dirGuardada, horariosAtencion: horariosActualizados });
-      onClose();
-    } catch (err) {
-      console.error(err);
-      alert(`Error al guardar la dirección o sus horarios: ${(err as Error).message}`);
+      const dataHor = await resHor.json();
+      horariosActualizados.push({ 
+        ...hor, 
+        id: dataHor.id,
+        especialidad: hor.especialidadId ? 
+          especialidadesPrestador.find(e => e.id === hor.especialidadId) : 
+          undefined
+      });
     }
-  };
+
+    console.log("✅ Todos los horarios guardados correctamente");
+
+    // 🔟 Notificar éxito
+    const direccionCompleta = { 
+      ...dirGuardada, 
+      horariosAtencion: horariosActualizados,
+      esTemporal: false 
+    };
+    
+    onSave(direccionCompleta);
+    onClose();
+    
+  } catch (err) {
+    console.error("Error completo:", err);
+    alert(`Error al guardar: ${(err as Error).message}`);
+  }
+};
 
   const calcularTurnos = (horario: HorarioAtencion): number => {
     if (!horario.desde || !horario.hasta || !horario.duracionTurno) return 0;

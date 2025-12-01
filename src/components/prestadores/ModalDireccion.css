@@ -79,3 +79,61 @@
   background: #4b81d8;
   border-radius: 2px;
 }
+
+/* ===================================
+   ESTILOS PARA ListaPrestadores
+   =================================== */
+
+/* Sección de información extra del prestador */
+.prestador-info-extra {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem 0;
+  border-top: 1px solid #e5e7eb;
+  margin-top: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+/* Item individual de información */
+.info-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+/* Etiqueta del campo */
+.info-label {
+  font-weight: 600;
+  color: #374151;
+  min-width: fit-content;
+  white-space: nowrap;
+}
+
+/* Valor del campo */
+.info-value {
+  color: #6b7280;
+  flex: 1;
+}
+
+/* Lista de horarios */
+.horarios-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+/* Grupo individual de horario */
+.horario-grupo {
+  font-size: 0.85rem;
+  color: #4b5563;
+}
+
+/* Indicador de más horarios */
+.horarios-extra {
+  font-size: 0.8rem;
+  color: #9ca3af;
+  font-style: italic;
+}
