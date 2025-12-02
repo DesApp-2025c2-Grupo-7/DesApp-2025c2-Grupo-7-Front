@@ -52,6 +52,7 @@ export const generarReporteSituacionesTerapeuticas = async (
 
 /**
  * Busca afiliados titulares por credencial, nombre o DNI
+ * Incluye el grupo familiar completo de cada titular encontrado
  */
 export const buscarAfiliadoTitular = async (
   busqueda: string
@@ -67,7 +68,7 @@ export const buscarAfiliadoTitular = async (
     const busquedaLower = busqueda.toLowerCase().trim();
 
     // Filtrar solo titulares que coincidan con la búsqueda
-    return afiliados.filter((afiliado) => {
+    const titularesEncontrados = afiliados.filter((afiliado) => {
       if (afiliado.tipoPersona !== "AFILIADO") return false;
 
       return (
@@ -78,6 +79,38 @@ export const buscarAfiliadoTitular = async (
         `${afiliado.nombre} ${afiliado.apellido}`.toLowerCase().includes(busquedaLower)
       );
     });
+
+    // Para cada titular encontrado, obtener su grupo familiar completo
+    const titularesConGrupo = await Promise.all(
+      titularesEncontrados.map(async (titular) => {
+        try {
+          const grupoResponse = await fetch(getApiUrl(`/personas/grupo/${titular.credencial}`));
+          if (grupoResponse.ok) {
+            const grupoCompleto = await grupoResponse.json();
+            // El backend devuelve: { ...titular, grupoFamiliar: Persona[] }
+            // Necesitamos estructurar correctamente para el frontend
+            return {
+              ...grupoCompleto,
+              grupoFamiliar: {
+                personas: grupoCompleto.grupoFamiliar || []
+              }
+            };
+          }
+          return {
+            ...titular,
+            grupoFamiliar: { personas: [] }
+          };
+        } catch (error) {
+          console.warn(`Error obteniendo grupo de ${titular.credencial}:`, error);
+          return {
+            ...titular,
+            grupoFamiliar: { personas: [] }
+          };
+        }
+      })
+    );
+
+    return titularesConGrupo;
   } catch (error) {
     console.error("Error al buscar afiliado titular:", error);
     throw error;

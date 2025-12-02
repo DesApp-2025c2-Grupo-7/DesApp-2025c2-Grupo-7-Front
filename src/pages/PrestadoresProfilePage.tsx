@@ -81,7 +81,7 @@ const PrestadorProfilePage: React.FC = () => {
           title="Gestión de prestadores"
           buttonText="Ver agenda de turnos"
           buttonIcon={Calendar}
-          onAlta={() => navigate("/agenda")}
+          onAlta={() => navigate("/agenda", { state: { prestadorSeleccionado: prestador } })}
         />
         {prestador ? (
           <PrestadoresFormEdit prestador={prestador} />
