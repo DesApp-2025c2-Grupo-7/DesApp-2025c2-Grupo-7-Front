@@ -2,13 +2,15 @@ import React, { useState } from "react";
 import { buscarAfiliadoTitular } from "../../../services/reportesService";
 import "./ReporteSituacionesTerapeuticas.css";
 import type { Persona } from "../../../types/afiliados";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import * as XLSX from "xlsx";
 
 const ReporteSituacionesTerapeuticas: React.FC = () => {
   const [busqueda, setBusqueda] = useState("");
   const [resultadosBusqueda, setResultadosBusqueda] = useState<Persona[]>([]);
   const [buscando, setBuscando] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [mostrarPopup, setMostrarPopup] = useState(false);
 
   const handleBuscarAfiliado = async () => {
     if (!busqueda.trim()) {
@@ -41,9 +43,138 @@ const ReporteSituacionesTerapeuticas: React.FC = () => {
     setError(null);
   };
 
-  const handleDescargar = () => {
-    setMostrarPopup(true);
-    setTimeout(() => setMostrarPopup(false), 3000);
+  const descargarPDF = (afiliado?: Persona) => {
+    const doc = new jsPDF();
+    const afiliadosParaExportar = afiliado ? [afiliado] : resultadosBusqueda;
+
+    // Título
+    doc.setFontSize(16);
+    doc.text("Reporte de Situaciones Terapéuticas", 14, 15);
+    doc.setFontSize(10);
+    doc.text(`Fecha: ${new Date().toLocaleDateString("es-AR")}`, 14, 22);
+
+    let yPos = 30;
+
+    afiliadosParaExportar.forEach((afiliadoActual, index) => {
+      if (index > 0) {
+        doc.addPage();
+        yPos = 20;
+      }
+
+      // Información del titular
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "bold");
+      doc.text(`Titular: ${afiliadoActual.nombre} ${afiliadoActual.apellido}`, 14, yPos);
+      yPos += 7;
+
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      doc.text(`Credencial: ${afiliadoActual.credencial}-${afiliadoActual.sufijo}`, 14, yPos);
+      doc.text(`DNI: ${afiliadoActual.numeroDocumento}`, 80, yPos);
+      doc.text(`Estado: ${afiliadoActual.fechaBaja ? "De baja" : "Activo"}`, 140, yPos);
+      yPos += 7;
+
+      // Recolectar todas las personas y situaciones
+      const todasLasPersonas = [afiliadoActual, ...(afiliadoActual.grupoFamiliar?.personas || [])];
+      const todasLasSituaciones: any[] = [];
+
+      todasLasPersonas.forEach((persona: any) => {
+        const situacionesPersona = persona.situacionesTerapeuticas || [];
+        situacionesPersona.forEach((sit: any) => {
+          todasLasSituaciones.push({
+            integrante: `${persona.nombre} ${persona.apellido}`,
+            credencial: `${persona.credencial}-${persona.sufijo}`,
+            parentesco: persona.id === afiliadoActual.id ? "Titular" : persona.parentesco || "Integrante",
+            diagnostico: sit.diagnostico || "Sin especificar",
+            fechaInicio: sit.fechaInicio ? new Date(sit.fechaInicio).toLocaleDateString("es-AR") : "-",
+            fechaFin: sit.fechaFin ? new Date(sit.fechaFin).toLocaleDateString("es-AR") : "-",
+            estado: sit.fechaFin ? "Finalizada" : "Activa"
+          });
+        });
+      });
+
+      if (todasLasSituaciones.length > 0) {
+        autoTable(doc, {
+          startY: yPos,
+          head: [["Integrante", "Credencial", "Parentesco", "Diagnóstico", "Inicio", "Fin", "Estado"]],
+          body: todasLasSituaciones.map((sit) => [
+            sit.integrante,
+            sit.credencial,
+            sit.parentesco,
+            sit.diagnostico,
+            sit.fechaInicio,
+            sit.fechaFin,
+            sit.estado
+          ]),
+          styles: { fontSize: 8 },
+          headStyles: { fillColor: [75, 129, 216] },
+          margin: { left: 14, right: 14 }
+        });
+      } else {
+        doc.text("No hay situaciones terapéuticas registradas", 14, yPos);
+      }
+    });
+
+    const nombreArchivo = afiliado 
+      ? `situaciones_${afiliado.apellido}_${afiliado.credencial}.pdf`
+      : `situaciones_terapeuticas_${new Date().toISOString().split("T")[0]}.pdf`;
+    
+    doc.save(nombreArchivo);
+  };
+
+  const descargarExcel = (afiliado?: Persona) => {
+    const afiliadosParaExportar = afiliado ? [afiliado] : resultadosBusqueda;
+    const datosExcel: any[] = [];
+
+    afiliadosParaExportar.forEach((afiliadoActual) => {
+      const todasLasPersonas = [afiliadoActual, ...(afiliadoActual.grupoFamiliar?.personas || [])];
+      
+      todasLasPersonas.forEach((persona: any) => {
+        const situacionesPersona = persona.situacionesTerapeuticas || [];
+        
+        if (situacionesPersona.length === 0) {
+          datosExcel.push({
+            "Titular": `${afiliadoActual.nombre} ${afiliadoActual.apellido}`,
+            "Credencial Titular": `${afiliadoActual.credencial}-${afiliadoActual.sufijo}`,
+            "DNI Titular": afiliadoActual.numeroDocumento,
+            "Estado Titular": afiliadoActual.fechaBaja ? "De baja" : "Activo",
+            "Integrante": `${persona.nombre} ${persona.apellido}`,
+            "Credencial Integrante": `${persona.credencial}-${persona.sufijo}`,
+            "Parentesco": persona.id === afiliadoActual.id ? "Titular" : persona.parentesco || "Integrante",
+            "Diagnóstico": "Sin situaciones registradas",
+            "Fecha Inicio": "",
+            "Fecha Fin": "",
+            "Estado Situación": ""
+          });
+        } else {
+          situacionesPersona.forEach((sit: any) => {
+            datosExcel.push({
+              "Titular": `${afiliadoActual.nombre} ${afiliadoActual.apellido}`,
+              "Credencial Titular": `${afiliadoActual.credencial}-${afiliadoActual.sufijo}`,
+              "DNI Titular": afiliadoActual.numeroDocumento,
+              "Estado Titular": afiliadoActual.fechaBaja ? "De baja" : "Activo",
+              "Integrante": `${persona.nombre} ${persona.apellido}`,
+              "Credencial Integrante": `${persona.credencial}-${persona.sufijo}`,
+              "Parentesco": persona.id === afiliadoActual.id ? "Titular" : persona.parentesco || "Integrante",
+              "Diagnóstico": sit.diagnostico || "Sin especificar",
+              "Fecha Inicio": sit.fechaInicio ? new Date(sit.fechaInicio).toLocaleDateString("es-AR") : "-",
+              "Fecha Fin": sit.fechaFin ? new Date(sit.fechaFin).toLocaleDateString("es-AR") : "-",
+              "Estado Situación": sit.fechaFin ? "Finalizada" : "Activa"
+            });
+          });
+        }
+      });
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet(datosExcel);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Situaciones");
+
+    const nombreArchivo = afiliado 
+      ? `situaciones_${afiliado.apellido}_${afiliado.credencial}.xlsx`
+      : `situaciones_terapeuticas_${new Date().toISOString().split("T")[0]}.xlsx`;
+
+    XLSX.writeFile(workbook, nombreArchivo);
   };
 
 
@@ -160,7 +291,7 @@ const ReporteSituacionesTerapeuticas: React.FC = () => {
 
                       {/* Botones de exportación por grupo familiar */}
                       <div className="acciones-grupo-familiar">
-                        <button className="btn-descargar-small" onClick={handleDescargar} title="Descargar PDF">
+                        <button className="btn-descargar-small" onClick={() => descargarPDF(afiliado)} title="Descargar PDF">
                           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                             <polyline points="7 10 12 15 17 10"></polyline>
@@ -168,7 +299,7 @@ const ReporteSituacionesTerapeuticas: React.FC = () => {
                           </svg>
                           PDF
                         </button>
-                        <button className="btn-descargar-small" onClick={handleDescargar} title="Descargar Excel">
+                        <button className="btn-descargar-small" onClick={() => descargarExcel(afiliado)} title="Descargar Excel">
                           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                             <polyline points="7 10 12 15 17 10"></polyline>
@@ -184,7 +315,7 @@ const ReporteSituacionesTerapeuticas: React.FC = () => {
 
               {/* Botones de acciones generales */}
               <div className="acciones-resultados">
-                <button className="btn-descargar" onClick={handleDescargar} title="Descargar todos los resultados en PDF">
+                <button className="btn-descargar" onClick={() => descargarPDF()} title="Descargar todos los resultados en PDF">
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                     <polyline points="7 10 12 15 17 10"></polyline>
@@ -192,7 +323,7 @@ const ReporteSituacionesTerapeuticas: React.FC = () => {
                   </svg>
                   Descargar PDF
                 </button>
-                <button className="btn-descargar" onClick={handleDescargar} title="Descargar todos los resultados en Excel">
+                <button className="btn-descargar" onClick={() => descargarExcel()} title="Descargar todos los resultados en Excel">
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                     <polyline points="7 10 12 15 17 10"></polyline>
@@ -207,18 +338,6 @@ const ReporteSituacionesTerapeuticas: React.FC = () => {
             </div>
           )}
       </div>
-
-      {mostrarPopup && (
-        <div className="popup-overlay" onClick={() => setMostrarPopup(false)}>
-          <div className="popup-content" onClick={(e) => e.stopPropagation()}>
-            <h3>Próximamente</h3>
-            <p>La funcionalidad de descarga estará disponible en breve.</p>
-            <button className="btn-popup-cerrar" onClick={() => setMostrarPopup(false)}>
-              Cerrar
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

@@ -93,6 +93,7 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
         tipoDocumento: afiliado?.tipoDocumento || '',
         numeroDocumento: afiliado?.numeroDocumento || '',
         planMedico: afiliado?.planMedico || '',
+        fechaBaja: afiliado?.fechaBaja || '',
         direccion: {
             calle: afiliado?.direccion?.[0]?.calle || '',
             numero: afiliado?.direccion?.[0]?.numero || '',
@@ -114,6 +115,7 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
                 tipoDocumento: afiliado.tipoDocumento || '',
                 numeroDocumento: afiliado.numeroDocumento || '',
                 planMedico: afiliado.planMedico || '',
+                fechaBaja: afiliado.fechaBaja || '',
                 direccion: {
                     calle: afiliado.direccion?.[0]?.calle || '',
                     numero: afiliado.direccion?.[0]?.numero || '',
@@ -646,6 +648,7 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
                 tipoDocumento: datosEditables.tipoDocumento,
                 numeroDocumento: datosEditables.numeroDocumento,
                 planMedico: datosEditables.planMedico,
+                fechaBaja: datosEditables.fechaBaja || null,
                 direccion: direcciones
             };
             
@@ -665,6 +668,7 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
                 tipoDocumento: afiliado.tipoDocumento || '',
                 numeroDocumento: afiliado.numeroDocumento || '',
                 planMedico: afiliado.planMedico || '',
+                fechaBaja: afiliado.fechaBaja || '',
                 direccion: {
                     calle: afiliado.direccion?.[0]?.calle || '',
                     numero: afiliado.direccion?.[0]?.numero || '',
@@ -995,9 +999,19 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
                 <label>Fecha de Alta</label>
                 {renderFieldWithIcon(<span>{afiliado?.fechaAlta}</span>, true)}
               </div>
-              <div className={`form-row-double-item-right ${getFieldClassName(true)}`}>
+              <div className={`form-row-double-item-right ${getFieldClassName(modoEdicion)}`}>
                 <label>Fecha Baja</label>
-                {renderFieldWithIcon(<span>{afiliado?.fechaBaja ?? 'No posee fecha de baja'}</span>, true)}
+                {modoEdicion ? (
+                  <Input 
+                    type="date" 
+                    value={datosEditables.fechaBaja}
+                    onChange={(value: string) => setDatosEditables({...datosEditables, fechaBaja: value})}
+                    placeholder="Dejar vacío si está activo"
+                  />
+                ) : (
+                  renderFieldWithIcon(<span>{afiliado?.fechaBaja ?? 'No posee fecha de baja'}</span>, true)
+                )}
+                {modoEdicion && <small className="form-help">Dejar vacío para reactivar o completar para programar baja</small>}
               </div>
             </div>
         

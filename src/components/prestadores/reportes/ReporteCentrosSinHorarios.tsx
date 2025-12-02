@@ -3,6 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { X, FileDown, FileSpreadsheet } from "lucide-react";
 import "./ReporteCentrosSinHorarios.css";
 import { getApiUrl } from "../../../config/env";
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import * as XLSX from 'xlsx';
 
 interface Prestador {
   id: number;
@@ -28,7 +31,6 @@ const ReporteCentrosSinHorarios: React.FC<ReporteCentrosSinHorariosProps> = ({ o
   const [prestadores, setPrestadores] = useState<Prestador[]>([]);
   const [loading, setLoading] = useState(true);
   const [centrosSinHorarios, setCentrosSinHorarios] = useState<Prestador[]>([]);
-  const [mostrarPopup, setMostrarPopup] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -74,9 +76,82 @@ const ReporteCentrosSinHorarios: React.FC<ReporteCentrosSinHorariosProps> = ({ o
     fetchPrestadores();
   }, []);
 
-  const handleDescargar = (formato: "pdf" | "excel") => {
-    setMostrarPopup(true);
-    setTimeout(() => setMostrarPopup(false), 3000);
+  const descargarPDF = () => {
+    const doc = new jsPDF();
+    
+    // Título
+    doc.setFontSize(16);
+    doc.text('Reporte de Centros sin Agendas de Turnos', 14, 15);
+    doc.setFontSize(10);
+    doc.text(`Fecha: ${new Date().toLocaleDateString('es-AR')}`, 14, 22);
+    doc.text(`Total de centros sin horarios: ${centrosSinHorarios.length}`, 14, 27);
+    doc.text('Centros médicos activos sin horarios de atención configurados', 14, 32);
+
+    // Preparar datos para la tabla
+    const datos = centrosSinHorarios.map(centro => {
+      const especialidades = centro.especialidades?.map(e => e.nombre).join(', ') || 'Sin especialidad';
+      const direcciones = centro.direccion?.map(d => 
+        `${d.calle || ''} ${d.numero || ''}, ${d.localidad || ''}`.trim()
+      ).join(' | ') || 'Sin dirección';
+
+      return [
+        centro.nombreCompleto,
+        centro.numeroCUIL,
+        especialidades,
+        direcciones,
+        new Date(centro.fechaAlta).toLocaleDateString('es-AR')
+      ];
+    });
+
+    autoTable(doc, {
+      startY: 38,
+      head: [['Nombre del Centro', 'CUIL', 'Especialidades', 'Dirección', 'Fecha Alta']],
+      body: datos,
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [75, 129, 216] },
+      margin: { left: 14, right: 14 },
+      columnStyles: {
+        0: { cellWidth: 40 },
+        1: { cellWidth: 25 },
+        2: { cellWidth: 40 },
+        3: { cellWidth: 50 },
+        4: { cellWidth: 25 }
+      }
+    });
+
+    doc.save(`centros_sin_horarios_${new Date().toISOString().split('T')[0]}.pdf`);
+  };
+
+  const descargarExcel = () => {
+    const datosExcel = centrosSinHorarios.map(centro => ({
+      'Nombre del Centro': centro.nombreCompleto,
+      'CUIL': centro.numeroCUIL,
+      'Especialidades': centro.especialidades?.map(e => e.nombre).join(', ') || 'Sin especialidad',
+      'Direcciones': centro.direccion?.map(d => 
+        `${d.calle || ''} ${d.numero || ''}, ${d.localidad || ''}`.trim()
+      ).join(' | ') || 'Sin dirección',
+      'Fecha de Alta': new Date(centro.fechaAlta).toLocaleDateString('es-AR'),
+      'Estado': 'Activo',
+      'Observación': 'Sin horarios de atención configurados'
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(datosExcel);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Centros sin Horarios');
+
+    // Ajustar ancho de columnas
+    const colWidths = [
+      { wch: 35 }, // Nombre
+      { wch: 15 }, // CUIL
+      { wch: 30 }, // Especialidades
+      { wch: 50 }, // Direcciones
+      { wch: 15 }, // Fecha Alta
+      { wch: 10 }, // Estado
+      { wch: 40 }  // Observación
+    ];
+    worksheet['!cols'] = colWidths;
+
+    XLSX.writeFile(workbook, `centros_sin_horarios_${new Date().toISOString().split('T')[0]}.xlsx`);
   };
 
   const handleVerMas = (prestadorId: number) => {
@@ -159,7 +234,7 @@ const ReporteCentrosSinHorarios: React.FC<ReporteCentrosSinHorariosProps> = ({ o
         <div className="modal-footer">
           <button
             className="btn-export"
-            onClick={() => handleDescargar("pdf")}
+            onClick={descargarPDF}
             disabled={centrosSinHorarios.length === 0}
           >
             <FileDown size={18} />
@@ -167,19 +242,13 @@ const ReporteCentrosSinHorarios: React.FC<ReporteCentrosSinHorariosProps> = ({ o
           </button>
           <button
             className="btn-export"
-            onClick={() => handleDescargar("excel")}
+            onClick={descargarExcel}
             disabled={centrosSinHorarios.length === 0}
           >
             <FileSpreadsheet size={18} />
             Descargar Excel
           </button>
         </div>
-
-        {mostrarPopup && (
-          <div className="popup-descarga">
-            <p>Funcionalidad de descarga próximamente disponible</p>
-          </div>
-        )}
       </div>
     </div>
   );

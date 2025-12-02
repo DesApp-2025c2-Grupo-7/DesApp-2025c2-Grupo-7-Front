@@ -75,7 +75,11 @@ const ListaPrestadores: React.FC<ListaPrestadoresProps> = ({ prestadores }) => {
       : fechaBajaSeleccionada;
 
     if (tipoBaja === "diferida" && !fechaBajaSeleccionada) {
-      alert("Selecciona una fecha de baja válida");
+      modal.mostrarError(
+        "Fecha de baja requerida",
+        "Debe seleccionar una fecha de baja válida",
+        ["Por favor, seleccione una fecha para dar de baja al prestador"]
+      );
       return;
     }
 

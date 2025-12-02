@@ -6,6 +6,8 @@ import { getApiUrl } from "../../config/env";
 import Input from "../genericos/Input";
 import Select from "../genericos/Select";
 import { AlertTriangle } from "lucide-react";
+import Modal from "../genericos/Modal";
+import { useModal } from "../../hooks/useModal";
 
 interface Especialidad {
   id: number;
@@ -47,6 +49,7 @@ const ModalDireccion: React.FC<ModalDireccionProps> = ({
   const [prestadorActual, setPrestadorActual] = useState<Prestador | null>(null);
   const [centrosMedicos, setCentrosMedicos] = useState<Prestador[]>([]);
   const [cargandoDatos, setCargandoDatos] = useState(true);
+  const modal = useModal();
 
   const normalizarHora = (valor: string) => {
     if (!valor) return "";
@@ -306,10 +309,30 @@ const ModalDireccion: React.FC<ModalDireccionProps> = ({
   const handleDeleteHorario = async (index: number) => {
     const horario = form.horariosAtencion[index];
     
+    const confirmarEliminacion = () => {
+      return new Promise<boolean>((resolve) => {
+        modal.mostrarModal({
+          titulo: "Eliminar horario",
+          mensaje: horario.id && horario.id > 0 && horario.id < 1000000 
+            ? "¿Desea eliminar este horario de forma permanente?"
+            : "¿Desea eliminar este horario?",
+          submensaje: horario.id && horario.id > 0 && horario.id < 1000000
+            ? "Esta acción no se puede deshacer"
+            : undefined,
+          tipo: "warning",
+          textoBotonConfirmar: "Eliminar",
+          textoBotonCancelar: "Cancelar",
+          onConfirmar: () => resolve(true),
+          onCancelar: () => resolve(false),
+        });
+      });
+    };
+
+    const confirmado = await confirmarEliminacion();
+    if (!confirmado) return;
+    
     // Si el horario ya está guardado en el backend, hacer DELETE
     if (horario.id && horario.id > 0 && horario.id < 1000000 && prestadorId) {
-      if (!window.confirm("¿Deseas eliminar este horario de forma permanente?")) return;
-      
       try {
         const res = await fetch(
           getApiUrl(`/prestadores/${prestadorId}/direcciones/${form.id}/horarios/${horario.id}`),
@@ -317,16 +340,22 @@ const ModalDireccion: React.FC<ModalDireccionProps> = ({
         );
         
         if (!res.ok) {
-          alert("Error al eliminar el horario del servidor");
+          modal.mostrarError(
+            "Error al eliminar",
+            "No se pudo eliminar el horario del servidor",
+            ["Por favor, intente nuevamente"]
+          );
           return;
         }
       } catch (err) {
         console.error("Error eliminando horario:", err);
-        alert("Error al eliminar el horario");
+        modal.mostrarError(
+          "Error al eliminar",
+          "Ocurrió un error al eliminar el horario",
+          [(err as Error).message || "Error desconocido"]
+        );
         return;
       }
-    } else {
-      if (!window.confirm("¿Deseas eliminar este horario?")) return;
     }
     
     const nuevos = form.horariosAtencion.filter((_, i) => i !== index);
@@ -349,7 +378,11 @@ const ModalDireccion: React.FC<ModalDireccionProps> = ({
   const handleSave = async () => {
   // 1️⃣ Validar campos de dirección
   if (!form.calle || !form.numero || !form.localidad) {
-    alert("Debes completar al menos: Calle, Número y Localidad");
+    modal.mostrarError(
+      "Campos obligatorios",
+      "Debe completar los datos de la dirección",
+      ["Calle, Número y Localidad son campos obligatorios"]
+    );
     return;
   }
 
@@ -359,26 +392,54 @@ const ModalDireccion: React.FC<ModalDireccionProps> = ({
   );
 
   if (tieneHorariosIncompletos) {
-    alert("Todos los horarios deben tener día, hora de inicio, hora de fin y duración completados");
+    modal.mostrarError(
+      "Horarios incompletos",
+      "Debe completar todos los campos de los horarios",
+      ["Todos los horarios deben tener día, hora de inicio, hora de fin y duración completados"]
+    );
     return;
   }
 
   // 3️⃣ Verificar errores críticos
   if (Object.keys(errores).length > 0) {
-    alert("Corrige los errores antes de guardar");
+    modal.mostrarError(
+      "Errores de validación",
+      "Debe corregir los errores antes de guardar",
+      ["Revise los horarios marcados en rojo"]
+    );
     return;
   }
 
   // 4️⃣ Si hay advertencias, pedir confirmación
   if (Object.keys(advertencias).length > 0) {
-    const confirmar = window.confirm(
-      "Se detectaron advertencias en los horarios. ¿Deseas continuar de todas formas?"
-    );
-    if (!confirmar) return;
+    const continuarConAdvertencias = await new Promise<boolean>((resolve) => {
+      modal.mostrarModal({
+        titulo: "Advertencias detectadas",
+        mensaje: "Se detectaron advertencias en los horarios",
+        submensaje: "¿Desea continuar de todas formas?",
+        tipo: "warning",
+        textoBotonConfirmar: "Continuar",
+        textoBotonCancelar: "Cancelar",
+        onConfirmar: () => resolve(true),
+        onCancelar: () => resolve(false),
+      });
+    });
+    if (!continuarConAdvertencias) return;
   }
 
   // 5️⃣ Confirmación final
-  if (!window.confirm("¿Deseas guardar los cambios realizados?")) return;
+  const confirmarGuardado = await new Promise<boolean>((resolve) => {
+    modal.mostrarModal({
+      titulo: "Guardar cambios",
+      mensaje: "¿Desea guardar los cambios realizados?",
+      tipo: "info",
+      textoBotonConfirmar: "Guardar",
+      textoBotonCancelar: "Cancelar",
+      onConfirmar: () => resolve(true),
+      onCancelar: () => resolve(false),
+    });
+  });
+  if (!confirmarGuardado) return;
 
   // 6️⃣ Si no hay prestadorId válido, guardar temporal
   if (!prestadorId || prestadorId === 0) {
@@ -484,7 +545,11 @@ const ModalDireccion: React.FC<ModalDireccionProps> = ({
     
   } catch (err) {
     console.error("Error completo:", err);
-    alert(`Error al guardar: ${(err as Error).message}`);
+    modal.mostrarError(
+      "Error al guardar",
+      "No se pudo guardar la dirección",
+      [(err as Error).message || "Error desconocido"]
+    );
   }
 };
 
@@ -499,6 +564,7 @@ const ModalDireccion: React.FC<ModalDireccionProps> = ({
   };
 
   return (
+    <>
     <div className="modal-overlay">
       <div className="modal-card">
         <h3 className="section-title">
@@ -780,6 +846,24 @@ const ModalDireccion: React.FC<ModalDireccionProps> = ({
         </div>
       </div>
     </div>
+
+    {/* Modal */}
+    <Modal
+      isOpen={modal.isOpen}
+      onClose={modal.cerrarModal}
+      onConfirm={modal.confirmarModal}
+      titulo={modal.config?.titulo || ""}
+      mensaje={modal.config?.mensaje || ""}
+      submensaje={modal.config?.submensaje}
+      tipo={modal.config?.tipo || "info"}
+      textoBotonConfirmar={modal.config?.textoBotonConfirmar}
+      textoBotonCancelar={modal.config?.textoBotonCancelar}
+      icono={modal.config?.icono}
+      contenidoExtra={modal.config?.contenidoExtra}
+      soloInformacion={modal.config?.soloInformacion}
+      listaErrores={modal.config?.listaErrores}
+    />
+    </>
   );
 };
 

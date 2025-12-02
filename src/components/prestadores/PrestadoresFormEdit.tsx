@@ -315,13 +315,19 @@ const PrestadoresFormEdit: React.FC<PrestadoresFormEditProps> = ({
   };
 
   const handleEliminarDireccion = (direccion: Direccion) => {
-    if (
-      !window.confirm("¿Deseas eliminar esta dirección y todos sus horarios?")
-    )
-      return;
-    setListaDirecciones((prev) => [
-      ...prev.filter((d) => d.id !== direccion.id),
-    ]);
+    modal.mostrarModal({
+      titulo: "Eliminar dirección",
+      mensaje: "¿Desea eliminar esta dirección?",
+      submensaje: "Todos los horarios asociados a esta dirección también serán eliminados",
+      tipo: "warning",
+      textoBotonConfirmar: "Eliminar",
+      textoBotonCancelar: "Cancelar",
+      onConfirmar: () => {
+        setListaDirecciones((prev) => [
+          ...prev.filter((d) => d.id !== direccion.id),
+        ]);
+      },
+    });
   };
 
   /* --- Funciones de profesionales (para Centro Médico) --- */
@@ -567,7 +573,11 @@ const PrestadoresFormEdit: React.FC<PrestadoresFormEditProps> = ({
         : fechaBajaSeleccionada;
 
     if (tipoBaja === "diferida" && !fechaBajaSeleccionada) {
-      alert("Selecciona una fecha de baja válida");
+      modal.mostrarError(
+        "Fecha de baja requerida",
+        "Debe seleccionar una fecha de baja válida",
+        ["Por favor, seleccione una fecha para dar de baja al prestador"]
+      );
       return;
     }
 

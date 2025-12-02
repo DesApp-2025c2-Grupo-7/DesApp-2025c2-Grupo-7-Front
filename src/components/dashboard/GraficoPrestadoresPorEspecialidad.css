@@ -8,6 +8,11 @@
 
 .grafico-pie-header {
   margin-bottom: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 1rem;
 }
 
 .grafico-pie-header h3 {
@@ -15,6 +20,36 @@
   color: #424242;
   font-size: 1.25rem;
   font-weight: 600;
+}
+
+.grafico-acciones {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btn-descarga-grafico {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1rem;
+  background: #4B81D8;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-descarga-grafico:hover {
+  background: #3a6bc7;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(75, 129, 216, 0.3);
+}
+
+.btn-descarga-grafico:active {
+  transform: translateY(0);
 }
 
 .grafico-pie-descripcion {
