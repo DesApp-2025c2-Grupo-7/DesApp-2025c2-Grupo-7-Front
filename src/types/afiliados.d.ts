@@ -15,7 +15,7 @@ export interface SituacionTerapeutica {
     personaId?: number;
 }
 
-interface Persona {
+export interface Persona {
   id: number;
   credencial: string;
   sufijo: string;
@@ -37,7 +37,7 @@ interface Persona {
   fechaBaja: string | null;
 }
 
-interface Integrante {
+export interface Integrante {
   id: number;
   credencial: string;
   sufijo: string;
@@ -81,7 +81,7 @@ export interface AfiliadoListItem {
   titularId?: number; // Solo para integrantes
 }
 
-interface GrupoFamiliar {
+export interface GrupoFamiliar {
   id?: number;
   credencial?: string;
   plan?: string;
@@ -111,4 +111,3 @@ export interface ReporteSituacionFamiliar {
   situacionesActivas: number;
 }
 
-export { Direccion, SituacionTerapeutica, Persona, Integrante, Afiliado, AfiliadoListItem, ListaAfiliadosProps, GrupoFamiliar};

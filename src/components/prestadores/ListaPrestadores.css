@@ -306,3 +306,33 @@
 .prestador-card:active {
     transform: translateY(0);
 }
+
+.chip-extra {
+  background: #e5e5e5 !important;
+  color: #333 !important;
+  border: 1px dashed #aaa !important;
+  font-weight: 500;
+}
+
+.prestador-especialidades-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.prestador-chip-especialidad {
+  background: #e8f0fe;
+  color: #1a3c8d;
+  padding: 3px 9px;
+  border-radius: 12px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  border: 1px solid #c6dafc;
+}
+
+.chip-extra {
+  background: #e5e5e5;
+  color: #333;
+  border: 1px dashed #b9b9b9;
+}
