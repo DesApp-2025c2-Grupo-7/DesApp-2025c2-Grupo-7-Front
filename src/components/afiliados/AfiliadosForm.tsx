@@ -10,9 +10,9 @@ import SituacionesTerapeuticasInput from "./SituacionesTerapeuticasInput";
 import { AlertTriangle, UserX, UserPlus, Plus, Trash2, Edit2, PenOff } from "lucide-react";
 import { useModal } from "../../hooks/useModal";
 import { personasService } from "../../services/personasService";
-import { esPersonaActiva } from "../../utils/estadoAfiliado";
+import { esPersonaActiva, type PersonaEstado } from "../../utils/estadoAfiliado";
 import "./ListaAfiliados.css"
-import type { Afiliado, GrupoFamiliar, Direccion } from "../../types/afiliados";
+import type { Persona as Afiliado, GrupoFamiliar, Direccion } from "../../types/afiliados";
 
 // Tipo local para direcciones creadas en el modal (no requieren id hasta que el backend las genere)
 type NewDireccion = {
@@ -65,11 +65,19 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
     const [modalFechaAlta, setModalFechaAlta] = useState<string>(new Date().toISOString().split('T')[0]);
     // Lista de diagnósticos (actualmente hardcodeada en frontend)
     const [listaSituacionesTerapeuticas] = useState([
-      'Diabetes',
-      'Hipertension',
-      'Alcoholismo',
-      'Obesidad',
-      'Asma',
+      'Anemia', 
+      'Ansiedad', 
+      'Asma', 
+      'Conjuntivitis', 
+      'Diabetes', 
+      'Esguince', 
+      'Estrés', 
+      'Fractura', 
+      'Gastroenteritis', 
+      'Gripe', 
+      'Migraña', 
+      'Neumonía', 
+      'Otitis', 
     ]);
     
     // Hook para el modal
@@ -152,7 +160,11 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
     }, [externalOpenAgregarIntegrante]);
 
   // Usar función utilitaria estandarizada
-  const isActive = () => esPersonaActiva(afiliado);
+  const isActive = () => {
+    // Evitar pasar null a esPersonaActiva; si no hay afiliado considerarlo inactivo
+    if (!afiliado) return false;
+    return esPersonaActiva(afiliado as PersonaEstado);
+  };
 
     const esTitular = () => {
         // El backend usa tipoPersona para distinguir: AFILIADO = titular, INTEGRANTE = integrante
@@ -160,23 +172,28 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
             return (afiliado as any).tipoPersona === "AFILIADO";
         }
         
-        // Fallback para compatibilidad con datos del frontend
-        if (afiliado?.parentesco) {
-            return afiliado.parentesco === "Titular";
+        // Fallback para compatibilidad con datos del frontend: comprobar la existencia de la clave antes de acceder
+        if (afiliado && 'parentesco' in afiliado && (afiliado as any).parentesco) {
+            return (afiliado as any).parentesco === "Titular";
         }
         
         // Verificar usando el afiliadoTitular si está disponible
         if (afiliadoTitular && afiliado) {
-            return afiliadoTitular.id === afiliado.id;
+            // Comparar ids utilizando 'any' para evitar errores de tipado cuando las definiciones pueden variar en los datos
+            return (afiliadoTitular as any).id === (afiliado as any).id;
         }
         
         // Si hay miembros del grupo, buscar el titular
         if (miembrosGrupo && miembrosGrupo.length > 0) {
             const titular = miembrosGrupo.find(m => 
-                m.parentesco === "Titular" || 
+                (m as any).parentesco === "Titular" || 
                 (m as any).tipoPersona === "AFILIADO"
             );
-            return titular ? titular.id === afiliado?.id : false;
+            // Asegurar que titular y afiliado existan y comparar ids usando 'any' para evitar errores de tipado
+            if (titular && afiliado) {
+                return (titular as any).id === (afiliado as any).id;
+            }
+            return false;
         }
         
         // Fallback: si no hay grupo familiar definido, asumir que es titular
@@ -980,7 +997,7 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
               </div>
               <div className={`form-row-double-item-right ${getFieldClassName(true)}`}>
                 <label>Fecha Baja</label>
-                {renderFieldWithIcon(<span>{afiliado.fechaBaja ? afiliado.fechaBaja : 'No posee fecha de baja'}</span>, true)}
+                {renderFieldWithIcon(<span>{afiliado?.fechaBaja ?? 'No posee fecha de baja'}</span>, true)}
               </div>
             </div>
         
@@ -1051,7 +1068,7 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
               <div className="modal-content modal-agregar-integrante" onClick={(e) => e.stopPropagation()}>
                 <div className="modal-header">
                   <h3><UserPlus size={20} /> Agregar Integrante al Grupo Familiar</h3>
-                  <p>Completar los datos del nuevo integrante para el grupo familiar del titular <strong>{titularParaModal ? `${titularParaModal.nombre} ${titularParaModal.apellido}` : `${afiliado?.nombre} ${afiliado?.apellido}`}</strong></p>
+                  <p>Completar los datos del nuevo integrante para el grupo familiar del titular <strong>{titularParaModal ? `${titularParaModal.nombre} ${titularParaModal.apellido}` : ''}</strong></p>
                 </div>
                 
                 <div className="modal-form">
@@ -1062,12 +1079,12 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
                     <div className="form-row-double">
                       <div className="form-row-double-item-left">
                         <label>Titular</label>
-                        <div className="credencial-info">
-                          {titularParaModal ? `${titularParaModal.nombre} ${titularParaModal.apellido}` : `${afiliado?.credencial}-${afiliado?.sufijo}`}
-                        </div>
-                        {titularParaModal?.credencial && (
-                          <div style={{ fontSize: 12, color: '#666', marginTop: 4 }}>{`Credencial: ${titularParaModal.credencial}${titularParaModal.sufijo ? '-' + titularParaModal.sufijo : ''}`}</div>
-                        )}
+                          <div className="credencial-info">
+                            {titularParaModal ? `${titularParaModal.nombre} ${titularParaModal.apellido}` : ''}
+                          </div>
+                          {titularParaModal?.credencial && (
+                            <div style={{ fontSize: 12, color: '#666', marginTop: 4 }}>{`Credencial: ${titularParaModal.credencial}${titularParaModal.sufijo ? '-' + titularParaModal.sufijo : ''}`}</div>
+                          )}
                       </div>
                       <div className="form-row-double-item-right">
                         <label>Parentesco *</label>

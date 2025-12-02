@@ -5,7 +5,7 @@ import CardDashboard from "../components/genericos/CardDashboard";
 import { Users, UserCheck, Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import PageHeader from "../components/genericos/PageHeader";
-import type { Afiliado, SituacionTerapeutica } from "../types/afiliados";
+import type { Persona as Afiliado } from "../types/afiliados";
 import type { Prestador } from "../types/prestadores";
 import { getApiUrl } from "../config/env";
 import GraficoPrestadoresPorCodigoPostal from "../components/dashboard/GraficoPrestadoresPorCodigoPostal";
@@ -41,7 +41,7 @@ const Dashboard: React.FC = () => {
       }
 
       // Agregar los integrantes del grupo familiar solo si están activos
-      if (afiliado.grupoFamiliar && afiliado.grupoFamiliar.length > 0) {
+      if (Array.isArray(afiliado.grupoFamiliar) && afiliado.grupoFamiliar.length > 0) {
         afiliado.grupoFamiliar.forEach((integrante: any) => {
           if (esActivo(integrante)) {
             const integranteKey = `${integrante.credencial}-${integrante.sufijo}`;
@@ -152,29 +152,6 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  // Recolectar todas las situaciones terapéuticas de todos los afiliados
-  const recolectarSituacionesTerapeuticas = (): SituacionTerapeutica[] => {
-    const situaciones: SituacionTerapeutica[] = [];
-    
-    afiliados.forEach((afiliado) => {
-      // Situaciones del titular
-      if (afiliado.situacionesTerapeuticas) {
-        situaciones.push(...afiliado.situacionesTerapeuticas);
-      }
-      
-      // Situaciones de los integrantes del grupo familiar
-      if (afiliado.grupoFamiliar) {
-        afiliado.grupoFamiliar.forEach((integrante: any) => {
-          if (integrante.situacionesTerapeuticas) {
-            situaciones.push(...integrante.situacionesTerapeuticas);
-          }
-        });
-      }
-    });
-    
-    return situaciones;
-  };
-
   return (
     <div className="admin-page">
       {/* Header superior */}
@@ -216,7 +193,7 @@ const Dashboard: React.FC = () => {
         {!loading && (
           <div className="dashboard-graficos">
             <GraficoPrestadoresPorCodigoPostal 
-              situaciones={recolectarSituacionesTerapeuticas()} 
+              prestadores={prestadores} 
               topN={10}
             />
             <GraficoPrestadoresPorEspecialidad 

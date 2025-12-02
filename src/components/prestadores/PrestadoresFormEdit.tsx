@@ -1265,36 +1265,29 @@ const PrestadoresFormEdit: React.FC<PrestadoresFormEditProps> = ({
             )}
           </div>
         )}
-
-        <div
-          style={{
-            marginTop: "1rem",
-            display: "flex",
-            gap: "0.5rem",
-            flexWrap: "wrap",
-          }}
-        >
-          <Button variant="cancel" onClick={() => navigate("/prestadores")}>
+        <div className="form-row"></div>
+        <div className="botones-acciones">
+          <Button size="large" variant="cancel" onClick={() => navigate("/prestadores")}>
             Cancelar
           </Button>
           {isEditing ? (
             <>
-              <Button variant="primary" onClick={handleGuardar}>
+              <Button size="large" variant="primary" onClick={handleGuardar}>
                 {prestador ? "Guardar cambios" : "Dar de alta"}
               </Button>
               {prestador && estaActivo() && (
-                <Button variant="danger" onClick={handleAbrirModalBaja}>
+                <Button size="large" variant="danger" onClick={handleAbrirModalBaja}>
                   Dar de baja
                 </Button>
               )}
               {prestador && !estaActivo() && (
-                <Button variant="primary" onClick={handleReactivar}>
+                <Button size="large" variant="primary" onClick={handleReactivar}>
                   Reactivar
                 </Button>
               )}
             </>
           ) : (
-            <Button variant="primary" onClick={() => setIsEditing(true)}>
+            <Button size="large" variant="primary" onClick={() => setIsEditing(true)}>
               Editar
             </Button>
           )}

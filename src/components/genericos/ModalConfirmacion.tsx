@@ -8,7 +8,7 @@ interface ModalConfirmacionProps {
   onConfirm: () => void;
   titulo: string;
   mensaje: string;
-  submensaje?: string;
+  submensaje?: string | React.ReactNode;
   tipoOperacion: 'danger' | 'warning' | 'info';
   textoBotonConfirmar?: string;
   textoBotonCancelar?: string;
@@ -47,7 +47,7 @@ const ModalConfirmacion: React.FC<ModalConfirmacionProps> = ({
           <p className="modal-mensaje">{mensaje}</p>
           {submensaje && (
             <div className="modal-submensaje">
-              <p>{submensaje}</p>
+              {typeof submensaje === 'string' ? <p>{submensaje}</p> : submensaje}
             </div>
           )}
         </div>

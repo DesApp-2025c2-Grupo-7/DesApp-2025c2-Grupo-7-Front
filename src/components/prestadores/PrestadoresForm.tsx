@@ -1,7 +1,19 @@
 import React from "react";
 import "./ListaPrestadores.css";
 import type { Prestador } from "../../types/prestadores";
-import CardDireccionesYHorariosForm from "./CardDireccionesYHorariosForm";
+
+const CardDireccionesYHorariosForm: React.FC<{ direcciones: any[]; prestadorId: number }> = ({ direcciones }) => {
+  return (
+    <div className="card-direcciones-horarios">
+      {Array.isArray(direcciones) && direcciones.length > 0 ? (
+        direcciones.map((d, i) => <div key={i}>{(d && (d.calle || d.direccion || JSON.stringify(d))) || String(d)}</div>)
+      ) : (
+        <div style={{ color: "#646b72ff" }}>No hay direcciones registradas</div>
+      )}
+    </div>
+  );
+};
+
 import Button from "../genericos/Button";
 
 interface PrestadoresFormProps {
@@ -64,7 +76,10 @@ const PrestadoresForm: React.FC<PrestadoresFormProps> = ({ prestador }) => {
         direcciones={prestador.direccion}
         prestadorId={prestador.id} 
       />
-      <Button variant="primary" >Editar</Button>
+      
+      <div className="botones-acciones">
+        <Button size="large" variant="primary" >Editar</Button>
+      </div>
     </div>
     
   );

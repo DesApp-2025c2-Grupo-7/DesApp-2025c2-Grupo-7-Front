@@ -67,11 +67,19 @@ export default function AfiliadosFormEdit() {
   });
 
   const [listaSituacionesTerapeuticas] = useState([
-    "Diabetes",
-    "Hipertension",
-    "Alcoholismo",
-    "Obesidad",
-    "Asma",
+      'Anemia', 
+      'Ansiedad', 
+      'Asma', 
+      'Conjuntivitis', 
+      'Diabetes', 
+      'Esguince', 
+      'Estrés', 
+      'Fractura', 
+      'Gastroenteritis', 
+      'Gripe', 
+      'Migraña', 
+      'Neumonía', 
+      'Otitis', 
   ]);
 
   const handleInputChange = (name: string, value: string) => {
@@ -402,21 +410,30 @@ export default function AfiliadosFormEdit() {
           />
         </div>
 
-        {/* Fecha de alta del sistema */}
-        <div className="form-row">
-          <label>Fecha de Alta del Sistema *</label>
-          <Input
-            type="date"
-            className="input-valor"
-            value={formData.fechaAlta}
-            onChange={(value: string) => handleInputChange("fechaAlta", value)}
-            required
-          />
-          <small
-            style={{ color: "#666", fontSize: "0.8rem", marginTop: "5px" }}
-          >
-            Fecha en que se registra en el sistema
-          </small>
+        {/* Fechas del sistema */}
+        <div className="form-row-double">
+          <div className="form-row-double-item-left">
+            <label>Fecha de Alta del Sistema *</label>
+            <Input
+              type="date"
+              className="input-valor"
+              value={formData.fechaAlta}
+              onChange={(value: string) => handleInputChange("fechaAlta", value)}
+              required
+            />
+            <small className="form-help">Fecha en que se registra en el sistema</small>
+          </div>
+          <div className="form-row-double-item-right">
+            <label>Fecha de Baja del Sistema</label>
+            <Input
+              type="date"
+              className="input-valor"
+              value={formData.fechaBaja}
+              onChange={(value: string) => handleInputChange("fechaBaja", value)}
+              placeholder="Dejar vacío si está activo"
+            />
+            <small className="form-help">Solo completar si se da de baja</small>
+          </div>
         </div>
 
         {/* Dirección */}
@@ -589,23 +606,28 @@ export default function AfiliadosFormEdit() {
             </button>
           </div>
           <div className="form-row"></div>
+          <div className="form-row"></div>
 
-          <Button
-            type="button"
-            variant="cancel"
-            onClick={handleCancelar}
-            disabled={isLoading}
-          >
-            Cancelar
-          </Button>
-          <Button
-            type="button"
-            variant="primary"
-            onClick={handleCrearTitular}
-            disabled={isLoading}
-          >
-            {isLoading ? "Creando..." : "Dar de alta"}
-          </Button>
+          <div className="botones-acciones">
+            <Button
+              type="button"
+              size="large"
+              variant="cancel"
+              onClick={handleCancelar}
+              disabled={isLoading}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              size="large"
+              variant="primary"
+              onClick={handleCrearTitular}
+              disabled={isLoading}
+            >
+              {isLoading ? "Creando..." : "Dar de alta"}
+            </Button>
+          </div>
         </>
       </form>
 

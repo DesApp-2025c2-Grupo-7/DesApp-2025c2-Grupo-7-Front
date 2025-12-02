@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Input from "./Input";
 import { Trash2 } from "lucide-react";
 import type { TipoValidacion } from "../../utils/validaciones";
@@ -17,6 +17,7 @@ type MultipleInputProps = {
   className?: string;
   placeholder?: string;
   onChange?: (values: string[]) => void;
+  values?: string[];
 };
 
 export default function MultipleInput({
@@ -25,8 +26,15 @@ export default function MultipleInput({
   className,
   placeholder,
   onChange,
+  values: externalValues,
 }: MultipleInputProps) {
-  const [values, setValues] = useState<string[]>([""]);
+  const [values, setValues] = useState<string[]>(externalValues || [""]);
+
+  useEffect(() => {
+    if (externalValues) {
+      setValues(externalValues);
+    }
+  }, [externalValues]);
 
   const handleInputChange = (index: number, value: string) => {
     const updatedValues = [...values];

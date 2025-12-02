@@ -149,7 +149,7 @@ const ListaPrestadores: React.FC<ListaPrestadoresProps> = ({ prestadores }) => {
                   </span>
                 )}
 
-                {bajaProgramada && (
+                {bajaProgramada && prestador.fechaBaja && (
                   <span className="badge-baja-programada">
                     <Calendar size={14} />
                     Baja programada: {new Date(prestador.fechaBaja).toLocaleDateString()}
@@ -186,22 +186,22 @@ const ListaPrestadores: React.FC<ListaPrestadoresProps> = ({ prestadores }) => {
                 {/* Información adicional del prestador */}
                 <div className="prestador-info-extra">
                   {/* Contacto */}
-                  {(prestador.telefono || prestador.email) && (
+                  {(prestador.telefono?.length > 0 || prestador.email?.length > 0) && (
                     <div className="info-item">
                       <span className="info-label">📞 Contacto:</span>
                       <span className="info-value">
-                        {prestador.telefono && <span>{prestador.telefono}</span>}
-                        {prestador.telefono && prestador.email && " • "}
-                        {prestador.email && <span>{prestador.email}</span>}
+                        {prestador.telefono?.[0] && <span>{prestador.telefono[0]}</span>}
+                        {prestador.telefono?.[0] && prestador.email?.[0] && " • "}
+                        {prestador.email?.[0] && <span>{prestador.email[0]}</span>}
                       </span>
                     </div>
                   )}
 
                   {/* Para profesionales independientes: Centro médico asociado */}
-                  {prestador.esProfesionalIndependiente && prestador.centroMedicoAsociado && (
+                  {prestador.esProfesionalIndependiente && prestador.centrosMedicos && prestador.centrosMedicos.length > 0 && (
                     <div className="info-item">
                       <span className="info-label">🏥 Centro:</span>
-                      <span className="info-value">{prestador.centroMedicoAsociado.nombreCompleto}</span>
+                      <span className="info-value">{prestador.centrosMedicos[0].nombreCompleto}</span>
                     </div>
                   )}
 
@@ -217,8 +217,8 @@ const ListaPrestadores: React.FC<ListaPrestadoresProps> = ({ prestadores }) => {
                           };
 
                           const diasAbrev: Record<string, string> = {
-                            'Lunes': 'L', 'Martes': 'M', 'Miércoles': 'X', 'Jueves': 'J',
-                            'Viernes': 'V', 'Sábado': 'S', 'Domingo': 'D'
+                            'Lunes': 'Lun', 'Martes': 'Mar', 'Miércoles': 'Mié', 'Jueves': 'Jue',
+                            'Viernes': 'Vie', 'Sábado': 'Sáb', 'Domingo': 'Dom'
                           };
 
                           const horariosPorDia = new Map<string, { desde: string, hasta: string }[]>();
