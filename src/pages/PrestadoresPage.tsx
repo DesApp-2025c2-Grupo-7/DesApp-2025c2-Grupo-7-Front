@@ -1,21 +1,27 @@
 // PrestadoresPage.tsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import Header from "../components/genericos/Header";
 import PrestadoresHeader from "../components/prestadores/HeaderPrestadores";
 import BarraBusqueda from "../components/genericos/BarraBusqueda";
 import ListaPrestadores from "../components/prestadores/ListaPrestadores";
 import Paginacion from "../components/genericos/Paginacion";
+import TabsPrestadores from "../components/prestadores/TabsPrestadores";
+import SubTabsReportesPrestadores from "../components/prestadores/reportes/SubTabReportesPrestadores";
+import ReporteAltasPorPeriodo from "../components/prestadores/reportes/ReporteAltasPeriodo";
+import ReportePrestadoresPorEspecialidad from "../components/prestadores/reportes/ReportePrestadoresPorEspecialidad";
+
 import "../components/genericos/PaginaEstilos.css";
 import type { Prestador } from "../types/prestadores";
 import { getApiUrl } from "../config/env";
 
 const PrestadoresPage: React.FC = () => {
-  const [busqueda, setBusqueda] = useState("");
-  const [prestadores, setPrestadores] = useState<Prestador[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Tabs principales
+  const [activeTab, setActiveTab] = useState<"lista" | "reportes">("lista");
+  const [activeSubTab, setActiveSubTab] = useState<"especialidades" | "altasPeriodo">("especialidades");
 
-  // Estados de filtros para prestadores
+  // Filtros
+  const [busqueda, setBusqueda] = useState("");
   const [searchByNombre, setSearchByNombre] = useState(true);
   const [searchByCuil, setSearchByCuil] = useState(false);
   const [searchByEspecialidad, setSearchByEspecialidad] = useState(false);
@@ -23,6 +29,9 @@ const PrestadoresPage: React.FC = () => {
   const [onlyProfesionales, setOnlyProfesionales] = useState(false);
   const [onlyCentros, setOnlyCentros] = useState(false);
   const [includeBajas, setIncludeBajas] = useState(false);
+
+  const [prestadores, setPrestadores] = useState<Prestador[]>([]);
+  const [loading, setLoading] = useState(true);
 
   // Paginación
   const [currentPage, setCurrentPage] = useState(1);
@@ -42,9 +51,7 @@ const PrestadoresPage: React.FC = () => {
         try {
           setLoading(true);
           const response = await fetch(getApiUrl("/prestadores"));
-          if (!response.ok) {
-            throw new Error("Error al obtener los prestadores");
-          }
+          if (!response.ok) throw new Error("Error al obtener los prestadores");
           const data: Prestador[] = await response.json();
           setPrestadores(data);
         } catch (error) {
@@ -61,19 +68,16 @@ const PrestadoresPage: React.FC = () => {
   const handleVolver = () => navigate("/");
   const handleAlta = () => navigate("/prestadores/alta");
 
-  // Función auxiliar para verificar si un prestador está activo
   const estaActivo = (prestador: Prestador): boolean => {
     const hoy = new Date();
     hoy.setHours(0, 0, 0, 0);
 
-    // Si tiene fecha de baja y ya pasó, está inactivo
     if (prestador.fechaBaja) {
       const fechaBaja = new Date(prestador.fechaBaja);
       fechaBaja.setHours(0, 0, 0, 0);
       if (fechaBaja <= hoy) return false;
     }
 
-    // Si tiene fecha de alta futura, está inactivo
     if (prestador.fechaAlta) {
       const fechaAlta = new Date(prestador.fechaAlta);
       fechaAlta.setHours(0, 0, 0, 0);
@@ -83,77 +87,48 @@ const PrestadoresPage: React.FC = () => {
     return true;
   };
 
-  // Filtrado de prestadores
-  const prestadoresFiltrados = prestadores.filter((prestador) => {
-    // Filtro por tipo de prestador
-    if (onlyProfesionales && !prestador.esProfesionalIndependiente) return false;
-    if (onlyCentros && prestador.esProfesionalIndependiente) return false;
+  const prestadoresFiltrados = useMemo(() => {
+    const q = busqueda.trim().toLowerCase();
+    return prestadores.filter((p) => {
+      if (onlyProfesionales && !p.esProfesionalIndependiente) return false;
+      if (onlyCentros && p.esProfesionalIndependiente) return false;
+      if (!includeBajas && !estaActivo(p)) return false;
+      if (!q) return true;
 
-    // Filtro por estado (bajas) - CORREGIDO
-    // Solo excluir si NO se incluyen bajas Y el prestador está realmente inactivo
-    if (!includeBajas && !estaActivo(prestador)) return false;
+      const matches: boolean[] = [];
+      if (searchByNombre && p.nombreCompleto.toLowerCase().includes(q)) matches.push(true);
+      if (searchByCuil && p.numeroCUIL.includes(q)) matches.push(true);
+      if (searchByEspecialidad && p.especialidades?.some(e => e.nombre.toLowerCase().includes(q))) matches.push(true);
+      if (searchByLocalidad && p.direccion?.some(d => d.localidad.toLowerCase().includes(q))) matches.push(true);
 
-    // Si no hay búsqueda, mostrar todos los que pasaron los filtros anteriores
-    if (!busqueda.trim()) return true;
+      return matches.length === 0 ? false : matches.some(Boolean);
+    });
+  }, [
+    prestadores,
+    busqueda,
+    searchByNombre,
+    searchByCuil,
+    searchByEspecialidad,
+    searchByLocalidad,
+    onlyProfesionales,
+    onlyCentros,
+    includeBajas,
+  ]);
 
-    const searchLower = busqueda.toLowerCase().trim();
-
-    // Si no hay ningún filtro de búsqueda activo, buscar en todos los campos
-    const noHayFiltrosActivos = !searchByNombre && !searchByCuil && !searchByEspecialidad && !searchByLocalidad;
-
-    if (noHayFiltrosActivos) {
-      // Buscar en todos los campos
-      return (
-        prestador.nombreCompleto.toLowerCase().includes(searchLower) ||
-        prestador.numeroCUIL.includes(searchLower) ||
-        prestador.especialidades?.some(esp => esp.nombre.toLowerCase().includes(searchLower)) ||
-        prestador.direccion?.some(dir => dir.localidad.toLowerCase().includes(searchLower))
-      );
-    }
-
-    // Si hay filtros activos, aplicarlos
-    let matchFound = false;
-
-    if (searchByNombre && prestador.nombreCompleto.toLowerCase().includes(searchLower)) {
-      matchFound = true;
-    }
-
-    if (searchByCuil && prestador.numeroCUIL.includes(searchLower)) {
-      matchFound = true;
-    }
-
-    if (searchByEspecialidad && prestador.especialidades?.some(esp => 
-      esp.nombre.toLowerCase().includes(searchLower)
-    )) {
-      matchFound = true;
-    }
-
-    if (searchByLocalidad && prestador.direccion?.some(dir => 
-      dir.localidad.toLowerCase().includes(searchLower)
-    )) {
-      matchFound = true;
-    }
-
-    return matchFound;
-  });
-
-  // Calcular total de páginas
   const totalPages = Math.ceil(prestadoresFiltrados.length / prestadoresPerPage) || 1;
-
-  // Ajustar currentPage si queda fuera de rango
-  useEffect(() => {
-    if (currentPage > totalPages) {
-      setCurrentPage(totalPages);
-    }
-  }, [currentPage, totalPages]);
-
-  // Reiniciar página al cambiar búsqueda o filtros
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [busqueda, searchByNombre, searchByCuil, searchByEspecialidad, searchByLocalidad, onlyProfesionales, onlyCentros, includeBajas]);
-
   const startIndex = (currentPage - 1) * prestadoresPerPage;
   const prestadoresVisibles = prestadoresFiltrados.slice(startIndex, startIndex + prestadoresPerPage);
+
+  useEffect(() => { setCurrentPage(1); }, [
+    busqueda,
+    searchByNombre,
+    searchByCuil,
+    searchByEspecialidad,
+    searchByLocalidad,
+    onlyProfesionales,
+    onlyCentros,
+    includeBajas
+  ]);
 
   return (
     <div className="admin-page">
@@ -165,39 +140,60 @@ const PrestadoresPage: React.FC = () => {
       <div className="admin-content">
         <PrestadoresHeader onVolver={handleVolver} onAlta={handleAlta} mostrarAlta={true} />
 
-        <BarraBusqueda
-          mode="prestadores"
-          busqueda={busqueda}
-          setBusqueda={setBusqueda}
-          searchByNombre={searchByNombre}
-          setSearchByNombre={setSearchByNombre}
-          searchByCuil={searchByCuil}
-          setSearchByCuil={setSearchByCuil}
-          searchByEspecialidad={searchByEspecialidad}
-          setSearchByEspecialidad={setSearchByEspecialidad}
-          searchByLocalidad={searchByLocalidad}
-          setSearchByLocalidad={setSearchByLocalidad}
-          onlyProfesionales={onlyProfesionales}
-          setOnlyProfesionales={setOnlyProfesionales}
-          onlyCentros={onlyCentros}
-          setOnlyCentros={setOnlyCentros}
-          includeBajas={includeBajas}
-          setIncludeBajas={setIncludeBajas}
-        />
+        {/* Tabs principales */}
+        <TabsPrestadores activeTab={activeTab} onTabChange={setActiveTab} />
 
-        {loading ? (
-          <p>Cargando prestadores...</p>
-        ) : prestadoresVisibles.length > 0 ? (
+        {activeTab === "lista" ? (
           <>
-            <ListaPrestadores prestadores={prestadoresVisibles} />
-            <Paginacion
-              totalPages={totalPages}
-              currentPage={currentPage}
-              onPageChange={setCurrentPage}
+            <BarraBusqueda
+              mode="prestadores"
+              busqueda={busqueda}
+              setBusqueda={setBusqueda}
+              searchByNombre={searchByNombre}
+              setSearchByNombre={setSearchByNombre}
+              searchByCuil={searchByCuil}
+              setSearchByCuil={setSearchByCuil}
+              searchByEspecialidad={searchByEspecialidad}
+              setSearchByEspecialidad={setSearchByEspecialidad}
+              searchByLocalidad={searchByLocalidad}
+              setSearchByLocalidad={setSearchByLocalidad}
+              onlyProfesionales={onlyProfesionales}
+              setOnlyProfesionales={setOnlyProfesionales}
+              onlyCentros={onlyCentros}
+              setOnlyCentros={setOnlyCentros}
+              includeBajas={includeBajas}
+              setIncludeBajas={setIncludeBajas}
             />
+
+            {loading ? (
+              <p>Cargando prestadores...</p>
+            ) : prestadoresVisibles.length > 0 ? (
+              <>
+                <ListaPrestadores prestadores={prestadoresVisibles} />
+                <Paginacion
+                  totalPages={totalPages}
+                  currentPage={currentPage}
+                  onPageChange={setCurrentPage}
+                />
+              </>
+            ) : (
+              <p>No se encontraron prestadores</p>
+            )}
           </>
         ) : (
-          <p>No se encontraron prestadores</p>
+          <>
+            {/* SubTabs para reportes */}
+            <SubTabsReportesPrestadores
+              activeSubTab={activeSubTab}
+              onSubTabChange={setActiveSubTab}
+            />
+
+            {activeSubTab === "especialidades" ? (
+              <ReportePrestadoresPorEspecialidad prestadores={prestadoresFiltrados} />
+            ) : (
+              <ReporteAltasPorPeriodo />
+            )}
+          </>
         )}
       </div>
     </div>

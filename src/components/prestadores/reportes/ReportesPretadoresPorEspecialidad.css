@@ -1,0 +1,176 @@
+.reporte-especialidad-container {
+  padding: 1.5rem;
+  font-family: Arial, sans-serif;
+  color: #333;
+}
+
+.reporte-especialidad-container h2 {
+  margin-bottom: 1rem;
+  color: #2c3e50;
+  font-size: 1.4rem;
+}
+
+/* --------------------------- */
+/* FILTROS Y BUSQUEDA */
+/* --------------------------- */
+
+.filtros-busqueda {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.2rem;
+  align-items: center;
+}
+
+.input-busqueda-container {
+  position: relative;
+  flex: 1;
+  min-width: 220px;
+}
+
+.input-busqueda {
+  width: 85%;
+  padding: 0.55rem 0.75rem 0.55rem 2.2rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 0.95rem;
+}
+
+.icono-busqueda {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.1rem;
+  color: #000000;
+}
+
+.filtro-especialidad {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.filtro-especialidad label {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #000000;
+}
+
+.filtro-especialidad select {
+  padding: 0.45rem 0.6rem;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  background: #c7c7c7;
+  min-width: 160px;
+  font-size: 0.95rem;
+  color: #000000;
+}
+
+/* --------------------------- */
+/* BOTONES EXPORTAR */
+/* --------------------------- */
+
+.export-buttons-general {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.export-buttons-general .btn {
+  min-width: 110px;
+}
+
+/* --------------------------- */
+/* SIN RESULTADOS */
+/* --------------------------- */
+
+.no-result {
+  margin-top: 1rem;
+  color: #777;
+  font-style: italic;
+  font-size: 0.95rem;
+}
+
+/* --------------------------- */
+/* TARJETA DE ESPECIALIDAD */
+/* --------------------------- */
+
+.especialidad-card {
+  margin-bottom: 2rem;
+  padding: 1rem 1.2rem;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  background-color: #fafafa;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+}
+
+.especialidad-card h3 {
+  margin-bottom: 0.75rem;
+  color: #2c3e50;
+  font-size: 1.15rem;
+  border-bottom: 1px solid #e0e0e0;
+  padding-bottom: 0.35rem;
+}
+
+/* --------------------------- */
+/* TABLAS */
+/* --------------------------- */
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
+.table-especialidad {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.table-especialidad th,
+.table-especialidad td {
+  border: 1px solid #ccc;
+  padding: 0.55rem;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.table-especialidad th {
+  background-color: #f4f4f4;
+  font-weight: 600;
+}
+
+.table-especialidad tbody tr:nth-child(even) {
+  background-color: #fdfdfd;
+}
+
+.table-especialidad tbody tr:hover {
+  background-color: #e8f2ff;
+  transition: 0.15s ease;
+}
+
+.table-especialidad td button {
+  font-size: 0.85rem;
+  padding: 0.25rem 0.5rem;
+}
+
+/* --------------------------- */
+/* RESPONSIVE */
+/* --------------------------- */
+
+@media (max-width: 768px) {
+  .filtros-busqueda {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .input-busqueda-container,
+  .filtro-especialidad,
+  .export-buttons-general {
+    width: 100%;
+  }
+
+  .export-buttons-general {
+    justify-content: space-between;
+  }
+}

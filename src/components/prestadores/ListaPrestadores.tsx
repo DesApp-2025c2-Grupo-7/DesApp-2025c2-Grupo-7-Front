@@ -158,15 +158,28 @@ const ListaPrestadores: React.FC<ListaPrestadoresProps> = ({ prestadores }) => {
 
                 <div className="card-header">
                   <h4 className="prestador-nombre">{prestador.nombreCompleto}</h4>
+
+                  {/* ⭐ ESPECIALIDADES LIMITADAS ⭐ */}
                   <div className="prestador-especialidades-list">
-                    {prestador.especialidades.length > 0
-                      ? prestador.especialidades.map((especialidad) => (
+                    {prestador.especialidades.length > 0 ? (
+                      <>
+                        {prestador.especialidades.slice(0, 5).map((especialidad) => (
                           <span key={especialidad.id} className="prestador-especialidad">
                             {especialidad.nombre}
                           </span>
-                        ))
-                      : <span style={{ color: '#666', fontSize: '0.9rem' }}>No posee especialidades</span>
-                    }
+                        ))}
+
+                        {prestador.especialidades.length > 5 && (
+                          <span className="prestador-especialidad chip-extra">
+                            +{prestador.especialidades.length - 5} más
+                          </span>
+                        )}
+                      </>
+                    ) : (
+                      <span style={{ color: "#666", fontSize: "0.9rem" }}>
+                        No posee especialidades
+                      </span>
+                    )}
                   </div>
                 </div>
 
@@ -192,35 +205,22 @@ const ListaPrestadores: React.FC<ListaPrestadoresProps> = ({ prestadores }) => {
                     </div>
                   )}
 
-                  {/* Días y horarios de atención */}
+                  {/* Horarios */}
                   {prestador.direccion && prestador.direccion.some(d => d.horariosAtencion?.length > 0) && (
                     <div className="info-item">
                       <span className="info-label">🕐 Horarios:</span>
                       <div className="info-value horarios-lista">
                         {(() => {
-                          // Orden de los días
                           const ordenDias: Record<string, number> = {
-                            'Lunes': 1,
-                            'Martes': 2,
-                            'Miércoles': 3,
-                            'Jueves': 4,
-                            'Viernes': 5,
-                            'Sábado': 6,
-                            'Domingo': 7
+                            'Lunes': 1, 'Martes': 2, 'Miércoles': 3, 'Jueves': 4,
+                            'Viernes': 5, 'Sábado': 6, 'Domingo': 7
                           };
 
-                          // Mapeo de días a abreviaturas
                           const diasAbrev: Record<string, string> = {
-                            'Lunes': 'L',
-                            'Martes': 'M',
-                            'Miércoles': 'X',
-                            'Jueves': 'J',
-                            'Viernes': 'V',
-                            'Sábado': 'S',
-                            'Domingo': 'D'
+                            'Lunes': 'L', 'Martes': 'M', 'Miércoles': 'X', 'Jueves': 'J',
+                            'Viernes': 'V', 'Sábado': 'S', 'Domingo': 'D'
                           };
 
-                          // Agrupar horarios por día y encontrar min/max
                           const horariosPorDia = new Map<string, { desde: string, hasta: string }[]>();
                           
                           prestador.direccion.forEach(dir => {
@@ -235,7 +235,6 @@ const ListaPrestadores: React.FC<ListaPrestadoresProps> = ({ prestadores }) => {
                             });
                           });
 
-                          // Calcular rango completo por día
                           const rangosPorDia = Array.from(horariosPorDia.entries()).map(([dia, horarios]) => {
                             const horasDesde = horarios.map(h => h.desde).sort();
                             const horasHasta = horarios.map(h => h.hasta).sort();
@@ -246,11 +245,10 @@ const ListaPrestadores: React.FC<ListaPrestadoresProps> = ({ prestadores }) => {
                             };
                           });
 
-                          // Ordenar por día de la semana
                           rangosPorDia.sort((a, b) => ordenDias[a.dia] - ordenDias[b.dia]);
 
-                          // Agrupar días con mismo horario
                           const horariosAgrupados: { dias: string[], rango: string }[] = [];
+
                           rangosPorDia.forEach(item => {
                             const rango = `${item.desde} - ${item.hasta}`;
                             const ultimoGrupo = horariosAgrupados[horariosAgrupados.length - 1];
@@ -262,16 +260,13 @@ const ListaPrestadores: React.FC<ListaPrestadoresProps> = ({ prestadores }) => {
                             }
                           });
 
-                          // Mostrar máximo 2 grupos
-                          return horariosAgrupados.slice(0, 2).map((grupo, idx) => {
-                            const diasText = grupo.dias.map(d => diasAbrev[d]).join(' y ');
-                            return (
-                              <span key={idx} className="horario-grupo">
-                                {diasText} de {grupo.rango}
-                              </span>
-                            );
-                          });
+                          return horariosAgrupados.slice(0, 2).map((grupo, idx) => (
+                            <span key={idx} className="horario-grupo">
+                              {grupo.dias.map(d => diasAbrev[d]).join(' y ')} de {grupo.rango}
+                            </span>
+                          ));
                         })()}
+
                         {prestador.direccion.reduce((total, dir) => 
                           total + (dir.horariosAtencion?.length || 0), 0
                         ) > 2 && (
@@ -371,7 +366,7 @@ const ListaPrestadores: React.FC<ListaPrestadoresProps> = ({ prestadores }) => {
         textoBotonCancelar="Cancelar"
       />
 
-      {/* Modal universal para mensajes */}
+      {/* Modal universal */}
       <Modal
         isOpen={modal.isOpen}
         onClose={modal.cerrarModal}
