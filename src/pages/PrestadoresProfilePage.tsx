@@ -25,6 +25,9 @@ const PrestadorProfilePage: React.FC = () => {
           throw new Error("Error al obtener los datos del prestador");
         }
         const data: Prestador = await response.json();
+
+        console.log("Prestador API data:", data);
+
         setPrestador(data);
       } catch (error) {
         console.error(error);
