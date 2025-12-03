@@ -14,28 +14,25 @@ const PrestadorProfilePage: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
 
-  useEffect(() => {
+  const fetchPrestador = async () => {
     if (!id) return;
-
-    const fetchPrestador = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch(getApiUrl(`/prestadores/${id}`));
-        if (!response.ok) {
-          throw new Error("Error al obtener los datos del prestador");
-        }
-        const data: Prestador = await response.json();
-
-
-        setPrestador(data);
-      } catch (error) {
-        console.error(error);
-        setPrestador(null);
-      } finally {
-        setLoading(false);
+    try {
+      setLoading(true);
+      const response = await fetch(getApiUrl(`/prestadores/${id}`));
+      if (!response.ok) {
+        throw new Error("Error al obtener los datos del prestador");
       }
-    };
+      const data: Prestador = await response.json();
+      setPrestador(data);
+    } catch (error) {
+      console.error(error);
+      setPrestador(null);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchPrestador();
   }, [id]);
 
@@ -83,7 +80,10 @@ const PrestadorProfilePage: React.FC = () => {
           onAlta={() => navigate("/agenda", { state: { prestadorSeleccionado: prestador } })}
         />
         {prestador ? (
-          <PrestadoresFormEdit prestador={prestador} />
+          <PrestadoresFormEdit 
+            prestador={prestador} 
+            onPrestadorActualizado={fetchPrestador}
+          />
         ) : (
           <p>No se encontró el prestador</p>
         )}

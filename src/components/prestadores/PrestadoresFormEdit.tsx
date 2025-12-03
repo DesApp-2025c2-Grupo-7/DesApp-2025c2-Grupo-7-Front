@@ -72,10 +72,12 @@ const validarFechas = (
 /* --- Componente principal --- */
 interface PrestadoresFormEditProps {
   prestador?: Prestador | null;
+  onPrestadorActualizado?: () => void;
 }
 
 const PrestadoresFormEdit: React.FC<PrestadoresFormEditProps> = ({
   prestador,
+  onPrestadorActualizado,
 }) => {
   const navigate = useNavigate();
   const modal = useModal();
@@ -620,7 +622,11 @@ const PrestadoresFormEdit: React.FC<PrestadoresFormEditProps> = ({
         textoBotonConfirmar: "Aceptar",
         soloInformacion: true,
         onConfirmar: () => {
-          window.location.reload();
+          if (onPrestadorActualizado) {
+            onPrestadorActualizado();
+          } else {
+            window.location.reload();
+          }
         },
       });
     } catch (err) {
@@ -673,7 +679,11 @@ const PrestadoresFormEdit: React.FC<PrestadoresFormEditProps> = ({
             textoBotonConfirmar: "Aceptar",
             soloInformacion: true,
             onConfirmar: () => {
-              window.location.reload();
+              if (onPrestadorActualizado) {
+                onPrestadorActualizado();
+              } else {
+                window.location.reload();
+              }
             },
           });
         } catch (err) {
@@ -1346,23 +1356,6 @@ const PrestadoresFormEdit: React.FC<PrestadoresFormEditProps> = ({
           />
         )}
 
-        {/* Modal de baja */}
-        <ModalConfirmacion
-          isOpen={modalBajaOpen}
-          onClose={() => setModalBajaOpen(false)}
-          onConfirm={handleConfirmarBaja}
-          titulo="Dar de baja prestador"
-          mensaje={`¿Está seguro que desea dar de baja a ${nombre}?`}
-          submensaje={
-            tipoBaja === "inmediata"
-              ? "Se dará de baja inmediatamente (hoy)"
-              : `Se dará de baja el ${fechaBajaSeleccionada}`
-          }
-          tipoOperacion="danger"
-          icono={<AlertTriangle size={24} />}
-          textoBotonConfirmar="Confirmar baja"
-          textoBotonCancelar="Cancelar"
-        />
 
         {/* Modal para seleccionar tipo de baja */}
         {modalBajaOpen && (

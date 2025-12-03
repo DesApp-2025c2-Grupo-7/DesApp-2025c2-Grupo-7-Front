@@ -481,15 +481,63 @@ const AgendaPage: React.FC = () => {
           ? prestadores.find((x) => String(x.id) === String(turno.prestadorId))
           : undefined);
 
-      const addresses =
-        p && Array.isArray(p.direccion) && p.direccion.length > 0
-          ? p.direccion
-              .map((d: any) =>
-                `${d.calle || ""} ${d.numero || ""} ${d.localidad || ""}`.trim()
-              )
-              .filter(Boolean)
-              .join(" — ")
-          : "No registrada";
+      // ✅ Determinar la dirección del turno actual
+      let direccionDelTurno = null;
+      let otrasDirecciones: any[] = [];
+
+      if (p && Array.isArray(p.direccion) && p.direccion.length > 0) {
+        // Obtener el día del turno
+        const turnoDate = turno 
+          ? new Date(`${turno.fecha}T${turno.hora}:00`)
+          : arr.length > 0
+          ? new Date(`${arr[0].fecha}T${arr[0].hora}:00`)
+          : null;
+
+        const turnoDiaNombre = turnoDate 
+          ? diasSemanaEsp[turnoDate.getDay()]
+          : null;
+
+        const especialidadTurno = arr.length > 0
+          ? arr[0]?.especialidad?.nombre || arr[0]?.especialidad
+          : turno
+          ? turno.especialidad?.nombre || turno.especialidad
+          : null;
+
+        // Buscar la dirección que contiene el horario que coincide con el turno
+        if (turnoDiaNombre && especialidadTurno) {
+          for (const d of p.direccion) {
+            const tieneHorarioCoincidente = (d.horariosAtencion || []).some((h: any) => {
+              const diaCoincide = stripDiacritics(h.dia) === stripDiacritics(turnoDiaNombre);
+              const especialidadCoincide = 
+                (h.especialidad?.nombre || h.especialidad) === especialidadTurno;
+              return diaCoincide && especialidadCoincide;
+            });
+
+            if (tieneHorarioCoincidente) {
+              direccionDelTurno = d;
+            } else {
+              otrasDirecciones.push(d);
+            }
+          }
+        }
+
+        // Si no se encontró dirección específica, usar todas como "otras"
+        if (!direccionDelTurno) {
+          otrasDirecciones = p.direccion;
+        }
+      }
+
+      const formatDireccion = (d: any) => 
+        `${d.calle || ""} ${d.numero || ""}, ${d.localidad || ""} (CP ${d.codigoPostal || ""})`.trim();
+
+      const direccionPrincipal = direccionDelTurno
+        ? formatDireccion(direccionDelTurno)
+        : "No registrada";
+
+      const otrasDir = otrasDirecciones
+        .map(formatDireccion)
+        .filter(Boolean)
+        .join(" — ");
 
       // ✅ Solo mostrar la especialidad del turno actual
       const specs =
@@ -552,11 +600,16 @@ const AgendaPage: React.FC = () => {
               {arr.length > 0 ? arr.length : turno ? 1 : 0}
             </p>
             <p>
-              <strong>Dirección(es):</strong> {addresses}
-            </p>
-            <p>
               <strong>Especialidad:</strong> {specs}
             </p>
+            <p>
+              <strong>Dirección de atención:</strong> {direccionPrincipal}
+            </p>
+            {otrasDir && (
+              <p>
+                <strong>Otras direcciones:</strong> {otrasDir}
+              </p>
+            )}
             <Button
               onClick={() => {
                 navigate("/prestadores/" + p.id);

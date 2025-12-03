@@ -143,6 +143,31 @@ const Dashboard: React.FC = () => {
     fetchData();
   }, []);
 
+  // Verificar si un prestador está activo
+  const prestadorEstaActivo = (prestador: Prestador): boolean => {
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+
+    if (prestador.fechaBaja) {
+      const fechaBaja = new Date(prestador.fechaBaja);
+      fechaBaja.setHours(0, 0, 0, 0);
+      if (fechaBaja < hoy) return false;
+    }
+
+    if (prestador.fechaAlta) {
+      const fechaAlta = new Date(prestador.fechaAlta);
+      fechaAlta.setHours(0, 0, 0, 0);
+      if (fechaAlta > hoy) return false;
+    }
+
+    return true;
+  };
+
+  // Calcular total de prestadores activos
+  const calcularPrestadoresActivos = () => {
+    return prestadores.filter(prestadorEstaActivo).length;
+  };
+
   // Calcular total de horarios de atención de todos los prestadores
   const calcularTotalHorarios = () => {
     try {
@@ -179,7 +204,7 @@ const Dashboard: React.FC = () => {
           <CardDashboard
             title="Prestadores Activos"
             buttonText="+ Ver Prestadores"
-            number={loading ? 0 : prestadores.length}
+            number={loading ? 0 : calcularPrestadoresActivos()}
             onButtonClick={() => navigate("/prestadores", { state: { prestadores } })}
             icon={UserCheck}
           />
