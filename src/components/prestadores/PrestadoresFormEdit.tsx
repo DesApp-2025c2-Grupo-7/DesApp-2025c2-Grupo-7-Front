@@ -159,7 +159,10 @@ const PrestadoresFormEdit: React.FC<PrestadoresFormEditProps> = ({
     const filtrados = profesionalesAsociados.filter(
       (prof) =>
         prof.nombreCompleto.toLowerCase().includes(filtro) ||
-        prof.numeroCUIL.includes(filtro)
+        prof.numeroCUIL.includes(filtro) ||
+        prof.especialidades?.some((esp) => 
+          esp.nombre.toLowerCase().includes(filtro)
+        )
     );
 
     setProfesionalesAsociadosFiltrados(filtrados);
@@ -954,7 +957,15 @@ const PrestadoresFormEdit: React.FC<PrestadoresFormEditProps> = ({
         <div className="form-row">
           <label>CUIL/CUIT</label>
           {isEditing ? (
-            <Input type="text" value={cuil} onChange={setCuil} />
+            <Input 
+              type="text" 
+              value={cuil} 
+              onChange={(value) => {
+                // Limitar a solo números y máximo 11 dígitos
+                const numericValue = value.replace(/\D/g, '').slice(0, 11);
+                setCuil(numericValue);
+              }} 
+            />
           ) : (
             <span>{cuil}</span>
           )}
@@ -1126,7 +1137,7 @@ const PrestadoresFormEdit: React.FC<PrestadoresFormEditProps> = ({
                 <div className="busqueda-contenedor-input">
                   <Input
                     type="text"
-                    placeholder={"Buscar profesional por nombre o CUIL"}
+                    placeholder={"Buscar profesional por nombre, CUIL o especialidad"}
                     value={busqueda}
                     onChange={(value) => {
                       setBusqueda(value);

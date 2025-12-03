@@ -132,6 +132,10 @@ const AgendaPage: React.FC = () => {
   const [currentPageDay, setCurrentPageDay] = useState(1);
   const cardsPerPage = 6;
 
+  // Paginación para vista semanal (por día)
+  const [weekDayPages, setWeekDayPages] = useState<{ [key: string]: number }>({});
+  const cardsPerDayWeek = 5;
+
   // Estado para el reporte de centros sin horarios
   const [mostrarReporteCentros, setMostrarReporteCentros] = useState(false);
 
@@ -156,6 +160,7 @@ const AgendaPage: React.FC = () => {
   // Reiniciar página cuando cambian filtros o fecha
   useEffect(() => {
     setCurrentPageDay(1);
+    setWeekDayPages({});
   }, [filtroEspecialidad, filtroPrestador, onlyCentros, onlyIndependientes, currentDate, view]);
 
   useEffect(() => {
@@ -949,6 +954,23 @@ const AgendaPage: React.FC = () => {
                         allowedPrestadorIds.has(String(t.prestadorId)))
                   );
                   const isToday = dayKey === todayKey;
+                  
+                  // Agrupar turnos por prestador-especialidad
+                  const groups: { [k: string]: any[] } = {};
+                  for (const dt of dayTurnos) {
+                    const key = `${dt.prestadorId}-${
+                      dt.especialidad?.nombre || "sin-especialidad"
+                    }`;
+                    groups[key] = groups[key] || [];
+                    groups[key].push(dt);
+                  }
+                  
+                  const allCards = Object.entries(groups);
+                  const currentPage = weekDayPages[dayKey] || 1;
+                  const totalPages = Math.ceil(allCards.length / cardsPerDayWeek);
+                  const startIdx = (currentPage - 1) * cardsPerDayWeek;
+                  const visibleCards = allCards.slice(startIdx, startIdx + cardsPerDayWeek);
+                  
                   return (
                     <div
                       className={"week-day" + (isToday ? " today" : "")}
@@ -962,17 +984,8 @@ const AgendaPage: React.FC = () => {
                         {dayTurnos.length === 0 ? (
                           <div className="muted small">Sin turnos</div>
                         ) : (
-                          (() => {
-                            const groups: { [k: string]: any[] } = {};
-                            for (const dt of dayTurnos) {
-                              const key = `${dt.prestadorId}-${
-                                dt.especialidad?.nombre || "sin-especialidad"
-                              }`;
-                              groups[key] = groups[key] || [];
-                              groups[key].push(dt);
-                            }
-
-                            return Object.entries(groups).map(([pid, arr]) => {
+                          <>
+                            {visibleCards.map(([pid, arr]) => {
                               const prest = prestadores.find(
                                 (p) =>
                                   String(p.id) === String(arr[0]?.prestadorId)
@@ -1021,8 +1034,54 @@ const AgendaPage: React.FC = () => {
                                   </div>
                                 </div>
                               );
-                            });
-                          })()
+                            })}
+                            {totalPages > 1 && (
+                              <div style={{ 
+                                display: 'flex', 
+                                justifyContent: 'center', 
+                                alignItems: 'center', 
+                                gap: '8px',
+                                marginTop: '8px',
+                                fontSize: '12px'
+                              }}>
+                                <button
+                                  className="rbc-btn small"
+                                  onClick={() => {
+                                    const newPage = Math.max(1, currentPage - 1);
+                                    setWeekDayPages(prev => ({ ...prev, [dayKey]: newPage }));
+                                  }}
+                                  disabled={currentPage === 1}
+                                  style={{
+                                    padding: '4px 8px',
+                                    fontSize: '11px',
+                                    opacity: currentPage === 1 ? 0.5 : 1,
+                                    cursor: currentPage === 1 ? 'not-allowed' : 'pointer'
+                                  }}
+                                >
+                                  ‹
+                                </button>
+                                <span style={{ fontSize: '11px', color: '#666' }}>
+                                  {currentPage} / {totalPages}
+                                </span>
+                                <button
+                                  className="rbc-btn small"
+                                  onClick={() => {
+                                    const newPage = Math.min(totalPages, currentPage + 1);
+                                    setWeekDayPages(prev => ({ ...prev, [dayKey]: newPage }));
+                                  }}
+                                  disabled={currentPage === totalPages}
+                                  style={{
+                                    padding: '4px 8px',
+                                    fontSize: '11px',
+                                    opacity: currentPage === totalPages ? 0.5 : 1,
+                                    cursor: currentPage === totalPages ? 'not-allowed' : 'pointer'
+                                  }}
+                                >
+                                  ›
+                                </button>
+                              </div>
+                            )}
+                          </>
                         )}
                       </div>
                     </div>

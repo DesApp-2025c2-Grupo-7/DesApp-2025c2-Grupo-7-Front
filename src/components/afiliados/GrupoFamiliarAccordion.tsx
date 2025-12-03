@@ -1,8 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronDown, ChevronUp, Users, Eye, UserPlus } from "lucide-react";
 import type { Afiliado, GrupoFamiliar } from "../../types/afiliados";
 import { esPersonaActiva, getTextoEstadoPersona } from "../../utils/estadoAfiliado";
+import Input from "../genericos/Input";
+import Paginacion from "../genericos/Paginacion";
 import "./GrupoFamiliarAccordion.css";
 
 interface GrupoFamiliarAccordionProps {
@@ -19,7 +21,11 @@ const GrupoFamiliarAccordion: React.FC<GrupoFamiliarAccordionProps> = ({
   onAgregarIntegrante
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [busqueda, setBusqueda] = useState("");
+  const [paginaActual, setPaginaActual] = useState(1);
   const navigate = useNavigate();
+
+  const miembrosPorPagina = 3;
 
   // Función helper para determinar si es titular
   const esTitular = (persona: any) => {
@@ -50,9 +56,33 @@ const GrupoFamiliarAccordion: React.FC<GrupoFamiliarAccordionProps> = ({
   const isActiveAfiliado = (miembro: Afiliado) => esPersonaActiva(miembro);
   const getEstadoText = (miembro: Afiliado) => getTextoEstadoPersona(miembro);
 
+  // Filtrar miembros según búsqueda
+  const miembrosFiltrados = miembrosGrupo.filter((miembro) => {
+    const filtro = busqueda.toLowerCase().trim();
+    if (filtro === "") return true;
 
-  // Debug temporal
+    return (
+      miembro.nombre.toLowerCase().includes(filtro) ||
+      miembro.apellido.toLowerCase().includes(filtro) ||
+      miembro.numeroDocumento.includes(filtro) ||
+      `${miembro.credencial}-${miembro.sufijo}`.includes(filtro)
+    );
+  });
 
+  // Calcular paginación
+  const totalPages = Math.ceil(miembrosFiltrados.length / miembrosPorPagina);
+  const miembrosPaginados = miembrosFiltrados.slice(
+    (paginaActual - 1) * miembrosPorPagina,
+    paginaActual * miembrosPorPagina
+  );
+
+  // Resetear página cuando cambia la búsqueda
+  useEffect(() => {
+    setPaginaActual(1);
+  }, [busqueda]);
+
+  // Mostrar paginación solo si hay más de 3 miembros
+  const mostrarPaginacion = miembrosGrupo.length > miembrosPorPagina;
 
   return (
     <div className="grupo-familiar-accordion">
@@ -110,8 +140,23 @@ const GrupoFamiliarAccordion: React.FC<GrupoFamiliarAccordionProps> = ({
                 </button>
               )}
             </div>
+
+            {/* Buscador (solo mostrar si hay más de 3 miembros) */}
+            {mostrarPaginacion && (
+              <div className="busqueda-contenedor-input" style={{ marginBottom: "1rem" }}>
+                <Input
+                  type="text"
+                  placeholder="Buscar por nombre, apellido, DNI o credencial"
+                  value={busqueda}
+                  onChange={(value) => {
+                    setBusqueda(value);
+                  }}
+                  variant="search"
+                />
+              </div>
+            )}
             
-            {miembrosGrupo.map((miembro, index) => {
+            {miembrosPaginados.map((miembro, index) => {
               const esAfililadoActual = miembro.credencial === afiliadoActual.credencial && miembro.sufijo === afiliadoActual.sufijo;
               
               return (
@@ -207,6 +252,17 @@ const GrupoFamiliarAccordion: React.FC<GrupoFamiliarAccordionProps> = ({
               </div>
               );
             })}
+
+            {/* Paginación (solo mostrar si hay más de 3 miembros) */}
+            {mostrarPaginacion && totalPages > 1 && (
+              <div style={{ marginTop: "1rem" }}>
+                <Paginacion
+                  totalPages={totalPages}
+                  currentPage={paginaActual}
+                  onPageChange={setPaginaActual}
+                />
+              </div>
+            )}
           </div>
         </div>
       )}
