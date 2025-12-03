@@ -9,6 +9,7 @@ import {
   MapPin,
   Building2,
   Eye,
+  Edit2,
 } from "lucide-react";
 import "./ListaPrestadores.css";
 import Button from "../genericos/Button";
@@ -919,11 +920,22 @@ const PrestadoresFormEdit: React.FC<PrestadoresFormEditProps> = ({
               }}
             />
           ) : (
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "0.2rem" }}>
+            <div className="prestador-especialidades-list">
               {seleccionadas.length > 0 ? (
-                seleccionadas.map((e) => <span key={e.id}>{e.nombre}</span>)
+                <>
+                  {seleccionadas.map((especialidad) => (
+                    <span
+                      key={especialidad.id}
+                      className="prestador-especialidad"
+                    >
+                      {especialidad.nombre}
+                    </span>
+                  ))}
+                </>
               ) : (
-                <span>No posee especialidades</span>
+                <span style={{ color: "#666", fontSize: "0.9rem" }}>
+                  No posee especialidades
+                </span>
               )}
             </div>
           )}
@@ -1063,6 +1075,7 @@ const PrestadoresFormEdit: React.FC<PrestadoresFormEditProps> = ({
                       size="small"
                       onClick={() => handleVerMas(dir)}
                     >
+                      <Edit2 size={16} style={{ marginRight: "8px" }} />
                       Editar
                     </Button>
                     <Button
@@ -1275,8 +1288,13 @@ const PrestadoresFormEdit: React.FC<PrestadoresFormEditProps> = ({
           </div>
         )}
         <div className="form-row"></div>
+        <div className="form-row"></div>
         <div className="botones-acciones">
-          <Button size="large" variant="cancel" onClick={() => navigate("/prestadores")}>
+          <Button
+            size="large"
+            variant="cancel"
+            onClick={() => navigate("/prestadores")}
+          >
             Cancelar
           </Button>
           {isEditing ? (
@@ -1285,18 +1303,31 @@ const PrestadoresFormEdit: React.FC<PrestadoresFormEditProps> = ({
                 {prestador ? "Guardar cambios" : "Dar de alta"}
               </Button>
               {prestador && estaActivo() && (
-                <Button size="large" variant="danger" onClick={handleAbrirModalBaja}>
+                <Button
+                  size="large"
+                  variant="danger"
+                  onClick={handleAbrirModalBaja}
+                >
                   Dar de baja
                 </Button>
               )}
               {prestador && !estaActivo() && (
-                <Button size="large" variant="primary" onClick={handleReactivar}>
+                <Button
+                  size="large"
+                  variant="primary"
+                  onClick={handleReactivar}
+                >
                   Reactivar
                 </Button>
               )}
             </>
           ) : (
-            <Button size="large" variant="primary" onClick={() => setIsEditing(true)}>
+            <Button
+              size="large"
+              variant="primary"
+              onClick={() => setIsEditing(true)}
+            >
+              <Edit2 size={16} style={{ marginRight: "8px" }} />
               Editar
             </Button>
           )}
