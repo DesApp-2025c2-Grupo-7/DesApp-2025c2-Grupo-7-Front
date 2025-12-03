@@ -258,10 +258,7 @@ export default function AfiliadosFormEdit() {
       };
 
       // Llamar al servicio para crear el titular (usando createIntegrante para titular)
-      console.log(
-        "Payload crear afiliado:",
-        JSON.stringify(datosAfiliado, null, 2)
-      );
+
       const nuevoAfiliado = await personasService.createAfiliado(datosAfiliado);
 
       // Mostrar modal de éxito y navegar cuando el usuario confirme

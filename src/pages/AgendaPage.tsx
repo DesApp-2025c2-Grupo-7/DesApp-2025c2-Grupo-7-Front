@@ -924,9 +924,6 @@ const AgendaPage: React.FC = () => {
                                 (p) =>
                                   String(p.id) === String(arr[0]?.prestadorId)
                               );
-                              console.log(prestadores);
-                              console.log(pid);
-                              console.log(groups);
                               let minStart = Infinity;
                               let maxEnd = -Infinity;
                               for (const t of arr) {
@@ -1175,8 +1172,6 @@ const AgendaPage: React.FC = () => {
     );
   };
 
-  console.log(prestadores);
-  console.log(prestadoresFiltrados);
   return (
     <>
       <div className="admin-page">

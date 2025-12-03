@@ -1,6 +1,6 @@
 // Servicio para manejar todas las llamadas a la API de personas
 import { getApiUrl } from '../config/env';
-import type { Afiliado } from '../types/afiliados';
+import type { Persona as Afiliado } from '../types/afiliados';
 
 export interface IntegranteData {
   nombre: string;
@@ -93,12 +93,10 @@ class PersonasService {
   // Crear un nuevo integrante en el grupo familiar
   async createIntegrante(titularCredencial: string, integranteData: IntegranteData) {
     try {
-      console.log('Buscando titular con credencial:', titularCredencial);
       
       // Primero necesitamos obtener el ID del titular usando su credencial
       const titular = await this.getGrupoFamiliar(titularCredencial);
       
-      console.log('Titular encontrado:', titular);
       
       if (!titular || !titular.id) {
         throw new Error(`No se pudo encontrar el titular con credencial ${titularCredencial}`);
@@ -120,8 +118,6 @@ class PersonasService {
         situacionesTerapeuticas: integranteData.situacionesTerapeuticas,
       };
 
-      console.log('Enviando payload para crear integrante:', JSON.stringify(payload, null, 2));
-      console.log('URL del endpoint:', getApiUrl(`/personas/${titular.id}/integrantes`));
 
       // Usar el endpoint específico para agregar integrantes
       const response = await fetch(getApiUrl(`/personas/${titular.id}/integrantes`), {
@@ -149,7 +145,7 @@ class PersonasService {
       }
 
       const nuevoIntegrante = await response.json();
-      console.log('Integrante creado exitosamente:', nuevoIntegrante);
+
       
       return nuevoIntegrante;
       

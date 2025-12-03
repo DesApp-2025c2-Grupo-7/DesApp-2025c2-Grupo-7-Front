@@ -1,4 +1,4 @@
-import type { Afiliado } from "../types/afiliados";
+import type { Persona as Afiliado } from "../types/afiliados";
 
 /**
  * Calcula el próximo sufijo disponible para un nuevo integrante del grupo familiar
@@ -19,7 +19,7 @@ export const calcularProximoSufijo = (miembrosGrupo: Afiliado[]): string => {
     .filter(sufijo => !isNaN(sufijo))
     .sort((a, b) => a - b);
 
-  console.log('Sufijos actuales encontrados:', sufijosActuales);
+
 
   // Si no hay sufijos válidos, empezar desde 01
   if (sufijosActuales.length === 0) {

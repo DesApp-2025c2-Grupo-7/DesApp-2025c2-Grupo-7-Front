@@ -26,7 +26,6 @@ const PrestadorProfilePage: React.FC = () => {
         }
         const data: Prestador = await response.json();
 
-        console.log("Prestador API data:", data);
 
         setPrestador(data);
       } catch (error) {

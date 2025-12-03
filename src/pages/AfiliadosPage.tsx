@@ -86,88 +86,65 @@ const AfiliadosPage: React.FC = () => {
   ]);
 
   useEffect(() => {
-    const afiliadosFromState = location.state?.afiliados;
+    // Siempre solicitar la lista fresca desde el backend para evitar datos en cache
+    const fetchAfiliados = async () => {
+      try {
+        setLoading(true);
 
-    if (afiliadosFromState) {
-      setAfiliados(afiliadosFromState);
-      const listaTransformada =
-        transformarAfiliadosParaLista(afiliadosFromState);
-      setAfiliadosLista(listaTransformada);
-      setLoading(false);
-    } else {
-      const fetchAfiliados = async () => {
-        try {
-          setLoading(true);
-
-          // 🧩 Intentar usar cache
-          const cacheStr = localStorage.getItem(CACHE_KEY);
-          if (cacheStr) {
-            const cache = JSON.parse(cacheStr);
-            const ageHours = (Date.now() - cache.timestamp) / (1000 * 60 * 60);
-            if (ageHours < CACHE_DURATION_HOURS) {
-              setAfiliados(cache.afiliados);
-              setAfiliadosLista(cache.afiliadosLista);
-              setLoading(false);
-              return;
-            }
-          }
-
-          const response = await fetch(getApiUrl("/personas"));
-          if (!response.ok) {
-            throw new Error("Error al obtener la lista de afiliados");
-          }
-          const titulares: Afiliado[] = await response.json();
-
-          const afiliadosCompletos = await Promise.all(
-            titulares.map(async (titular) => {
-              try {
-                const grupoResponse = await fetch(
-                  getApiUrl(`/personas/grupo/${titular.credencial}`)
-                );
-                if (grupoResponse.ok) {
-                  const grupoCompleto = await grupoResponse.json();
-                  return {
-                    ...titular,
-                    grupoFamiliar: grupoCompleto.grupoFamiliar || [],
-                  };
-                }
-                return { ...titular, grupoFamiliar: [] };
-              } catch (error) {
-                console.warn(
-                  `Error obteniendo grupo de ${titular.credencial}:`,
-                  error
-                );
-                return { ...titular, grupoFamiliar: [] };
-              }
-            })
-          );
-
-          setAfiliados(afiliadosCompletos);
-          const listaTransformada =
-            transformarAfiliadosParaLista(afiliadosCompletos);
-          setAfiliadosLista(listaTransformada);
-
-          // 💾 Guardar cache
-          localStorage.setItem(
-            CACHE_KEY,
-            JSON.stringify({
-              timestamp: Date.now(),
-              afiliados: afiliadosCompletos,
-              afiliadosLista: listaTransformada,
-            })
-          );
-        } catch (error) {
-          console.error("Error al cargar afiliados:", error);
-          setAfiliados([]);
-          setAfiliadosLista([]);
-        } finally {
-          setLoading(false);
+        const response = await fetch(getApiUrl("/personas"));
+        if (!response.ok) {
+          throw new Error("Error al obtener la lista de afiliados");
         }
-      };
+        const titulares: Afiliado[] = await response.json();
 
-      fetchAfiliados();
-    }
-  }, [location.state]);
+        const afiliadosCompletos = await Promise.all(
+          titulares.map(async (titular) => {
+            try {
+              const grupoResponse = await fetch(
+                getApiUrl(`/personas/grupo/${titular.credencial}`)
+              );
+              if (grupoResponse.ok) {
+                const grupoCompleto = await grupoResponse.json();
+                return {
+                  ...titular,
+                  grupoFamiliar: grupoCompleto.grupoFamiliar || [],
+                };
+              }
+              return { ...titular, grupoFamiliar: [] };
+            } catch (error) {
+              console.warn(
+                `Error obteniendo grupo de ${titular.credencial}:`,
+                error
+              );
+              return { ...titular, grupoFamiliar: [] };
+            }
+          })
+        );
+
+        setAfiliados(afiliadosCompletos);
+        const listaTransformada = transformarAfiliadosParaLista(afiliadosCompletos);
+        setAfiliadosLista(listaTransformada);
+
+        // Actualizar cache para usos posteriores, aunque siempre hacemos fetch al entrar
+        localStorage.setItem(
+          CACHE_KEY,
+          JSON.stringify({
+            timestamp: Date.now(),
+            afiliados: afiliadosCompletos,
+            afiliadosLista: listaTransformada,
+          })
+        );
+      } catch (error) {
+        console.error("Error al cargar afiliados:", error);
+        setAfiliados([]);
+        setAfiliadosLista([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAfiliados();
+  }, [location.key]);
 
   const handleVolver = () => {
     navigate("/", { state: { afiliados } });

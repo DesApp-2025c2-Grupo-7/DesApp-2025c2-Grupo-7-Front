@@ -50,7 +50,29 @@ const ModalDireccion: React.FC<ModalDireccionProps> = ({
   const [centrosMedicos, setCentrosMedicos] = useState<Prestador[]>([]);
   const [cargandoDatos, setCargandoDatos] = useState(true);
   const modal = useModal();
+  
+  // Helper: mostrar un modal y devolver una promesa que se resuelve
+  // en true si el usuario confirma, o false si cierra/cancela.
+  const mostrarConfirmacionPromise = (config: any) => {
+    return new Promise<boolean>((resolve) => {
+      let confirmado = false;
+      modal.mostrarModal({
+        ...config,
+        onConfirmar: () => {
+          confirmado = true;
+          resolve(true);
+        }
+      });
 
+      // Vigilar cierre del modal para resolver false si no confirmó
+      const watcher = setInterval(() => {
+        if (!modal.isOpen) {
+          clearInterval(watcher);
+          if (!confirmado) resolve(false);
+        }
+      }, 100);
+    });
+  };
   const normalizarHora = (valor: string) => {
     if (!valor) return "";
     const partes = valor.split(":");
@@ -310,21 +332,17 @@ const ModalDireccion: React.FC<ModalDireccionProps> = ({
     const horario = form.horariosAtencion[index];
     
     const confirmarEliminacion = () => {
-      return new Promise<boolean>((resolve) => {
-        modal.mostrarModal({
-          titulo: "Eliminar horario",
-          mensaje: horario.id && horario.id > 0 && horario.id < 1000000 
-            ? "¿Desea eliminar este horario de forma permanente?"
-            : "¿Desea eliminar este horario?",
-          submensaje: horario.id && horario.id > 0 && horario.id < 1000000
-            ? "Esta acción no se puede deshacer"
-            : undefined,
-          tipo: "warning",
-          textoBotonConfirmar: "Eliminar",
-          textoBotonCancelar: "Cancelar",
-          onConfirmar: () => resolve(true),
-          onCancelar: () => resolve(false),
-        });
+      return mostrarConfirmacionPromise({
+        titulo: "Eliminar horario",
+        mensaje: horario.id && horario.id > 0 && horario.id < 1000000 
+          ? "¿Desea eliminar este horario de forma permanente?"
+          : "¿Desea eliminar este horario?",
+        submensaje: horario.id && horario.id > 0 && horario.id < 1000000
+          ? "Esta acción no se puede deshacer"
+          : undefined,
+        tipo: "warning",
+        textoBotonConfirmar: "Eliminar",
+        textoBotonCancelar: "Cancelar",
       });
     };
 
@@ -412,38 +430,29 @@ const ModalDireccion: React.FC<ModalDireccionProps> = ({
 
   // 4️⃣ Si hay advertencias, pedir confirmación
   if (Object.keys(advertencias).length > 0) {
-    const continuarConAdvertencias = await new Promise<boolean>((resolve) => {
-      modal.mostrarModal({
-        titulo: "Advertencias detectadas",
-        mensaje: "Se detectaron advertencias en los horarios",
-        submensaje: "¿Desea continuar de todas formas?",
-        tipo: "warning",
-        textoBotonConfirmar: "Continuar",
-        textoBotonCancelar: "Cancelar",
-        onConfirmar: () => resolve(true),
-        onCancelar: () => resolve(false),
-      });
+    const continuarConAdvertencias = await mostrarConfirmacionPromise({
+      titulo: "Advertencias detectadas",
+      mensaje: "Se detectaron advertencias en los horarios",
+      submensaje: "¿Desea continuar de todas formas?",
+      tipo: "warning",
+      textoBotonConfirmar: "Continuar",
+      textoBotonCancelar: "Cancelar",
     });
     if (!continuarConAdvertencias) return;
   }
 
   // 5️⃣ Confirmación final
-  const confirmarGuardado = await new Promise<boolean>((resolve) => {
-    modal.mostrarModal({
-      titulo: "Guardar cambios",
-      mensaje: "¿Desea guardar los cambios realizados?",
-      tipo: "info",
-      textoBotonConfirmar: "Guardar",
-      textoBotonCancelar: "Cancelar",
-      onConfirmar: () => resolve(true),
-      onCancelar: () => resolve(false),
-    });
+  const confirmarGuardado = await mostrarConfirmacionPromise({
+    titulo: "Guardar cambios",
+    mensaje: "¿Desea guardar los cambios realizados?",
+    tipo: "info",
+    textoBotonConfirmar: "Guardar",
+    textoBotonCancelar: "Cancelar",
   });
   if (!confirmarGuardado) return;
 
   // 6️⃣ Si no hay prestadorId válido, guardar temporal
   if (!prestadorId || prestadorId === 0) {
-    console.log("Guardando dirección temporal (sin prestadorId)");
     onSave({ ...form, esTemporal: true });
     onClose();
     return;
@@ -454,20 +463,13 @@ const ModalDireccion: React.FC<ModalDireccionProps> = ({
     const esIdTemporal = form.id >= 1000000;
     const esNuevaDireccion = form.id === 0 || esIdTemporal || form.esTemporal === true;
 
-    console.log("Guardando dirección:", {
-      prestadorId,
-      direccionId: form.id,
-      esNuevaDireccion,
-      esIdTemporal
-    });
-
     // 8️⃣ Guardar/actualizar dirección
     const method = esNuevaDireccion ? "POST" : "PUT";
     const url = esNuevaDireccion
       ? getApiUrl(`/prestadores/${prestadorId}/direcciones`)
       : getApiUrl(`/prestadores/${prestadorId}/direcciones/${form.id}`);
 
-    console.log(`${method} ${url}`);
+
 
     const resDir = await fetch(url, {
       method,
@@ -487,7 +489,6 @@ const ModalDireccion: React.FC<ModalDireccionProps> = ({
     }
 
     const dirGuardada: Direccion = await resDir.json();
-    console.log("Dirección guardada:", dirGuardada);
 
     // 9️⃣ Guardar/actualizar horarios
     const horariosActualizados: HorarioAtencion[] = [];
@@ -507,7 +508,6 @@ const ModalDireccion: React.FC<ModalDireccionProps> = ({
         ? getApiUrl(`/prestadores/${prestadorId}/direcciones/${dirGuardada.id}/horarios`)
         : getApiUrl(`/prestadores/${prestadorId}/direcciones/${dirGuardada.id}/horarios/${hor.id}`);
 
-      console.log(`${methodHorario} ${endpoint}`, horData);
 
       const resHor = await fetch(endpoint, {
         method: methodHorario,
@@ -531,7 +531,6 @@ const ModalDireccion: React.FC<ModalDireccionProps> = ({
       });
     }
 
-    console.log("✅ Todos los horarios guardados correctamente");
 
     // 🔟 Notificar éxito
     const direccionCompleta = { 

@@ -458,9 +458,8 @@ const AfiliadosForm: React.FC<AfiliadoFormProps> = ({
         throw new Error('Credencial del titular no disponible');
       }
 
-  console.log('Payload crear integrante:', JSON.stringify(integranteData, null, 2));
+
   const nuevoIntegrante = await personasService.createIntegrante(titularCredencial, integranteData);
-        console.log('Integrante creado exitosamente:', nuevoIntegrante);
 
         if (onIntegranteCreado) {
           onIntegranteCreado(nuevoIntegrante);

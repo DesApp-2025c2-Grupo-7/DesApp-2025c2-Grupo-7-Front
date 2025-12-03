@@ -698,7 +698,6 @@ const PrestadoresFormEdit: React.FC<PrestadoresFormEditProps> = ({
     return true;
   };
 
-  console.log(profesionalesPaginados);
   /* --- Render --- */
   return (
     <>

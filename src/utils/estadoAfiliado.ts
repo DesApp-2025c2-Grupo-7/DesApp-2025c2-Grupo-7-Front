@@ -17,13 +17,14 @@ export const esPersonaActiva = (persona: PersonaEstado): boolean => {
   
   const today = new Date().toISOString().split('T')[0];
   
-  // Si la fecha de alta está en el futuro, aún no está activo
+  // Regla para "activo HOY":
+  // - fechaAlta en el futuro (>) => aún no está activo
+  // - fechaAlta igual a hoy => ya está activo
+  // - fechaBaja igual a hoy o anterior => ya está inactivo
   if (persona.fechaAlta && persona.fechaAlta > today) return false;
-  
-  // Si no tiene fecha de baja, está activo
+
   if (!persona.fechaBaja) return true;
-  
-  // Si tiene fecha de baja, verificar si es futura
+
   return persona.fechaBaja > today;
 };
 
@@ -41,16 +42,16 @@ export const getTextoEstadoPersona = (persona: PersonaEstado): string => {
   if (persona.fechaAlta && persona.fechaAlta > today) {
     return `Activo a partir de ${persona.fechaAlta}`;
   }
-  
+
   // Si no tiene fecha de baja, está activo
   if (!persona.fechaBaja) return 'Activo';
-  
-  // Si tiene fecha de baja futura
+
+  // Si la fecha de baja es posterior a hoy
   if (persona.fechaBaja > today) {
     return `Activo hasta ${persona.fechaBaja}`;
   }
-  
-  // Si la fecha de baja ya pasó
+
+  // Si la fecha de baja es hoy o pasada
   return 'Inactivo';
 };
 
@@ -68,10 +69,10 @@ export const getLabelEstadoPersona = (persona: PersonaEstado): string => {
   if (persona.fechaAlta && persona.fechaAlta > today) {
     return `ACTIVO A PARTIR DE ${persona.fechaAlta}`;
   }
-  
+
   // Si no tiene fecha de baja, está activo
   if (!persona.fechaBaja) return 'ACTIVO';
-  
-  // Si tiene fecha de baja, verificar si es futura o pasada
+
+  // Si la fecha de baja es posterior a hoy -> ACTIVO; si es hoy o pasada -> INACTIVO
   return persona.fechaBaja > today ? 'ACTIVO' : 'INACTIVO';
 };

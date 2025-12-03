@@ -4,7 +4,7 @@ import Header from "../components/genericos/Header";
 import SubHeader from "../components/genericos/SubHeader";
 import AfiliadosForm from "../components/afiliados/AfiliadosForm";
 import "./AfiliadoProfile.css"; 
-import type {Afiliado,GrupoFamiliar } from "../types/afiliados";
+import type {Persona as Afiliado,GrupoFamiliar } from "../types/afiliados";
 import { useModal } from "../hooks/useModal";
 import Modal from "../components/genericos/Modal";
 import { getApiUrl } from "../config/env";
@@ -21,7 +21,6 @@ const limpiarDatosParaBackend = (afiliado: Afiliado) => {
     direccion, 
     situacionesTerapeuticas, 
     grupoFamiliar, 
-    miembrosGrupo, 
     ...datosBasicos 
   } = afiliado;
   
@@ -110,10 +109,19 @@ const AfiliadoProfile: React.FC = () => {
         // Crear la lista completa del grupo familiar evitando duplicaciones
         const miembrosCompletos: Afiliado[] = [];
         
-        // Verificar si el titular ya está incluido en grupoFamiliar
+        // Normalizar la lista de personas del grupo familiar. A veces el backend
+        // devuelve `grupoFamiliar` como un array directo o como un objeto con
+        // la propiedad `personas`. Soportamos ambos formatos aquí.
+        const grupoPersonas: any[] = Array.isArray(grupoCompleto.grupoFamiliar)
+          ? grupoCompleto.grupoFamiliar
+          : (grupoCompleto.grupoFamiliar && Array.isArray((grupoCompleto.grupoFamiliar as any).personas))
+            ? (grupoCompleto.grupoFamiliar as any).personas
+            : [];
+
+        // Verificar si el titular ya está incluido en la lista de personas
         let titularYaIncluido = false;
-        if (grupoCompleto.grupoFamiliar && grupoCompleto.grupoFamiliar.length > 0) {
-          titularYaIncluido = grupoCompleto.grupoFamiliar.some((miembro: any) => 
+        if (grupoPersonas.length > 0) {
+          titularYaIncluido = grupoPersonas.some((miembro: any) => 
             miembro.id === grupoCompleto.id || 
             (miembro.credencial === grupoCompleto.credencial && miembro.sufijo === grupoCompleto.sufijo)
           );
@@ -121,18 +129,20 @@ const AfiliadoProfile: React.FC = () => {
         
         // Solo agregar el titular manualmente si NO está ya incluido en grupoFamiliar
         if (!titularYaIncluido) {
+          // Añadir el titular sin incluir la estructura completa de grupoFamiliar
+          const { grupoFamiliar: _gf, ...titularSinGrupo } = grupoCompleto as any;
           miembrosCompletos.push({
-            ...grupoCompleto,
-            grupoFamiliar: [], // Evitar recursión
+            ...titularSinGrupo,
+            grupoFamiliar: { planMedico: grupoCompleto.planMedico } as any,
             parentesco: "Titular"
           });
         }
         
         // Agregar todos los miembros del grupo familiar (que puede incluir o no al titular)
-        if (grupoCompleto.grupoFamiliar && grupoCompleto.grupoFamiliar.length > 0) {
-          const miembros: Afiliado[] = grupoCompleto.grupoFamiliar.map((miembro: any) => ({
+        if (grupoPersonas.length > 0) {
+          const miembros: Afiliado[] = grupoPersonas.map((miembro: any) => ({
             ...miembro,
-            grupoFamiliar: [],
+            grupoFamiliar: { planMedico: miembro.planMedico } as any,
             parentesco: miembro.id === grupoCompleto.id ? "Titular" : (miembro.parentesco || 'Integrante')
           }));
           miembrosCompletos.push(...miembros);
@@ -183,14 +193,19 @@ const AfiliadoProfile: React.FC = () => {
     if (afiliadoMostrado) {
       const fechaBaja = new Date().toISOString().split("T")[0];
       try {
-        console.log('Dando de baja persona con ID:', afiliadoMostrado.id);
-        console.log('Fecha de baja:', fechaBaja);
+        // Evitar re-dar de baja si ya tiene fechaBaja igual o anterior
+        if (afiliadoMostrado.fechaBaja && afiliadoMostrado.fechaBaja <= fechaBaja) {
+          modalUniversal.mostrarAdvertencia(
+            'Afiliado ya dado de baja',
+            `El afiliado ya posee fecha de baja: ${afiliadoMostrado.fechaBaja}`
+          );
+          return;
+        }
 
+        // Actualizar el afiliado seleccionado (titular o integrante)
         const response = await fetch(getApiUrl(`/personas/${afiliadoMostrado.id}`), {
-          method: "PUT", 
-          headers: {
-            "Content-Type": "application/json",
-          },
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ fechaBaja }),
         });
 
@@ -201,14 +216,52 @@ const AfiliadoProfile: React.FC = () => {
         }
 
         const afiliadoActualizado = await response.json();
-        console.log('Afiliado actualizado:', afiliadoActualizado);
-        
-        setAfiliadoMostrado({ ...afiliadoMostrado, fechaBaja });
-        modalUniversal.mostrarExito(
-          "Afiliado dado de baja",
-          "El afiliado será dado de baja exitosamente",
-          `Fecha de baja: ${fechaBaja}`
-        );
+
+        // Actualizar estado local
+        setAfiliadoMostrado(afiliadoActualizado);
+        if (afiliado && afiliadoActualizado.id === afiliado.id) {
+          setAfiliado(afiliadoActualizado);
+        }
+
+        // Si dimos de baja al titular, propagar la baja a sus integrantes
+        const esTitular = afiliado && afiliadoActualizado.id === afiliado.id;
+        if (esTitular && miembrosGrupo && miembrosGrupo.length > 0) {
+          try {
+            const integrantesParaBaja = miembrosGrupo.filter(m => m.id !== afiliadoActualizado.id && (!m.fechaBaja || m.fechaBaja > fechaBaja));
+            // Ejecutar actualizaciones en paralelo
+            await Promise.all(integrantesParaBaja.map(async (integrante) => {
+              try {
+                const res = await fetch(getApiUrl(`/personas/${integrante.id}`), {
+                  method: 'PUT',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ fechaBaja })
+                });
+                if (res.ok) {
+                  const actualizado = await res.json();
+                  // Actualizar miembro en estado local
+                  setMiembrosGrupo(prev => prev.map(p => p.id === actualizado.id ? actualizado : p));
+                } else {
+                  console.warn(`No se pudo dar de baja al integrante ${integrante.id}`);
+                }
+              } catch (e) {
+                console.error('Error al propagar baja a integrante:', e);
+              }
+            }));
+          } catch (e) {
+            console.error('Error al propagar bajas a integrantes:', e);
+          }
+        }
+
+        // Mostrar modal de éxito y recargar la página para que las listas globales se actualicen
+        modalUniversal.mostrarModal({
+          titulo: 'Afiliado dado de baja',
+          mensaje: 'El afiliado fue dado de baja correctamente.',
+          submensaje: `Fecha de baja: ${fechaBaja}`,
+          tipo: 'success',
+          soloInformacion: true,
+          textoBotonConfirmar: 'Aceptar',
+          onConfirmar: () => window.location.reload()
+        });
       } catch (error) {
         console.error("Error al dar de baja:", error);
         modalUniversal.mostrarError(
@@ -222,15 +275,9 @@ const AfiliadoProfile: React.FC = () => {
   // Funciones para el modo de edición
   const handleGuardarCambios = async (afiliadoModificado: Afiliado) => {
     try {
-      console.log('Enviando datos al backend:', afiliadoModificado);
       
       // Limpiar datos para enviar solo campos básicos al backend
       const datosLimpios = limpiarDatosParaBackend(afiliadoModificado);
-      
-      console.log('Datos originales:', afiliadoModificado);
-      console.log('Datos limpios a enviar:', datosLimpios);
-      console.log('INCLUIDOS: campos básicos + arrays de primitivos (telefono, email)');
-      console.log('EXCLUIDOS: direccion, situacionesTerapeuticas, grupoFamiliar, arrays de objetos');
       
       // 1. Actualizar datos básicos del afiliado (solo campos primitivos)
       const response = await fetch(getApiUrl(`/personas/${afiliadoModificado.id}`), {
@@ -249,7 +296,6 @@ const AfiliadoProfile: React.FC = () => {
 
       // 2. Manejar direcciones por separado usando endpoints específicos
       if (afiliadoModificado.direccion && afiliadoModificado.direccion.length > 0) {
-        console.log('Sincronizando direcciones:', afiliadoModificado.direccion);
         
         try {
           // Procesar direcciones una por una
@@ -258,16 +304,13 @@ const AfiliadoProfile: React.FC = () => {
           for (const direccion of afiliadoModificado.direccion) {
             if (direccion.id && direccion.id > 0) {
               // Dirección existente - actualizar
-              console.log('Actualizando dirección existente:', direccion.id);
               await personasService.updateDireccion(afiliadoModificado.id, direccion.id, direccion);
             } else {
               // Dirección nueva - crear
-              console.log('Creando nueva dirección:', direccion);
               await personasService.createDireccion(afiliadoModificado.id, direccion);
             }
           }
           
-          console.log('Direcciones sincronizadas exitosamente');
         } catch (errorDirecciones) {
           console.error('Error al sincronizar direcciones:', errorDirecciones);
           // No fallar todo el guardado por errores de direcciones, solo avisar
@@ -280,7 +323,6 @@ const AfiliadoProfile: React.FC = () => {
         }
       }
       
-      console.log('Datos básicos actualizados exitosamente');
 
       // Actualizar el estado local con los datos completos (incluyendo direcciones)
       setAfiliadoMostrado(afiliadoModificado);

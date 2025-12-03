@@ -10,6 +10,7 @@ import type { Prestador } from "../types/prestadores";
 import { getApiUrl } from "../config/env";
 import GraficoPrestadoresPorCodigoPostal from "../components/dashboard/GraficoPrestadoresPorCodigoPostal";
 import GraficoPrestadoresPorEspecialidad from "../components/dashboard/GraficoPrestadoresPorEspecialidad";
+import { esPersonaActiva } from "../utils/estadoAfiliado";
 
 const CACHE_KEY = "dashboardData";
 const CACHE_DURATION_HOURS = 0.02; // tiempo de validez del cache
@@ -24,13 +25,9 @@ const Dashboard: React.FC = () => {
   // Función para calcular el total de personas (titulares + integrantes) evitando duplicados
   const calcularTotalPersonas = () => {
     const personasUnicas = new Set<string>();
-    const today = new Date().toISOString().split("T")[0];
-
     const esActivo = (persona: any) => {
-      // Considerar activo si no tiene fechaBaja o su fechaBaja es posterior a hoy
       if (!persona) return false;
-      if (!persona.fechaBaja) return true;
-      return persona.fechaBaja > today;
+      return esPersonaActiva(persona as any);
     };
 
     afiliados.forEach(afiliado => {
@@ -41,8 +38,14 @@ const Dashboard: React.FC = () => {
       }
 
       // Agregar los integrantes del grupo familiar solo si están activos
-      if (Array.isArray(afiliado.grupoFamiliar) && afiliado.grupoFamiliar.length > 0) {
-        afiliado.grupoFamiliar.forEach((integrante: any) => {
+      const grupoPersonas: any[] = Array.isArray(afiliado.grupoFamiliar)
+        ? afiliado.grupoFamiliar
+        : (afiliado.grupoFamiliar && Array.isArray(afiliado.grupoFamiliar.personas))
+        ? afiliado.grupoFamiliar.personas
+        : [];
+
+      if (grupoPersonas.length > 0) {
+        grupoPersonas.forEach((integrante: any) => {
           if (esActivo(integrante)) {
             const integranteKey = `${integrante.credencial}-${integrante.sufijo}`;
             personasUnicas.add(integranteKey);
