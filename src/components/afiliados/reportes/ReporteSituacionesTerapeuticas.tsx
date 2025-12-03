@@ -71,7 +71,7 @@ const ReporteSituacionesTerapeuticas: React.FC = () => {
       doc.setFont("helvetica", "normal");
       doc.text(`Credencial: ${afiliadoActual.credencial}-${afiliadoActual.sufijo}`, 14, yPos);
       doc.text(`DNI: ${afiliadoActual.numeroDocumento}`, 80, yPos);
-      doc.text(`Estado: ${afiliadoActual.fechaBaja ? "De baja" : "Activo"}`, 140, yPos);
+      doc.text(`Estado: ${afiliadoActual.fechaBaja ? "Inactivo" : "Activo"}`, 140, yPos);
       yPos += 7;
 
       // Recolectar todas las personas y situaciones
@@ -137,7 +137,7 @@ const ReporteSituacionesTerapeuticas: React.FC = () => {
             "Titular": `${afiliadoActual.nombre} ${afiliadoActual.apellido}`,
             "Credencial Titular": `${afiliadoActual.credencial}-${afiliadoActual.sufijo}`,
             "DNI Titular": afiliadoActual.numeroDocumento,
-            "Estado Titular": afiliadoActual.fechaBaja ? "De baja" : "Activo",
+            "Estado Titular": afiliadoActual.fechaBaja ? "Inactivo" : "Activo",
             "Integrante": `${persona.nombre} ${persona.apellido}`,
             "Credencial Integrante": `${persona.credencial}-${persona.sufijo}`,
             "Parentesco": persona.id === afiliadoActual.id ? "Titular" : persona.parentesco || "Integrante",
@@ -152,7 +152,7 @@ const ReporteSituacionesTerapeuticas: React.FC = () => {
               "Titular": `${afiliadoActual.nombre} ${afiliadoActual.apellido}`,
               "Credencial Titular": `${afiliadoActual.credencial}-${afiliadoActual.sufijo}`,
               "DNI Titular": afiliadoActual.numeroDocumento,
-              "Estado Titular": afiliadoActual.fechaBaja ? "De baja" : "Activo",
+              "Estado Titular": afiliadoActual.fechaBaja ? "Inactivo" : "Activo",
               "Integrante": `${persona.nombre} ${persona.apellido}`,
               "Credencial Integrante": `${persona.credencial}-${persona.sufijo}`,
               "Parentesco": persona.id === afiliadoActual.id ? "Titular" : persona.parentesco || "Integrante",
@@ -215,7 +215,7 @@ const ReporteSituacionesTerapeuticas: React.FC = () => {
               <h3>Resultados de búsqueda:</h3>
               <div className="lista-resultados">
                 {resultadosBusqueda.map((afiliado) => {
-                  const estadoAfiliado = afiliado.fechaBaja ? "De baja" : "Activo";
+                  const estadoAfiliado = afiliado.fechaBaja ? "Inactivo" : "Activo";
                   
                   // Recolectar situaciones del titular y del grupo familiar
                   const todasLasPersonas = [afiliado, ...(afiliado.grupoFamiliar?.personas || [])];

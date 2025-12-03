@@ -168,7 +168,7 @@ const GraficoPrestadoresPorEspecialidad: React.FC<Props> = ({ prestadores }) => 
         'Especialidades': especialidades,
         'Teléfonos': telefonos,
         'Emails': emails,
-        'Estado': prestador.fechaBaja ? 'De baja' : 'Activo',
+        'Estado': prestador.fechaBaja ? 'Inactivo' : 'Activo',
         'Direcciones': direccionesTexto,
         'Horarios': horariosTexto
       });
